@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        /* Background Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #764ba2, #764ba2);
+            margin: 0;
+            padding: 50px;
+            color: white;
+        }
+
+        /* Container Styling */
+        .container {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            display: inline-block;
+            min-width: 350px;
+        }
+
+        h1 {
+            color: white;
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        /* Button Styling */
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            margin: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        /* Chat Button */
+        .chat-btn {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+        }
+        .chat-btn:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #ff4b2b, #ff416c);
+        }
+
+        /* Logout Button */
+        .logout-btn {
+            background: linear-gradient(90deg, #dc3545, #b31217);
+        }
+        .logout-btn:hover {
+            transform: scale(1.05);
+            background: linear-gradient(90deg, #b31217, #dc3545);
+        }
+    </style>
+</head>
+<body>
+    <div>
+
+        <h1>Welcome to Linga AI Solutions Website </h1>
+        <p>Here you can chat with me and ask me anything you want to know about Linga AI Solutions.</p>
+    </div>
+
+    <div class="container">
+        <h1>Welcome, {{ user.username }}! 🎉</h1>
+        <a href="https://linga-ai-solutions.streamlit.app/" class="btn chat-btn">💬 Chat with Me</a>
+        <a href="{% url 'logout' %}" class="btn logout-btn"> Logout</a>
+    </div>
+</body>
+</html>
