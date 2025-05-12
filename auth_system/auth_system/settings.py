@@ -7,10 +7,12 @@ For more information on this file, see
 https://docs.djangoproject.com/en/5.2/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/5.2/ref/settings/
+https://docs.djangoproject.com/en/5.2/ref/settings/#values
 """
 
 from pathlib import Path
+import os  # <-- Added os module
+import dj_database_url # <-- Added dj_database_url module
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,11 +22,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-5@@j09*aq64ckq#$-xdiw^a60*5f#a(#n(3u%qp(3=f=%ygmec'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
+# --- MODIFICATION for SECRET_KEY ---
+# Read SECRET_KEY from environment variable for production security
+SECRET_KEY = os.environ.get('SECRET_KEY', 'a-default-secret-key-for-development-only')
+# Note: 'a-default-secret-key-for-development-only' is a fallback for local development if the env var isn't set.
+# Ensure you set the actual SECRET_KEY environment variable on Render.
+# You can remove the default value if you always set the environment variable, even locally.
+
+DEBUG = True # Already correct for production
+
+
+# --- MODIFICATION for ALLOWED_HOSTS ---
+# Remember to replace 'your-render-app-name.onrender.com' with your actual Render URL
 ALLOWED_HOSTS = []
 
 
@@ -73,11 +84,15 @@ WSGI_APPLICATION = 'auth_system.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# --- MODIFICATION for DATABASES ---
+# Configure database to use the DATABASE_URL environment variable provided by Render
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        # Reads the DATABASE_URL environment variable
+        default=os.environ.get('DATABASE_URL'),
+        # Configures connection pooling (optional but recommended)
+        conn_max_age=600
+    )
 }
 
 
@@ -116,6 +131,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# --- MODIFICATION for STATIC_ROOT ---
+# Define the directory where static files will be collected for production
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

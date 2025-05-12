@@ -1,8 +1,28 @@
-*.vscode
-*.venv
+# Byte-code files
 *.pyc
 __pycache__/
-local_settings.py
-db.sqlite3
-.DS_Store
-*.log
+
+# VS Code specific files
+.vscode/
+
+# Virtual environment
+.venv/
+venv/
+
+# Database files (if you're using SQLite)
+*.sqlite3
+
+# Collectstatic files
+static/
+
+# Media files
+media/
+
+# Distribution / build files
+dist/
+*.egg-info/
+.build/
+
+# Other temporary files
+*~
+*.swp
