@@ -13,9 +13,34 @@ https://docs.djangoproject.com/en/5.2/ref/settings/#values
 from pathlib import Path
 import os  # <-- Added os module
 import dj_database_url # <-- Added dj_database_url module
+# Added for loading .env file in local development
+# Make sure you have installed python-dotenv: pip install python-dotenv
+# And added a .env file to your project root (and added .env to .gitignore)
+# if you are using it for local development
+# try:
+#     from dotenv import load_dotenv
+# except ImportError:
+#     pass # Don't require dotenv in production
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file in local development
+# This part should typically only run in development, not production
+# You can add a check for production environment if you prefer,
+# or ensure your deployment process on Render doesn't install python-dotenv
+# Example check: if not os.environ.get('RENDER'): # Assumes Render sets a RENDER env var
+#     try:
+#          load_dotenv(BASE_DIR / '.env')
+#     except NameError:
+#          pass # dotenv not installed
+if os.path.exists(BASE_DIR / '.env'):
+     try:
+          from dotenv import load_dotenv
+          load_dotenv(BASE_DIR / '.env')
+     except ImportError:
+          # Handle case where dotenv is not installed (e.g., in production)
+          pass
 
 
 # Quick-start development settings - unsuitable for production
@@ -26,17 +51,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # --- MODIFICATION for SECRET_KEY ---
 # Read SECRET_KEY from environment variable for production security
-SECRET_KEY = os.environ.get('SECRET_KEY', 'a-default-secret-key-for-development-only')
-# Note: 'a-default-secret-key-for-development-only' is a fallback for local development if the env var isn't set.
-# Ensure you set the actual SECRET_KEY environment variable on Render.
-# You can remove the default value if you always set the environment variable, even locally.
+# Get from environment variable, with a non-secret default for local development if needed.
+# On Render, you MUST set the SECRET_KEY environment variable with a strong, unique value.
+SECRET_KEY = os.environ.get('SECRET_KEY', 'a-default-secret-key-for-development-only-replace-this-in-prod')
 
-DEBUG = True # Already correct for production
+
+# --- MODIFICATION for DEBUG ---
+# Read DEBUG from environment variable. Convert the string ('True' or 'False') to a boolean.
+# Default to False if not set (recommended for production).
+# Set DEBUG=True in your local .env file for development.
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 
 # --- MODIFICATION for ALLOWED_HOSTS ---
-# Remember to replace 'your-render-app-name.onrender.com' with your actual Render URL
-ALLOWED_HOSTS = []
+# Read ALLOWED_HOSTS from environment variable.
+# Expects a comma-separated string (e.g., 'majd-kassem-business.onrender.com,127.0.0.1,localhost').
+# Set this environment variable on Render with your domain(s).
+ALLOWED_HOSTS_STRING = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STRING.split(',') if host.strip()]
 
 
 # Application definition
@@ -59,6 +91,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Add DRF's SessionAuthentication middleware if you are using it
+    # 'rest_framework.authentication.SessionAuthentication',
 ]
 
 ROOT_URLCONF = 'auth_system.urls'
@@ -86,12 +120,12 @@ WSGI_APPLICATION = 'auth_system.wsgi.application'
 
 # --- MODIFICATION for DATABASES ---
 # Configure database to use the DATABASE_URL environment variable provided by Render
+# dj_database_url.config() parses the DATABASE_URL string and configures the DATABASES dict.
+# Default to SQLite if DATABASE_URL is not set (for local development without .env or DATABASE_URL).
 DATABASES = {
     'default': dj_database_url.config(
-        # Reads the DATABASE_URL environment variable
-        default=os.environ.get('DATABASE_URL'),
-        # Configures connection pooling (optional but recommended)
-        conn_max_age=600
+        default=os.environ.get('DATABASE_URL', f'sqlite:///{BASE_DIR / "db.sqlite3"}'),
+        conn_max_age=600 # Optional: connection pooling settings
     )
 }
 
@@ -132,12 +166,57 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# --- MODIFICATION for STATIC_ROOT ---
+# --- ADDITION for STATIC_ROOT ---
 # Define the directory where static files will be collected for production
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# This is where 'python manage.py collectstatic' will put all static files.
+# Your production web server (like Nginx or a web service like Render) will serve files from here.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# --- ADDITION for REST_FRAMEWORK settings ---
+# Configure DRF authentication and permissions
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication', # Uncomment if you need session auth for APIs
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated', # Default to requiring authentication for APIs
+    ]
+}
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- ADDITION for production-specific security settings (optional, but good practice) ---
+# These settings are often enabled when DEBUG is False
+if not DEBUG:
+    # Security settings for production
+    # SECURE_SSL_REDIRECT = True # Redirect HTTP to HTTPS (often handled by hosting)
+    # SESSION_COOKIE_SECURE = True # Ensure session cookies are only sent over HTTPS
+    # CSRF_COOKIE_SECURE = True # Ensure CSRF cookies are only sent over HTTPS
+    # SECURE_HSTS_SECONDS = 31536000 # Enable HTTP Strict Transport Security (HSTS)
+    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_HSTS_PRELOAD = True
+    # SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https') # Needed if behind a reverse proxy
+    pass # Add production security settings here
+
+# --- ADDITION for CORS/CSRF origins if using a separate frontend ---
+# If your frontend is on a different domain/port than your backend API, you'll need CORS headers.
+# Install django-cors-headers: pip install django-cors-headers
+# Add 'corsheaders' to INSTALLED_APPS
+# Add 'corsheaders.middleware.CorsMiddleware' to MIDDLEWARE (place it high up)
+# CORS_ALLOWED_ORIGINS = [
+#    "http://localhost:3000", # Your frontend's local development server
+#    "https://your-frontend-domain.com", # Your frontend's production domain
+# ]
+# Or allow all origins (less secure for production):
+# CORS_ALLOW_ALL_ORIGINS = True
+
+# If your frontend makes AJAX POST requests, you might need to adjust CSRF trusted origins
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:3000", # Your frontend's local development server
+#     "https://your-frontend-domain.com", # Your frontend's production domain
+# ]
