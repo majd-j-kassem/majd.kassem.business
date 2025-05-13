@@ -1,14 +1,11 @@
+#auth_system/accounts/urls.py
 from django.urls import path
-from .views import signup_view, login_view, logout_view
+# Import your web view functions from accounts.views
+from .views import signup_view, login_view, logout_view, dashboard # Make sure dashboard is imported here
+
 urlpatterns = [
     path('signup/', signup_view, name='signup'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),
+    path('dashboard/', dashboard, name='dashboard'), # Include the dashboard path
 ]
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-@login_required
-def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
-urlpatterns += [
-    path('dashboard/', dashboard, name='dashboard'),]
