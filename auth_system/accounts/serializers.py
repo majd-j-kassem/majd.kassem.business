@@ -12,6 +12,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password2 = serializers.CharField(write_only=True, required=True)
     email = serializers.EmailField(required=True) # Ensure email is required and validated
+    # --- MUTATION: Add required=False ---
+    #email = serializers.EmailField(required=False) 
+      # --- End Mutation ---
     class Meta:
         model = User
         # Fields to include in the serializer. username is required by default for Django's User model
