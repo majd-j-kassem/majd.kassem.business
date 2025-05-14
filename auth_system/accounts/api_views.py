@@ -68,7 +68,7 @@ class LogoutAPIView(APIView):
             request.user.auth_token.delete()
             # Log out the user from the session (important if you use sessions too)
             logout(request)
-            return Response({'message': 'Successfully logged out.'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Successfully logged out.'}, status=status.HTTP_201_CREATED)
         except Exception as e:
              # This catch is broad, you might want to handle specific exceptions
             return Response({'error': f'An error occurred during logout: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
