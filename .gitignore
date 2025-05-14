@@ -29,3 +29,9 @@ dist/
 
 # Environmental file
 *.env
+#related to test
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+reports/
