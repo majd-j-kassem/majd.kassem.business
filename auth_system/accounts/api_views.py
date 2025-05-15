@@ -6,10 +6,16 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+
+
 
 from .serializers import UserRegisterSerializer, UserLoginSerializer
 
 User = get_user_model()
+
+@method_decorator(csrf_exempt, name='post')
 
 class RegisterAPIView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -30,6 +36,7 @@ class LoginAPIView(APIView):
     serializer_class = UserLoginSerializer # Assign the serializer class
 
     def post(self, request, *args, **kwargs):
+        print("--> LoginAPIView POST method reached!")
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             username_or_email = serializer.validated_data['username_or_email']
