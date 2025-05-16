@@ -26,7 +26,9 @@ def login_view(request):
         # Safely get username and password from POST data
         username = request.POST.get('username')
         password = request.POST.get('password')
-
+        print(f"--- Login Attempt ---")
+        print(f"Received Username: '{username}'")
+        print(f"Received Password: '{password}'")
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
@@ -34,19 +36,19 @@ def login_view(request):
             # You can add a success message
             messages.success(request, f"Welcome back, {username}!")
             # Redirect to the dashboard or home page after successful login
-            return redirect('dashboard') # Or 'portfolio' if you prefer
+            return redirect('courses') # Or 'portfolio' if you prefer
 
         else:
             # Add an error message for invalid credentials
             messages.error(request, "Invalid username or password.")
-            return render(request, 'accounts/login.html', {}) # Render the login page again with error
+            return render(request, 'login.html', {}) # Render the login page again with error
     else:
         # For a GET request, just render the empty login form
-        return render(request, 'accounts/login.html', {})
+        return render(request, 'login.html', {})
 
 def dashboard(request):
     if request.user.is_authenticated:
-        return render(request, 'accounts/dashboard.html', {})
+        return render(request, 'dashboard.html', {})
     else:
         messages.info(request, "Please log in to view the dashboard.")
         return redirect('login') # Redirect to login if not authenticated
@@ -61,6 +63,9 @@ def logout_view(request):
 @login_required
 def dashboard(request):
     return render(request, 'accounts/dashboard.html')
+@login_required
+def courses(request):
+    return render(request, 'courses.html')
 # Your existing views
 def portfolio_view(request):
     return render(request, 'index.html', {})

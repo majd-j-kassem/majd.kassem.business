@@ -4,20 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Portfolio - Home</title>
+    <title>Your Name - Courses</title> {# Updated Title #}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- General Body Styles (from your portfolio index.html) --- */
+        /* --- General Body Styles (Consistent across pages) --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #764ba2, #764ba2);
+            background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%);
             margin: 0;
-            padding: 50px;
-            color: white;
+            padding-top: 70px; /* Space for the fixed header */
+            color: #333; /* Default text color for body */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
         }
 
-        /* --- Header/Navigation Styles (from your portfolio index.html) --- */
+        /* --- Header/Navigation Styles (Consistent across pages) --- */
         .main-header {
             background-color: #333;
             color: white;
@@ -70,7 +75,7 @@
             color: #007bff;
         }
 
-        /* --- Footer Styles (from your portfolio index.html) --- */
+        /* --- Footer Styles (Consistent across pages) --- */
         .main-footer {
             background-color: #222;
             color: #ccc;
@@ -147,175 +152,103 @@
             font-size: 0.85em;
         }
 
-        /* --- Hero Section for Homepage --- */
-        .hero-section {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 50px 20px;
-            background: linear-gradient(135deg, #764911, #764ba2);
-            color: white;
-            margin: 20px auto;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        /* --- Page Content General Styling (Reusable) --- */
+        .page-content {
+            flex-grow: 1; /* Allows content to expand and push footer down */
+            padding: 40px 20px;
             max-width: 900px;
             width: 100%;
+            margin: 30px auto;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            text-align: left;
         }
-        .hero-section h1 {
-            font-size: 3.5em;
-            margin-bottom: 15px;
+        .page-content h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            text-align: center;
         }
-        .hero-section p {
-            font-size: 1.3em;
-            margin-bottom: 30px;
-            max-width: 600px;
-            line-height: 1.6;
+        .page-content p, .page-content ul {
+            line-height: 1.7;
+            font-size: 1.05em;
+            color: #555;
+            text-align: left;
         }
-        .hero-button {
-            background-color: white;
-            color: #007bff;
-            padding: 15px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.2em;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-        .hero-button:hover {
-            background-color: #f0f0f0;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        .page-content ul {
+            padding-left: 20px;
         }
 
-        /* Responsive Adjustments */
+        /* --- Course Page Specific Styling (Similar to Project Grid) --- */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .course-card {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .course-card h3 {
+            color: #007bff;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .course-card p {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .course-card a.view-link {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .course-card a.view-link:hover {
+            background-color: #0056b3;
+        }
+
+
+        /* Responsive Adjustments for Header/Nav/Footer/Content */
         @media (max-width: 768px) {
             .main-header .header-content {
-                flex-direction: column;
-                align-items: flex-start;
+                flex-direction: column; align-items: flex-start;
             }
             .main-nav ul {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 15px;
-                width: 100%;
-                padding-top: 10px;
+                flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; padding-top: 10px;
             }
-            .logo {
-                margin-bottom: 10px;
-            }
+            .logo { margin-bottom: 10px; }
             .footer-content {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
+                flex-direction: column; align-items: center; text-align: center;
             }
-            .footer-section {
-                padding-right: 0;
-            }
+            .footer-section { padding-right: 0; }
             .footer-nav ul, .social-links ul {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 10px;
+                display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
             }
-            .social-links ul li {
-                margin: 0 8px;
+            .social-links ul li { margin: 0 8px; }
+            .page-content {
+                margin: 20px; padding: 25px; border-radius: 15px;
             }
-            .hero-section h1 {
-                font-size: 2.5em;
+            .course-grid {
+                grid-template-columns: 1fr; /* Stack courses on small screens */
             }
-            .hero-section p {
-                font-size: 1em;
-            }
-        }
-
-        /* --- Sign-Up Page Styles (integrated) --- */
-        /* Note: The 'body' styles from the original sign-up page (background, color, padding)
-           are NOT included here as they would conflict with your main portfolio page's body styles.
-           These styles are typically applied to a wrapper 'div' if the form is present on the page. */
-
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-            display: inline-block; /* Useful if a parent container doesn't use flex */
-            width: 350px;
-        }
-
-        h2 { /* This rule will now apply to all h2s unless more specific */
-            color: white; /* Will appear white on dark backgrounds, but contrast on light backgrounds */
-            margin-bottom: 15px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            outline: none;
-            background: rgba(249, 242, 242, 0.93); /* Very light background */
-            color: #333; /* Adjusted for readability on light background */
-        }
-
-        input::placeholder {
-            color: #777; /* Adjusted for readability */
-        }
-
-        button {
-            background: linear-gradient(90deg, #ff416c, #ff4b2b);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #ff4b2b, #ff416c);
-        }
-
-        .error-message {
-            color: red;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none; /* Hidden by default */
-        }
-
-        .login-section {
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        .login-btn {
-            display: inline-block;
-            margin-top: 10px;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-
-        .login-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #00f2fe, #4facfe);
         }
     </style>
 </head>
@@ -323,20 +256,21 @@
     {# --- Header / Navigation Bar --- #}
     <header class="main-header">
         <div class="header-content">
-           <div class="logo">
+            <div class="logo">
                 <a href="{% url 'portfolio' %}">
                     {% if user.is_authenticated %}
-                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                        {{ user.username }}
                     {% else %}
                         Your Name
                     {% endif %}
                 </a>
             </div>
-           <nav class="main-nav">
+            <nav class="main-nav">
                 <ul>
                     <li><a href="{% url 'portfolio' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'courses' %}">Courses</a></li> {# Added Courses link #}
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
@@ -350,26 +284,48 @@
             </nav>
         </div>
     </header>
-    
-    {# --- Hero Section for Homepage --- #}
-    
-    <div class="hero-section">
-        <h1>Welcome to My Portfolio!</h1>
-        <p>I'm a passionate developer creating awesome things. Explore my work and connect with me!</p>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'login' %}" class="hero-button">Get Started</a>
-        {% else %}
-            <a href="{% url 'dashboard' %}" class="hero-button">Go to Dashboard</a>
-        {% endif %}
+
+    {# --- Main Courses Content --- #}
+    <div class="page-content">
+        <h1>My Educational Courses</h1>
+        <p>Here's a list of courses I've completed or am currently taking to expand my knowledge and skills.</p>
+
+        <div class="course-grid">
+            <div class="course-card">
+                <h3>Course Title 1: Advanced Python Development</h3>
+                <p>Instructor: Jane Doe | Platform: Coursera</p>
+                <p>A comprehensive course covering advanced Python topics, including web frameworks, testing, and deployment.</p>
+                <a href="#" class="view-link">View Certificate</a>
+            </div>
+            <div class="course-card">
+                <h3>Course Title 2: Modern JavaScript & React</h3>
+                <p>Instructor: John Smith | Platform: Udemy</p>
+                <p>Deep dive into ES6+, React Hooks, context API, and building single-page applications.</p>
+                <a href="#" class="view-link">View Certificate</a>
+            </div>
+            <div class="course-card">
+                <h3>Course Title 3: Database Design & SQL</h3>
+                <p>Instructor: Alice Brown | Platform: edX</p>
+                <p>Fundamental concepts of relational databases, SQL queries, and database normalization.</p>
+                <a href="#" class="view-link">View Certificate</a>
+            </div>
+            <div class="course-card">
+                <h3>Course Title 4: Cloud Computing Fundamentals (AWS)</h3>
+                <p>Instructor: Bob White | Platform: LinkedIn Learning</p>
+                <p>Introduction to cloud services, EC2, S3, Lambda, and basic cloud architecture design on AWS.</p>
+                <a href="#" class="view-link">View Certificate</a>
+            </div>
+            {# Add more course cards as needed #}
+        </div>
+        <p style="margin-top: 30px; text-align: center;">These courses represent a selection of my continuous learning journey. Feel free to ask for more details!</p>
     </div>
-    */
 
     {# --- Footer --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
                 <h3>Your Name</h3>
-                <p>A brief description about you or your project. You can add more text here.</p>
+                <p>A brief description about you or your project.</p>
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
@@ -378,6 +334,7 @@
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'courses' %}">Courses</a></li> {# Added Courses link to footer #}
                 </ul>
             </div>
             <div class="footer-section footer-contact">
@@ -389,7 +346,7 @@
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have static files setup for images, or replace with icon fonts/SVGs #}
+                    {# Ensure you have social icon images in your static files (e.g., /static/images/linkedin-icon.png) #}
                     <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
                     <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
                     <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
