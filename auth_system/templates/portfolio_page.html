@@ -4,14 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Your Name - Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* --- General Body Styles --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            /* Updated background to be consistent if you want a similar look to the landing page */
             background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%); 
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
@@ -23,7 +22,7 @@
             justify-content: flex-start;
         }
 
-        /* --- Header/Navigation Styles --- */
+        /* --- Header/Navigation Styles (Consistent across pages) --- */
         .main-header {
             background-color: #333; /* Dark background */
             color: white;
@@ -76,7 +75,7 @@
             color: #007bff; /* Highlight on hover */
         }
 
-        /* --- Footer Styles --- */
+        /* --- Footer Styles (Consistent across pages) --- */
         .main-footer {
             background-color: #222; /* Darker background for footer */
             color: #ccc;
@@ -153,117 +152,100 @@
             font-size: 0.85em;
         }
 
-        /* --- Your existing Dashboard specific styling --- */
-        .content-area { /* Added a wrapper for your existing content */
+        /* --- Page Content Specific Styling --- */
+        .page-content {
             flex-grow: 1; /* Allows content to expand and push footer down */
-            padding: 20px;
+            padding: 40px 20px;
             max-width: 900px;
             width: 100%;
-            margin: 20px auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            margin: 30px auto;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            text-align: left;
         }
-
-        .dashboard-welcome { /* Adjusted existing div */
-            margin-bottom: 20px;
+        .page-content h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            text-align: center;
         }
-        .dashboard-welcome h1 {
-            color: #333; /* Default text color for body */
-            font-size: 2em;
+        .page-content p, .page-content ul {
+            line-height: 1.7;
+            font-size: 1.05em;
+            color: #555;
+            text-align: left;
+        }
+        .page-content ul {
+            padding-left: 20px;
+        }
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .project-card {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .project-card h3 {
+            color: #007bff;
+            font-size: 1.5em;
             margin-bottom: 10px;
         }
-        .dashboard-welcome p {
-            color: #555;
-            font-size: 1.1em;
+        .project-card p {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 15px;
         }
-
-
-        .container {
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        .project-card a.view-link {
             display: inline-block;
-            min-width: 350px;
-            margin-top: 0; /* No top margin here as it's within content-area */
-            color: white; /* Keep white for dashboard h1/p inside this container */
-        }
-
-        h1 {
-            color: white; /* Keep white for dashboard h1 inside .container */
-            font-size: 26px;
-            margin-bottom: 20px;
-        }
-        p {
-            color: white; /* Keep white for dashboard p inside .container */
-        }
-
-        /* Button Styling */
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            margin: 10px;
-            font-size: 18px;
-            font-weight: bold;
+            background-color: #007bff;
             color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
             text-decoration: none;
-            border-radius: 8px;
-            transition: 0.3s;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+        }
+        .project-card a.view-link:hover {
+            background-color: #0056b3;
         }
 
-        /* Chat Button */
-        .chat-btn {
-            background: linear-gradient(90deg, #ff416c, #ff4b2b);
-        }
-        .chat-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #ff4b2b, #ff416c);
-        }
 
-        /* Logout Button */
-        .logout-btn {
-            background: linear-gradient(90deg, #dc3545, #b31217);
-        }
-        .logout-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #b31217, #dc3545);
-        }
-
-        /* Responsive Adjustments for Header/Nav/Footer */
+        /* Responsive Adjustments for Header/Nav/Footer/Content */
         @media (max-width: 768px) {
             .main-header .header-content {
-                flex-direction: column;
-                align-items: flex-start;
+                flex-direction: column; align-items: flex-start;
             }
             .main-nav ul {
-                flex-wrap: wrap; 
-                justify-content: center;
-                gap: 15px; 
-                width: 100%; 
-                padding-top: 10px;
+                flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; padding-top: 10px;
             }
-            .logo {
-                margin-bottom: 10px;
-            }
+            .logo { margin-bottom: 10px; }
             .footer-content {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
+                flex-direction: column; align-items: center; text-align: center;
             }
-            .footer-section {
-                padding-right: 0;
-            }
+            .footer-section { padding-right: 0; }
             .footer-nav ul, .social-links ul {
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 10px;
+                display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
             }
-            .social-links ul li {
-                margin: 0 8px;
+            .social-links ul li { margin: 0 8px; }
+            .page-content {
+                margin: 20px; padding: 25px; border-radius: 15px;
+            }
+            .project-grid {
+                grid-template-columns: 1fr; /* Stack projects on small screens */
             }
         }
     </style>
@@ -273,40 +255,57 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                <a href="{% url 'portfolio' %}">Your Name</a> {# Link to your main landing page #}
-            </div>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li> 
-                    <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> 
-                    <li><a href="{% url 'courses' %}">Courses</a></li>
-                    <li><a href="{% url 'contact' %}">Contact</a></li> 
-                    <li><a href="{% url 'about' %}">About</a></li>   
-                    
-                    {# Display Login or Logout based on authentication status #}
-                    {% if user.is_authenticated %}
-                        <li><a href="{% url 'logout' %}">Logout</a></li>
-                    {% else %}
-                        <li><a href="{% url 'login' %}">Login</a></li>
-                    {% endif %}
-                </ul>
-            </nav>
+    <a href="{% url 'portfolio' %}">
+        {% if user.is_authenticated %}
+            {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+        {% else %}
+            Your Name
+        {% endif %}
+    </a>
+</div>
+           <nav class="main-nav">
+    <ul>
+        <li><a href="{% url 'portfolio' %}">Home</a></li>
+        <li><a href="{% url 'cv' %}">CV</a></li>
+        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+        <li><a href="{% url 'certificates' %}">Certificates</a></li>
+        <li><a href="{% url 'contact' %}">Contact</a></li>
+        <li><a href="{% url 'about' %}">About</a></li>
+
+        {% if user.is_authenticated %}
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+        {% else %}
+            <li><a href="{% url 'login' %}">Login</a></li>
+        {% endif %}
+    </ul>
+</nav>
         </div>
     </header>
 
-    {# --- Main Content Area --- #}
-    <div class="content-area">
-        <div class="dashboard-welcome">
-            <h1>Welcome to my experiment example Website 2026 </h1>
-            <p>We are demonstrating the Automation pipeline.</p>
-        </div>
+    {# --- Main Portfolio Content --- #}
+    <div class="page-content">
+        <h1>My Projects Portfolio</h1>
+        <p>Explore a selection of my recent projects and case studies.</p>
 
-        <div class="container">
-            <h1>Welcome, {{ user.username }}! 🎉</h1>
-            <a href="https://linga-ai-solutions.streamlit.app/" class="btn chat-btn">💬 Chat with Me</a>
-            <a href="{% url 'logout' %}" class="btn logout-btn"> Logout</a>
+        <div class="project-grid">
+            <div class="project-card">
+                <h3>Project Title 1</h3>
+                <p>Brief description of Project 1, highlighting technologies used and key features.</p>
+                <a href="#" class="view-link">View Details</a>
+            </div>
+            <div class="project-card">
+                <h3>Project Title 2</h3>
+                <p>Brief description of Project 2, highlighting technologies used and key features.</p>
+                <a href="#" class="view-link">View Details</a>
+            </div>
+            <div class="project-card">
+                <h3>Project Title 3</h3>
+                <p>Brief description of Project 3, highlighting technologies used and key features.</p>
+                <a href="#" class="view-link">View Details</a>
+            </div>
+            {# Add more project cards as needed #}
         </div>
+        <p style="margin-top: 30px; text-align: center;">For more projects, please <a href="{% url 'contact' %}">contact me</a> or visit my GitHub.</p>
     </div>
 
     {# --- Footer --- #}
@@ -314,7 +313,7 @@
         <div class="footer-content">
             <div class="footer-section footer-about">
                 <h3>Your Name</h3>
-                <p>A brief description about you or your project. You can add more text here.</p>
+                <p>A brief description about you or your project.</p>
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
@@ -334,6 +333,7 @@
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
+                    {# Ensure you have social icon images in your static files (e.g., /static/images/linkedin-icon.png) #}
                     <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
                     <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
                     <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>

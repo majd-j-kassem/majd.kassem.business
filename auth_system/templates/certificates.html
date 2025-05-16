@@ -1,0 +1,201 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Certificates</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Consistent Styles from other templates --- */
+        body { font-family: 'Poppins', sans-serif; text-align: center; background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%); margin: 0; padding-top: 70px; color: #333; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; }
+        .main-header { background-color: #333; color: white; padding: 15px 0; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .logo a { color: white; text-decoration: none; font-weight: 700; font-size: 1.8em; transition: color 0.3s ease; }
+        .logo a:hover { color: #007bff; }
+        .main-nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 25px; }
+        .main-nav ul li a { color: white; text-decoration: none; font-weight: 500; font-size: 1.1em; transition: color 0.3s ease; }
+        .main-nav ul li a:hover { color: #007bff; }
+        .main-footer { background-color: #222; color: #ccc; padding: 30px 20px; width: 100%; margin-top: auto; box-shadow: 0 -2px 10px rgba(0,0,0,0.15); text-align: left; }
+        .footer-content { display: flex; flex-wrap: wrap; justify-content: space-between; max-width: 1200px; margin: 0 auto; }
+        .footer-section { flex: 1; min-width: 250px; margin-bottom: 20px; padding-right: 20px; }
+        .footer-section h3 { color: white; margin-bottom: 15px; font-size: 1.2em; }
+        .footer-section p, .footer-section a { color: #ccc; text-decoration: none; font-size: 0.95em; line-height: 1.6; }
+        .footer-section a:hover { color: #007bff; }
+        .footer-nav ul, .social-links ul { list-style: none; padding: 0; margin: 0; }
+        .footer-nav ul li, .social-links ul li { margin-bottom: 10px; }
+        .social-links ul li { display: inline-block; margin-right: 15px; }
+        .social-links img { width: 24px; height: 24px; vertical-align: middle; transition: transform 0.3s ease; }
+        .social-links img:hover { transform: scale(1.1); }
+        .footer-bottom { text-align: center; padding-top: 20px; border-top: 1px solid #444; margin-top: 20px; color: #aaa; font-size: 0.85em; }
+
+        /* --- Page Content Specific Styling --- */
+        .page-content {
+            flex-grow: 1; /* Allows content to expand and push footer down */
+            padding: 40px 20px;
+            max-width: 900px;
+            width: 100%;
+            margin: 30px auto;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            text-align: left;
+        }
+        .page-content h1 {
+            color: #333;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .certificate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        .certificate-card {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .certificate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .certificate-card h3 {
+            color: #007bff;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        .certificate-card p {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .certificate-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .main-header .header-content { flex-direction: column; align-items: flex-start; }
+            .main-nav ul { flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; padding-top: 10px; }
+            .logo { margin-bottom: 10px; }
+            .footer-content { flex-direction: column; align-items: center; text-align: center; }
+            .footer-section { padding-right: 0; }
+            .footer-nav ul, .social-links ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+            .social-links ul li { margin: 0 8px; }
+            .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
+            .certificate-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    {# --- Header / Navigation Bar --- #}
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo">
+    <a href="{% url 'portfolio' %}">
+        {% if user.is_authenticated %}
+            {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+        {% else %}
+            Your Name
+        {% endif %}
+    </a>
+</div>
+            <nav class="main-nav">
+    <ul>
+        <li><a href="{% url 'portfolio' %}">Home</a></li>
+        <li><a href="{% url 'cv' %}">CV</a></li>
+        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+        <li><a href="{% url 'certificates' %}">Certificates</a></li>
+        <li><a href="{% url 'contact' %}">Contact</a></li>
+        <li><a href="{% url 'about' %}">About</a></li>
+
+        {% if user.is_authenticated %}
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+        {% else %}
+            <li><a href="{% url 'login' %}">Login</a></li>
+        {% endif %}
+    </ul>
+</nav>
+        </div>
+    </header>
+
+    {# --- Main Certificates Content --- #}
+    <div class="page-content">
+        <h1>My Certifications</h1>
+        <p>Here you can find a list of my professional certifications and completed courses.</p>
+
+        <div class="certificate-grid">
+            <div class="certificate-card">
+                <img src="{% static 'images/certificate_placeholder.png' %}" alt="Certificate 1">
+                <h3>Certificate Title 1</h3>
+                <p>Issued by: Institution Name</p>
+                <p>Date: Month, Year</p>
+                <a href="#" class="view-link">View Credential</a>
+            </div>
+            <div class="certificate-card">
+                <img src="{% static 'images/certificate_placeholder.png' %}" alt="Certificate 2">
+                <h3>Certificate Title 2</h3>
+                <p>Issued by: Institution Name</p>
+                <p>Date: Month, Year</p>
+                <a href="#" class="view-link">View Credential</a>
+            </div>
+            <div class="certificate-card">
+                <img src="{% static 'images/certificate_placeholder.png' %}" alt="Certificate 3">
+                <h3>Certificate Title 3</h3>
+                <p>Issued by: Institution Name</p>
+                <p>Date: Month, Year</p>
+                <a href="#" class="view-link">View Credential</a>
+            </div>
+            {# Add more certificate cards as needed #}
+        </div>
+        <p style="margin-top: 30px; text-align: center;">These are some of the key certifications that validate my skills.</p>
+    </div>
+
+    {# --- Footer --- #}
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section footer-about">
+                <h3>Your Name</h3>
+                <p>A brief description about you or your project.</p>
+            </div>
+            <div class="footer-section footer-nav">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li> {# Updated link text #}
+                </ul>
+            </div>
+            <div class="footer-section footer-contact">
+                <h3>Contact</h3>
+                <p>Email: your.email@example.com</p>
+                <p>Phone: +123 456 7890</p>
+                <p>Location: Your City, Country</p>
+            </div>
+            <div class="footer-section footer-social">
+                <h3>Follow Me</h3>
+                <ul class="social-links">
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Your Name. All rights reserved.
+        </div>
+    </footer>
+</body>
+</html>
