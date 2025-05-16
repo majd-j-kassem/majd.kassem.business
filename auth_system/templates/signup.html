@@ -1,9 +1,11 @@
+{% load static %} {# Added load static tag #}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* General Styles */
         body {
@@ -38,7 +40,13 @@
             gap: 15px;
         }
 
-        input, select, textarea {
+        /* Style for form fields (inputs, select, textarea, file) */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="file"], /* Added style for file input */
+        select,
+        textarea {
             width: 100%;
             padding: 10px;
             border: none;
@@ -46,11 +54,19 @@
             font-size: 16px;
             outline: none;
             background: rgba(249, 242, 242, 0.93);
-            color: white;
+            color: #333; /* Changed text color to dark for readability on light input background */
         }
 
-        input::placeholder {
-            color: rgba(253, 246, 246, 0.94);
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(51, 51, 51, 0.7); /* Darker placeholder text for readability */
+        }
+
+        /* Style for file input specifically */
+        input[type="file"] {
+             padding: 10px 15px; /* Adjust padding for file input */
+             background-color: rgba(249, 242, 242, 0.8);
+             cursor: pointer;
         }
 
         /* Button Styles */
@@ -73,10 +89,19 @@
 
         /* Password Error Message */
         .error-message {
-            color: red;
+            color: #ff9999; /* Lighter red for readability */
             font-size: 14px;
             margin-top: 5px;
             display: none; /* Hidden by default */
+        }
+
+         /* Django form error list style */
+        .errorlist {
+            color: #ff9999; /* Lighter red for readability */
+            font-size: 0.9em;
+            margin-top: 5px;
+            list-style: none;
+            padding: 0;
         }
 
         /* Login Section */
@@ -106,26 +131,69 @@
 <body>
     <div class="container">
         <h2>🚀 Create Your Account</h2>
-        <form method="post">
+        {# IMPORTANT: Add enctype="multipart/form-data" for file uploads #}
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="username">Username</label>
+
+            {# Render form fields manually for more control #}
+            <label for="{{ form.username.id_for_label }}">Username</label>
             {{ form.username }}
+            {% if form.username.errors %}
+                <ul class="errorlist">{% for error in form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
 
-            <label for="email">Email</label>
+            <label for="{{ form.email.id_for_label }}">Email</label>
             {{ form.email }}
+             {% if form.email.errors %}
+                <ul class="errorlist">{% for error in form.email.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
 
-            <label for="password1">Password</label>
+            {# Added First Name and Last Name fields (assuming you added them to your form Meta fields) #}
+            <label for="{{ form.first_name.id_for_label }}">First Name</label>
+            {{ form.first_name }}
+             {% if form.first_name.errors %}
+                <ul class="errorlist">{% for error in form.first_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+
+            <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+            {{ form.last_name }}
+             {% if form.last_name.errors %}
+                <ul class="errorlist">{% for error in form.last_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+
+
+            <label for="{{ form.password1.id_for_label }}">Password</label>
             {{ form.password1 }}
             <p id="password-error" class="error-message">⚠️ Password must be at least 8 characters and not too common.</p>
+             {% if form.password1.errors %}
+                <ul class="errorlist">{% for error in form.password1.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
 
-            <label for="password2">Confirm Password</label>
+            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
             {{ form.password2 }}
             <p id="confirm-error" class="error-message">⚠️ Passwords do not match.</p>
+             {% if form.password2.errors %}
+                <ul class="errorlist">{% for error in form.password2.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+
+            {# Add the new profile picture field #}
+            <label for="{{ form.profile_picture.id_for_label }}">{{ form.profile_picture.label }}</label>
+            {{ form.profile_picture }}
+             {% if form.profile_picture.errors %}
+                <ul class="errorlist">{% for error in form.profile_picture.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+
+             {# Add the new bio field #}
+            <label for="{{ form.bio.id_for_label }}">{{ form.bio.label }}</label>
+            {{ form.bio }}
+             {% if form.bio.errors %}
+                <ul class="errorlist">{% for error in form.bio.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+
 
             <button type="submit">Sign Up</button>
         </form>
 
-        <!-- Login Section -->
         <div class="login-section">
             <p>Already have an account?</p>
             <a href="{% url 'login' %}" class="login-btn">Login</a>

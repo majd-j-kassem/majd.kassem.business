@@ -70,7 +70,7 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS_STRING = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STRING.split(',') if host.strip()]
 
-
+BASE_DIR = Path(__file__).resolve().parent.parent
 # Application definition
 
 INSTALLED_APPS = [
@@ -83,14 +83,15 @@ INSTALLED_APPS = [
     'accounts',
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Add DRF's SessionAuthentication middleware if you are using it
@@ -102,13 +103,21 @@ ROOT_URLCONF = 'auth_system.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        # DIRS is where Django looks for project-level templates
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        # MEDIA_ROOT and MEDIA_URL should NOT be in here
+        # Remove these lines if they are still present inside this dictionary:
+        # 'MEDIA_ROOT' :[os.path.join(BASE_DIR, 'media')],
+        # 'MEDIA_URL' : '/media/',
+        'APP_DIRS': True, # This tells Django to look for a 'templates' subdirectory inside each app
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug', # Good to keep debug context processor
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                # Add the media context processor to make MEDIA_URL available in templates
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -118,13 +127,19 @@ WSGI_APPLICATION = 'auth_system.wsgi.application'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        # You might keep SessionAuthentication for browsable API or if you mix web and API
-        # 'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated', # Default to requiring authentication
-    ]
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly'
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', # Add this line
+    }
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Your API Documentation',
+    'DESCRIPTION': 'API description',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -176,7 +191,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 # --- ADDITION for STATIC_ROOT ---
 # Define the directory where static files will be collected for production
 # This is where 'python manage.py collectstatic' will put all static files.
@@ -185,29 +202,49 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # --- ADDITION for REST_FRAMEWORK settings ---
 # Configure DRF authentication and permissions
+
+
 REST_FRAMEWORK = {
+
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication', # Uncomment if you need session auth for APIs
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication'
+
     ],
+
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated', # Default to requiring authentication for APIs
-    ]
-}
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication', # Keep if you need session auth too
+
+    'rest_framework.permissions.IsAuthenticatedOrReadOnly'
+
     ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ]
+
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', # Add this line
+
 }
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# --- MEDIA FILES SETTINGS ---
+# Directory where uploaded media files will be stored
+# This should be a string path, NOT a list or inside TEMPLATES
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# URL that will be used to access the media from the browser
+# This should be a string URL, NOT inside TEMPLATES
+MEDIA_URL = '/media/'
+
+# Default URL to redirect to after login (e.g., dashboard)
+LOGIN_REDIRECT_URL = 'dashboard'
+
+# Default URL to redirect to after logout
+LOGOUT_REDIRECT_URL = 'portfolio'
+
+# Optional: Set to False to disable persistent messages for debugging
+# MESSAGES_DEBUG = True # <-- If this is True, set it to False or remove the line
 
 # --- ADDITION for production-specific security settings (optional, but good practice) ---
 # These settings are often enabled when DEBUG is False

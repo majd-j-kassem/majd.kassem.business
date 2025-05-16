@@ -1,32 +1,28 @@
-"""
-URL configuration for auth_system project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-
+# auth_system/auth_system/urls.py (PROJECT-LEVEL URLS)
 from django.contrib import admin
 from django.urls import path, include
-from accounts import views
+from django.conf import settings 
+from django.conf.urls.static import static 
 
-
-
+# API Documentation URLs (These are typically kept in the project's urls.py)
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
-   
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls')),
+
+    # Include all URL patterns from your 'accounts' app
+    # This single line will now handle all your main navigation,
+    # authentication, and profile URLs defined within 'accounts/urls.py'.
+    path('', include('accounts.urls')),
+
+    # API Documentation URLs
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+
+    # Main API URLs (Keep this if 'accounts.api_urls' defines your REST API endpoints)
     path('api/', include('accounts.api_urls')),
-    path('', views.login_view, name='home'),
     
+
 ]
+if settings.DEBUG:
+        urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
