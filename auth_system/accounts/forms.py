@@ -77,3 +77,29 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['profile_picture', 'bio']
+        
+# --- Contact Form ---
+class ContactForm(forms.Form):
+    """
+    Form for users to submit contact messages.
+    """
+    name = forms.CharField(
+        label='Your Name',
+        max_length=100,
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your name'})
+    )
+    email = forms.EmailField(
+        label='Your Email',
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email address'})
+    )
+    phone = forms.CharField(
+        label='Your Phone Number (Optional)',
+        max_length=20,
+        required=False, # Make phone number optional
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your phone number (optional)'})
+    )
+    message = forms.CharField(
+        label='Your Message',
+        widget=forms.Textarea(attrs={'placeholder': 'Enter your message', 'rows': 6})
+    )
+

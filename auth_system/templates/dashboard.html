@@ -11,36 +11,37 @@
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            /* Updated background to be consistent if you want a similar look to the landing page */
-            background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%); 
+            background: linear-gradient(135deg, #764ba2, #764ba2);
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: #333; /* Default text color for body */
+            color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
+            line-height: 1.6; /* Improved readability */
         }
 
         /* --- Header/Navigation Styles --- */
         .main-header {
-            background-color: #333; /* Dark background */
+            background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
+            backdrop-filter: blur(8px);
             color: white;
             padding: 15px 0;
-            position: fixed; /* Makes header stick to top */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000; /* Ensures it's above other content */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15); /* More prominent shadow */
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px; /* Max width for your content */
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -53,7 +54,7 @@
             transition: color 0.3s ease;
         }
         .logo a:hover {
-            color: #007bff; /* Highlight on hover */
+            color: #007bff;
         }
 
         .main-nav ul {
@@ -61,7 +62,7 @@
             margin: 0;
             padding: 0;
             display: flex;
-            gap: 25px; /* Spacing between menu items */
+            gap: 25px;
         }
 
         .main-nav ul li a {
@@ -73,38 +74,39 @@
         }
 
         .main-nav ul li a:hover {
-            color: #007bff; /* Highlight on hover */
+            color: #007bff;
         }
 
         /* --- Footer Styles --- */
         .main-footer {
-            background-color: #222; /* Darker background for footer */
+            background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
+            backdrop-filter: blur(8px);
             color: #ccc;
-            padding: 30px 20px;
+            padding: 25px 20px; /* Reduced overall padding */
             width: 100%;
-            margin-top: auto; /* Pushes footer to the bottom */
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
-            text-align: left; /* Align content to the left within the footer */
+            margin-top: auto;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+            text-align: left;
         }
 
         .footer-content {
             display: flex;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            flex-wrap: wrap;
             justify-content: space-between;
             max-width: 1200px;
             margin: 0 auto;
         }
 
         .footer-section {
-            flex: 1; /* Each section takes equal space */
-            min-width: 250px; /* Minimum width before wrapping */
-            margin-bottom: 20px; /* Space between sections on wrap */
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 15px; /* Reduced space between sections */
             padding-right: 20px;
         }
 
         .footer-section h3 {
             color: white;
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Reduced space below headings */
             font-size: 1.2em;
         }
 
@@ -126,16 +128,16 @@
         }
 
         .footer-nav ul li, .social-links ul li {
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* Reduced space between list items */
         }
 
         .social-links ul li {
-            display: inline-block; /* Social links inline */
+            display: inline-block;
             margin-right: 15px;
         }
 
         .social-links img {
-            width: 24px; /* Size of social icons */
+            width: 24px;
             height: 24px;
             vertical-align: middle;
             transition: transform 0.3s ease;
@@ -146,125 +148,102 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-            margin-top: 20px;
+            padding-top: 15px; /* Reduced padding above copyright */
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin-top: 15px; /* Reduced margin above copyright */
             color: #aaa;
             font-size: 0.85em;
         }
 
-        /* --- Your existing Dashboard specific styling --- */
-        .content-area { /* Added a wrapper for your existing content */
-            flex-grow: 1; /* Allows content to expand and push footer down */
-            padding: 20px;
-            max-width: 900px;
+        /* --- Page Content Specific Styling (for Dashboard) --- */
+        .page-content {
+            flex-grow: 1;
+            padding: 40px 20px;
+            max-width: 800px; /* Adjust as needed */
             width: 100%;
-            margin: 20px auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dashboard-welcome { /* Adjusted existing div */
-            margin-bottom: 20px;
-        }
-        .dashboard-welcome h1 {
-            color: #333; /* Default text color for body */
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        .dashboard-welcome p {
-            color: #555;
-            font-size: 1.1em;
-        }
-
-
-        .container {
-            background: rgba(255, 255, 255, 0.2);
+            margin: 30px auto;
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-            display: inline-block;
-            min-width: 350px;
-            margin-top: 0; /* No top margin here as it's within content-area */
-            color: white; /* Keep white for dashboard h1/p inside this container */
-        }
-
-        h1 {
-            color: white; /* Keep white for dashboard h1 inside .container */
-            font-size: 26px;
-            margin-bottom: 20px;
-        }
-        p {
-            color: white; /* Keep white for dashboard p inside .container */
-        }
-
-        /* Button Styling */
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            margin: 10px;
-            font-size: 18px;
-            font-weight: bold;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            text-align: center; /* Center content in the box */
             color: white;
-            text-decoration: none;
+        }
+        .page-content h1 {
+            color: white;
+            font-size: 2.8em; /* Larger heading */
+            margin-bottom: 20px;
+            font-weight: 700; /* Bolder heading */
+        }
+         .page-content p {
+            line-height: 1.7;
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 25px;
+        }
+
+        .dashboard-links {
+            margin-top: 30px;
+        }
+
+        .dashboard-links a {
+            display: inline-block;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 12px 25px;
             border-radius: 8px;
-            transition: 0.3s;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin: 10px; /* Space between buttons */
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
         }
 
-        /* Chat Button */
-        .chat-btn {
-            background: linear-gradient(90deg, #ff416c, #ff4b2b);
-        }
-        .chat-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #ff4b2b, #ff416c);
+        .dashboard-links a:hover {
+             background: linear-gradient(90deg, #00f2fe, #4facfe);
+             transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,242,254,0.4);
         }
 
-        /* Logout Button */
-        .logout-btn {
-            background: linear-gradient(90deg, #dc3545, #b31217);
-        }
-        .logout-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #b31217, #dc3545);
-        }
 
-        /* Responsive Adjustments for Header/Nav/Footer */
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
+            body { padding-top: 60px; }
+            .main-header { padding: 10px 0; }
             .main-header .header-content {
                 flex-direction: column;
                 align-items: flex-start;
             }
             .main-nav ul {
-                flex-wrap: wrap; 
+                flex-wrap: wrap;
                 justify-content: center;
-                gap: 15px; 
-                width: 100%; 
+                gap: 15px;
+                width: 100%;
                 padding-top: 10px;
             }
-            .logo {
-                margin-bottom: 10px;
-            }
+            .logo { margin-bottom: 10px; }
             .footer-content {
                 flex-direction: column;
                 align-items: center;
                 text-align: center;
             }
-            .footer-section {
-                padding-right: 0;
-            }
+            .footer-section { padding-right: 0; }
             .footer-nav ul, .social-links ul {
                 display: flex;
                 flex-wrap: wrap;
                 justify-content: center;
                 gap: 10px;
             }
-            .social-links ul li {
-                margin: 0 8px;
-            }
+            .social-links ul li { margin: 0 8px; }
+            .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
+             .page-content h1 { font-size: 2em; }
+             .page-content p { font-size: 1em; }
+             .dashboard-links a {
+                display: block; /* Stack buttons on small screens */
+                margin: 10px auto; /* Center stacked buttons */
+                width: 80%; /* Make stacked buttons wider */
+             }
         }
     </style>
 </head>
@@ -273,21 +252,32 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                <a href="{% url 'portfolio' %}">Your Name</a> {# Link to your main landing page #}
+                {# Link to the homepage using the 'index' URL name #}
+                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'index' %}{% endif %}">
+                    {% if user.is_authenticated %}
+                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                    {% else %}
+                        Your Name {# Replace with your actual name #}
+                    {% endif %}
+                </a>
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li> 
+                     {# Link to the homepage using the 'index' URL name #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> 
-                    <li><a href="{% url 'courses' %}">Courses</a></li>
-                    <li><a href="{% url 'contact' %}">Contact</a></li> 
-                    <li><a href="{% url 'about' %}">About</a></li>   
-                    
-                    {# Display Login or Logout based on authentication status #}
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
+
                     {% if user.is_authenticated %}
+                        {# Link to the logout view #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
+                        {# Link to the profile edit view #}
+                        <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     {% else %}
+                        {# Link to the login view #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -295,54 +285,56 @@
         </div>
     </header>
 
-    {# --- Main Content Area --- #}
-    <div class="content-area">
-        <div class="dashboard-welcome">
-            <h1>Welcome to my experiment example Website 2026 </h1>
-            <p>We are demonstrating the Automation pipeline.</p>
+    {# --- Main Dashboard Content --- #}
+    <div class="page-content">
+        <h1>Welcome to Your Dashboard, {{ user.username }}!</h1> {# Welcome message for the logged-in user #}
+        <p>This is your personalized dashboard where you can manage your profile and access other sections of the site.</p>
+
+        <div class="dashboard-links">
+            {# Links to other authenticated user pages #}
+            <a href="{% url 'profile_edit' %}">Edit Profile</a>
+            {# Add other links relevant to a dashboard here, e.g., #}
+            {# <a href="{% url 'my_projects' %}">My Projects</a> #}
+            {# <a href="{% url 'my_courses' %}">My Courses</a> #}
         </div>
 
-        <div class="container">
-            <h1>Welcome, {{ user.username }}! 🎉</h1>
-            <a href="https://linga-ai-solutions.streamlit.app/" class="btn chat-btn">💬 Chat with Me</a>
-            <a href="{% url 'logout' %}" class="btn logout-btn"> Logout</a>
-        </div>
     </div>
 
     {# --- Footer --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3>
-                <p>A brief description about you or your project. You can add more text here.</p>
+                <h3>Your Name</h3> {# Replace with your name #}
+                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    {# Ensure these links use valid URL names #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
                 </ul>
             </div>
             <div class="footer-section footer-contact">
                 <h3>Contact</h3>
-                <p>Email: your.email@example.com</p>
-                <p>Phone: +123 456 7890</p>
-                <p>Location: Your City, Country</p>
+                <p>Email: your.email@example.com</p> {# Replace with your email #}
+                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
+                <p>Location: Your City, Country</p> {# Replace with your location #}
             </div>
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
-                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
-                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
-                    {# Add more social links as needed #}
+                    {# Ensure you have these icons in your static/images/ directory #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 Your Name. All rights reserved.
+            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
         </div>
     </footer>
 </body>

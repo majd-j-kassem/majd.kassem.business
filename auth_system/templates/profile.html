@@ -20,6 +20,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
+            line-height: 1.6; /* Improved readability */
         }
 
         /* --- Header/Navigation Styles --- */
@@ -174,46 +175,62 @@
             font-size: 2.2em;
             margin-bottom: 25px;
             text-align: center;
+            font-weight: 600; /* Make heading a bit bolder */
         }
         .profile-form-container { /* Wrapper for the forms */
             max-width: 500px;
             margin: 0 auto;
         }
         .profile-form-group { /* Style for each form field row */
-            margin-bottom: 15px;
+            margin-bottom: 20px; /* Increased space between form groups */
         }
         .profile-form-group label {
             display: block;
             text-align: left;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 8px; /* Increased space below labels */
+            font-weight: 500; /* Make labels slightly bolder */
+            color: rgba(255, 255, 255, 0.95); /* Slightly brighter label color */
+            font-size: 1.05em; /* Slightly larger label font size */
         }
+        /* Combined styling for text inputs, email, file input, and textarea */
         .profile-form-group input[type="text"],
         .profile-form-group input[type="email"],
-        .profile-form-group input[type="file"] { /* Added file input */
+        .profile-form-group input[type="file"],
+        .profile-form-group textarea {
             width: 100%;
-            padding: 12px 15px;
-            border: none;
+            padding: 12px 15px; /* Consistent padding */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Added subtle border */
             border-radius: 8px;
             font-family: 'Poppins', sans-serif;
             font-size: 1em;
-            box-sizing: border-box;
+            box-sizing: border-box; /* Include padding and border in element's total width */
             outline: none;
             background: rgba(249, 242, 242, 0.93);
             color: #333;
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
-         /* Style for file input specifically */
+         /* Style for file input specifically - adjust padding slightly if needed for visual alignment */
         .profile-form-group input[type="file"] {
-             padding: 10px 15px; /* Adjust padding for file input */
+             /* You might slightly adjust padding here if needed for perfect visual alignment */
+             /* padding: 12px 15px; */ /* Keeping consistent with others */
              background-color: rgba(249, 242, 242, 0.8);
              cursor: pointer;
         }
+        /* Style for textarea specifically */
+        .profile-form-group textarea {
+            width: 100%; /* Explicitly set width */
+            box-sizing: border-box; /* Explicitly set box-sizing */
+            resize: vertical; /* Allow vertical resizing but prevent horizontal */
+            min-height: 100px; /* Give it a default height */
+        }
+
         .profile-form-group input[type="text"]:focus,
-        .profile-form-group input[type="email"]:focus {
+        .profile-form-group input[type="email"]:focus,
+        .profile-form-group input[type="file"]:focus,
+        .profile-form-group textarea:focus {
             background-color: white;
             box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+            border-color: #007bff; /* Highlight border on focus */
             outline: none;
         }
 
@@ -317,27 +334,32 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'portfolio' %}{% endif %}">
+                {# Link to the homepage using the 'index' URL name #}
+                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
                         {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
                     {% else %}
-                        Your Name
+                        Your Name {# Replace with your actual name #}
                     {% endif %}
                 </a>
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    {# Link to the homepage using the 'index' URL name #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
+                        {# Link to the logout view #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
-                        <li><a href="{% url 'profile_edit' %}">Profile</a></li> {# Link to the new profile page #}
+                        {# Link to the profile edit view #}
+                        <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     {% else %}
+                        {# Link to the login view #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -373,8 +395,9 @@
                     <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}'s Profile Picture" class="profile-image">
                 {% else %}
                     {# Display a default placeholder if no image is uploaded #}
-                    {# Ensure you have a default.jpg in your static/images/profiles/ directory or adjust the path #}
-                    <img src="{% static 'images/profiles/default.jpg' %}" alt="Default Profile Picture" class="profile-image">
+                    {# Ensure you have a default.jpg in your media/profiles/ directory #}
+                    {# Use MEDIA_URL to construct the path to the default image #}
+                    <img src="{{ MEDIA_URL }}profiles/default.jpg" alt="Default Profile Picture" class="profile-image">
                 {% endif %}
                 <p>Current Profile Picture</p>
             </div>
@@ -400,7 +423,7 @@
             {% for field in profile_form %}
                  <div class="profile-form-group">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }} {# This will render the file input for profile_picture #}
+                    {{ field }} {# This will render the file input for profile_picture and the textarea for bio #}
                      {% if field.help_text %}
                         <small style="color: rgba(255,255,255,0.7); margin-top: 5px; display: block;">{{ field.help_text }}</small>
                     {% endif %}
@@ -421,13 +444,14 @@
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3>
-                <p>A brief description about you or your project. You can add more text here.</p>
+                <h3>Your Name</h3> {# Replace with your name #}
+                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    {# Ensure these links use valid URL names #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
@@ -435,21 +459,22 @@
             </div>
             <div class="footer-section footer-contact">
                 <h3>Contact</h3>
-                <p>Email: your.email@example.com</p>
-                <p>Phone: +123 456 7890</p>
-                <p>Location: Your City, Country</p>
+                <p>Email: your.email@example.com</p> {# Replace with your email #}
+                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
+                <p>Location: Your City, Country</p> {# Replace with your location #}
             </div>
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
-                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
-                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
+                    {# Ensure you have these icons in your static/images/ directory #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 Your Name. All rights reserved.
+            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
         </div>
     </footer>
 </body>

@@ -4,7 +4,6 @@ from . import views # This import is CORRECT here because views.py is in the sam
 
 urlpatterns = [
     # Core Landing Page (your homepage)
-    path('', views.portfolio_view, name='portfolio'),
 
     # Main Navigation Menu Items
     path('cv/', views.cv_view, name='cv'),
@@ -13,6 +12,7 @@ urlpatterns = [
     path('contact/', views.contact_view, name='contact'),
     path('about/', views.about_view, name='about'),
     path('courses/', views.course_view, name='courses'),
+    path('', views.index_view, name='index'),
     # Authentication & User Management URLs
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),

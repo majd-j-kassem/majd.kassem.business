@@ -190,8 +190,8 @@
             overflow: hidden; /* Hide overflowing image corners */
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
+            display: flex; /* Use Flexbox */
+            flex-direction: column; /* Stack items vertically */
         }
 
         .portfolio-item:hover {
@@ -208,7 +208,9 @@
 
         .portfolio-item-content {
             padding: 20px;
-            flex-grow: 1; /* Allow content area to grow */
+            flex-grow: 1; /* Allow content area to grow and take available space */
+            display: flex; /* Use Flexbox for content to align link */
+            flex-direction: column; /* Stack content vertically */
         }
 
         .portfolio-item-content h3 {
@@ -224,6 +226,7 @@
             font-size: 1em;
             line-height: 1.6;
             margin-bottom: 15px;
+            flex-grow: 1; /* Allow paragraph to take up space */
         }
 
         .portfolio-item-link {
@@ -235,6 +238,8 @@
             text-decoration: none;
             font-weight: 500;
             transition: background 0.3s ease;
+            margin-top: auto; /* Pushes the link to the bottom */
+            align-self: flex-start; /* Align the link to the start within the flex container */
         }
 
         .portfolio-item-link:hover {
@@ -295,7 +300,8 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'portfolio' %}{% endif %}">
+                {# Link to the homepage using the 'index' URL name #}
+                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
                         {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
                     {% else %}
@@ -305,17 +311,22 @@
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li> {# Link to this page #}
+                    {# Link to the homepage using the 'index' URL name #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    {# Link to this dedicated portfolio page #}
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
+                        {# Link to the logout view #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
+                        {# Link to the profile edit view #}
                         <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     {% else %}
+                        {# Link to the login view #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -377,9 +388,10 @@
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    {# Ensure these links use valid URL names #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                 </ul>
             </div>
@@ -392,7 +404,7 @@
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have these icons in your static/images/ directory #}
+                    {# Ensure you have these icons in your static/images/directory #}
                     <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
                     <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
                     <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}

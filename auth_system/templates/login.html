@@ -4,42 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Your Account</title>
+    <title>Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- General Body Styles (ADOPTED FROM signup.html's unique background) --- */
+        /* --- General Body Styles --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #764ba2, #764ba2); /* Purple gradient from signup.html */
+            background: linear-gradient(135deg, #764ba2, #764ba2);
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: white; /* Default text color for body, matches signup.html */
+            color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
+            line-height: 1.6; /* Improved readability */
         }
 
-        /* --- Header/Navigation Styles (CONSISTENT WITH OTHER PAGES) --- */
+        /* --- Header/Navigation Styles --- */
         .main-header {
-            background-color: #333; /* Dark background */
+            background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
+            backdrop-filter: blur(8px);
             color: white;
             padding: 15px 0;
-            position: fixed; /* Makes header stick to top */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000; /* Ensures it's above other content */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15); /* More prominent shadow */
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px; /* Max width for your content */
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -52,7 +54,7 @@
             transition: color 0.3s ease;
         }
         .logo a:hover {
-            color: #007bff; /* Highlight on hover */
+            color: #007bff;
         }
 
         .main-nav ul {
@@ -60,7 +62,7 @@
             margin: 0;
             padding: 0;
             display: flex;
-            gap: 25px; /* Spacing between menu items */
+            gap: 25px;
         }
 
         .main-nav ul li a {
@@ -72,38 +74,39 @@
         }
 
         .main-nav ul li a:hover {
-            color: #007bff; /* Highlight on hover */
+            color: #007bff;
         }
 
-        /* --- Footer Styles (CONSISTENT WITH OTHER PAGES) --- */
+        /* --- Footer Styles --- */
         .main-footer {
-            background-color: #222; /* Darker background for footer */
+            background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
+            backdrop-filter: blur(8px);
             color: #ccc;
-            padding: 30px 20px;
+            padding: 25px 20px; /* Reduced overall padding */
             width: 100%;
-            margin-top: auto; /* Pushes footer to the bottom */
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
-            text-align: left; /* Align content to the left within the footer */
+            margin-top: auto;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+            text-align: left;
         }
 
         .footer-content {
             display: flex;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            flex-wrap: wrap;
             justify-content: space-between;
             max-width: 1200px;
             margin: 0 auto;
         }
 
         .footer-section {
-            flex: 1; /* Each section takes equal space */
-            min-width: 250px; /* Minimum width before wrapping */
-            margin-bottom: 20px; /* Space between sections on wrap */
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 15px; /* Reduced space between sections */
             padding-right: 20px;
         }
 
         .footer-section h3 {
             color: white;
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Reduced space below headings */
             font-size: 1.2em;
         }
 
@@ -125,16 +128,16 @@
         }
 
         .footer-nav ul li, .social-links ul li {
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* Reduced space between list items */
         }
 
         .social-links ul li {
-            display: inline-block; /* Social links inline */
+            display: inline-block;
             margin-right: 15px;
         }
 
         .social-links img {
-            width: 24px; /* Size of social icons */
+            width: 24px;
             height: 24px;
             vertical-align: middle;
             transition: transform 0.3s ease;
@@ -145,79 +148,73 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-            margin-top: 20px;
+            padding-top: 15px; /* Reduced padding above copyright */
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin-top: 15px; /* Reduced margin above copyright */
             color: #aaa;
             font-size: 0.85em;
         }
 
-        /* --- Login Content Container (ADOPTED FROM signup.html's unique container) --- */
-        .page-content { /* Renamed from .login-container to match general page style */
-            flex-grow: 1; /* Allows content to expand and push footer down */
+        /* --- Page Content Specific Styling (for Login) --- */
+        .page-content {
+            flex-grow: 1;
             padding: 40px 20px;
-            max-width: 500px; /* Adjusted for login form */
+            max-width: 500px; /* Adjusted for a login form */
             width: 100%;
             margin: 30px auto;
-            /* ADOPTED FROM signup.html */
-            background: rgba(255, 255, 255, 0.1); 
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 18px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Retained subtle shadow */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
-            text-align: center;
-            color: white; /* Text color for content within this box */
-        }
-
-        /* --- Login Form Specific Styles (ADOPTED FROM signup.html's inputs/buttons) --- */
-        .login-container h2 { /* Original login-container is now the inner form wrapper */
-            color: white; /* Matches body text */
-            font-size: 2.2em;
-            margin-bottom: 20px;
-        }
-
-        .login-container p { /* For slogans/messages */
-            font-size: 1.05em;
-            color: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
-            margin-bottom: 25px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
             text-align: left;
+            color: white;
         }
-
-        .form-group label {
+        .page-content h1 {
+            color: white;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600; /* Make heading a bit bolder */
+        }
+        .login-form-container { /* Wrapper for the form */
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .login-form-group { /* Style for each form field row */
+            margin-bottom: 20px; /* Increased space between form groups */
+        }
+        .login-form-group label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.9); /* Slightly transparent white */
+            text-align: left;
+            margin-bottom: 8px; /* Increased space below labels */
+            font-weight: 500; /* Make labels slightly bolder */
+            color: rgba(255, 255, 255, 0.95); /* Slightly brighter label color */
+            font-size: 1.05em; /* Slightly larger label font size */
         }
-
-        .form-group input {
+        .login-form-group input[type="text"],
+        .login-form-group input[type="password"] {
             width: 100%;
             padding: 12px 15px;
-            border: none; /* No border as per signup.html */
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Added subtle border */
             border-radius: 8px;
-            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
             font-size: 1em;
+            box-sizing: border-box;
             outline: none;
-            /* ADOPTED FROM signup.html */
-            background: rgba(249, 242, 242, 0.93); /* Semi-transparent white */
-            color: #333; /* Dark text on light input background */
-            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(249, 242, 242, 0.93);
+            color: #333;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
-        .form-group input::placeholder {
-            color: rgba(51, 51, 51, 0.7); /* Darker placeholder text for readability */
-        }
-        .form-group input:focus {
-            background-color: white; /* Solid white on focus */
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2); /* Soft white glow */
+        .login-form-group input[type="text"]:focus,
+        .login-form-group input[type="password"]:focus {
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+            border-color: #007bff; /* Highlight border on focus */
             outline: none;
         }
 
         .login-button {
-            /* ADOPTED FROM signup.html's button gradient */
             background: linear-gradient(90deg, #ff416c, #ff4b2b);
             color: white;
             padding: 15px 35px;
@@ -226,75 +223,88 @@
             cursor: pointer;
             font-size: 1.25em;
             font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             margin-top: 20px;
             width: 100%;
         }
-
         .login-button:hover {
-            background: linear-gradient(90deg, #ff4b2b, #ff416c); /* Reversed gradient on hover */
-            transform: scale(1.02); /* Slight scale for effect */
+            background: linear-gradient(90deg, #ff4b2b, #ff416c);
+            transform: scale(1.02);
             box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
         }
 
-        .link-group { /* For Forgot Password and Sign Up */
-            margin-top: 25px;
-            font-size: 1em; /* Increased for better visibility */
-            color: rgba(255, 255, 255, 0.9);
+        .message-success {
+            color: #d4edda;
+            background-color: rgba(40, 167, 69, 0.8); /* Semi-transparent green */
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(40, 167, 69, 0.4);
         }
 
-        .link-group a {
-            color: #4facfe; /* Blue from signup.html's login button gradient */
+        .message-error {
+            color: #f8d7da;
+            background-color: rgba(220, 53, 69, 0.8); /* Semi-transparent red */
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(220, 53, 69, 0.4);
+        }
+
+        /* Link for "Don't have an account?" */
+        .signup-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 1em;
+        }
+        .signup-link a {
+            color: #007bff; /* Blue link color */
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.3s ease, text-decoration 0.3s ease;
+            transition: color 0.3s ease;
         }
-
-        .link-group a:hover {
-            color: #00f2fe; /* Lighter blue on hover */
+        .signup-link a:hover {
+            color: #0056b3; /* Darker blue on hover */
             text-decoration: underline;
         }
 
-        /* Error Message Styles (adjusted for dark background) */
-        .messages {
-            list-style: none;
-            padding: 0;
-            margin: -10px 0 20px 0; /* Adjust margin to fit well */
-            text-align: left;
-        }
-        .messages li {
-            padding: 10px 15px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            font-size: 0.95em;
-            font-weight: 500;
-        }
-        .messages .success {
-            background-color: rgba(144, 238, 144, 0.2); /* Light green translucent */
-            color: #d4edda; /* Green text */
-            border: 1px solid rgba(144, 238, 144, 0.4);
-        }
-        .messages .error {
-            background-color: rgba(255, 99, 71, 0.2); /* Light red translucent */
-            color: #f8d7da; /* Red text */
-            border: 1px solid rgba(255, 99, 71, 0.4);
-        }
-        .messages .info {
-            background-color: rgba(173, 216, 230, 0.2); /* Light blue translucent */
-            color: #d1ecf1; /* Blue text */
-            border: 1px solid rgba(173, 216, 230, 0.4);
-        }
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
-            .main-header .header-content { flex-direction: column; align-items: flex-start; }
-            .main-nav ul { flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; padding-top: 10px; }
+            body { padding-top: 60px; }
+            .main-header { padding: 10px 0; }
+            .main-header .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .main-nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+                width: 100%;
+                padding-top: 10px;
+            }
             .logo { margin-bottom: 10px; }
-            .footer-content { flex-direction: column; align-items: center; text-align: center; }
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
             .footer-section { padding-right: 0; }
-            .footer-nav ul, .social-links ul { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+            .footer-nav ul, .social-links ul {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
             .social-links ul li { margin: 0 8px; }
             .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
+            .login-form-container { padding: 0 10px; }
         }
     </style>
 </head>
@@ -303,26 +313,30 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                <a href="{% url 'portfolio' %}">
+                {# Link to the homepage using the 'index' URL name #}
+                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
-                        {{ user.username }}
+                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
                     {% else %}
-                        Your Name
+                        Your Name {# Replace with your actual name #}
                     {% endif %}
                 </a>
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    {# Link to the homepage using the 'index' URL name #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
+                        <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     {% else %}
+                        {# Link to the login page (this page) #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -331,54 +345,62 @@
     </header>
 
     {# --- Main Login Content --- #}
-    <div class="page-content"> {# This container adopts signup.html's style #}
-        <h2>Welcome Back!</h2>
-        <p>Access your account to manage your portfolio and projects.</p>
+    <div class="page-content">
+        <h1>Login</h1>
 
         {# Display messages (success, error, info) #}
+        {# Note: Django messages framework automatically adds 'success', 'error', 'info' tags #}
         {% if messages %}
-            <ul class="messages">
+            <div class="messages">
                 {% for message in messages %}
-                    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                    {# Use the message tags directly as CSS class #}
+                    <div class="{{ message.tags }}">
+                        {{ message }}
+                    </div>
                 {% endfor %}
-            </ul>
+            </div>
         {% endif %}
 
-        <form method="post" action="{% url 'login' %}">
+        <form method="post" class="login-form-container">
             {% csrf_token %}
-            <div class="form-group">
-                <label for="username">Username or Email</label>
-                <input type="text" id="username" name="username" placeholder="Enter your username or email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password" required>
-            </div>
-            
-            <button type="submit" class="login-button">Log In</button>
+
+            {% for field in form %}
+                <div class="login-form-group"> {# Add a div for each form group for spacing #}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }} {# Render the input field itself #}
+                    {% if field.help_text %}
+                        <small style="color: rgba(255,255,255,0.7); margin-top: 5px; display: block;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p style="color: #ff9999; font-size: 0.9em; margin-top: 5px;">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="login-button">Login</button>
         </form>
 
-        <div class="link-group">
-            <a href="#">Forgot Password?</a> {# Placeholder link #}
+        <div class="signup-link">
+            {# Link to the signup page #}
+            <p>Don't have an account? <a href="{% url 'signup' %}">Sign Up</a></p>
         </div>
 
-        <div class="link-group">
-            Don't have an account? <a href="{% url 'signup' %}">Sign Up</a>
-        </div>
     </div>
 
     {# --- Footer --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3>
-                <p>A brief description about you or your project.</p>
+                <h3>Your Name</h3> {# Replace with your name #}
+                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    {# Ensure these links use valid URL names #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to homepage #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
@@ -386,21 +408,22 @@
             </div>
             <div class="footer-section footer-contact">
                 <h3>Contact</h3>
-                <p>Email: your.email@example.com</p>
-                <p>Phone: +123 456 7890</p>
-                <p>Location: Your City, Country</p>
+                <p>Email: your.email@example.com</p> {# Replace with your email #}
+                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
+                <p>Location: Your City, Country</p> {# Replace with your location #}
             </div>
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    <li><a href="{% static 'images/linkedin-icon.png' %}" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
-                    <li><a href="{% static 'images/github-icon.png' %}" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
-                    <li><a href="{% static 'images/twitter-icon.png' %}" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
+                    {# Ensure you have these icons in your static/images/ directory #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 Your Name. All rights reserved.
+            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
         </div>
     </footer>
 </body>
