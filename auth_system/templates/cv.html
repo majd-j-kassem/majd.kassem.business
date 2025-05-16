@@ -7,14 +7,14 @@
     <title>Your Name - CV</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- General Body Styles --- */
+        /* --- General Body Styles (Updated to purple gradient) --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%); 
+            background: linear-gradient(135deg, #764ba2, #764ba2); /* Changed to purple gradient */
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: #333; /* Default text color for body */
+            color: white; /* Default text color for body, often white on dark backgrounds */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -152,21 +152,24 @@
             font-size: 0.85em;
         }
 
-        /* --- Page Content Specific Styling --- */
+        /* --- Page Content Specific Styling (Updated for transparent background) --- */
         .page-content {
             flex-grow: 1; /* Allows content to expand and push footer down */
             padding: 40px 20px;
             max-width: 900px;
             width: 100%;
             margin: 30px auto;
-            background: white;
+            /* ADOPTED FROM signup.html/login.html's container aesthetic */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
             text-align: left;
+            color: white; /* Changed text color for readability on dark background */
         }
         .page-content h1 {
-            color: #333;
+            color: white; /* Changed heading color for readability */
             font-size: 2.2em;
             margin-bottom: 25px;
             text-align: center;
@@ -174,12 +177,16 @@
         .page-content p, .page-content ul {
             line-height: 1.7;
             font-size: 1.05em;
-            color: #555;
+            color: rgba(255, 255, 255, 0.9); /* Lighter text for readability */
             text-align: left;
         }
         .page-content ul {
             padding-left: 20px;
         }
+        .page-content strong {
+            color: #4facfe; /* Highlight strong text with a blue accent */
+        }
+
 
         /* Responsive Adjustments for Header/Nav/Footer/Content */
         @media (max-width: 768px) {
@@ -209,30 +216,30 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-    <a href="{% url 'portfolio' %}">
-        {% if user.is_authenticated %}
-            {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
-        {% else %}
-            Your Name
-        {% endif %}
-    </a>
-</div>
+                <a href="{% url 'portfolio' %}">
+                    {% if user.is_authenticated %}
+                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                    {% else %}
+                        Your Name
+                    {% endif %}
+                </a>
+            </div>
             <nav class="main-nav">
-    <ul>
-        <li><a href="{% url 'portfolio' %}">Home</a></li>
-        <li><a href="{% url 'cv' %}">CV</a></li>
-        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-        <li><a href="{% url 'certificates' %}">Certificates</a></li>
-        <li><a href="{% url 'contact' %}">Contact</a></li>
-        <li><a href="{% url 'about' %}">About</a></li>
+                <ul>
+                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
 
-        {% if user.is_authenticated %}
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-        {% else %}
-            <li><a href="{% url 'login' %}">Login</a></li>
-        {% endif %}
-    </ul>
-</nav>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </header>
 
@@ -266,7 +273,7 @@
                     <li><a href="{% url 'portfolio' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
                 </ul>
             </div>
             <div class="footer-section footer-contact">
@@ -278,11 +285,9 @@
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have social icon images in your static files (e.g., /static/images/linkedin-icon.png) #}
                     <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
-                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon' %}" alt="GitHub"></a></li>
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
                     <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
-                    {# Add more social links as needed #}
                 </ul>
             </div>
         </div>

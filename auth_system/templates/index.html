@@ -7,19 +7,25 @@
     <title>Your Portfolio - Home</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- General Body Styles (from your portfolio index.html) --- */
+        /* --- General Body Styles --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
             background: linear-gradient(135deg, #764ba2, #764ba2);
             margin: 0;
-            padding: 50px;
+            padding-top: 70px; /* Space for the fixed header */
             color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
         }
 
-        /* --- Header/Navigation Styles (from your portfolio index.html) --- */
+        /* --- Header/Navigation Styles (ENHANCED FURTHER) --- */
         .main-header {
-            background-color: #333;
+            background-color: rgba(40, 0, 70, 0.8);
+            backdrop-filter: blur(8px);
             color: white;
             padding: 15px 0;
             position: fixed;
@@ -27,7 +33,7 @@
             left: 0;
             width: 100%;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .header-content {
@@ -70,14 +76,15 @@
             color: #007bff;
         }
 
-        /* --- Footer Styles (from your portfolio index.html) --- */
+        /* --- Footer Styles (REDUCED AREA) --- */
         .main-footer {
-            background-color: #222;
+            background-color: rgba(20, 0, 50, 0.9);
+            backdrop-filter: blur(8px);
             color: #ccc;
-            padding: 30px 20px;
+            padding: 25px 20px; /* Reduced overall padding */
             width: 100%;
             margin-top: auto;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
             text-align: left;
         }
 
@@ -92,13 +99,13 @@
         .footer-section {
             flex: 1;
             min-width: 250px;
-            margin-bottom: 20px;
+            margin-bottom: 15px; /* Reduced space between sections */
             padding-right: 20px;
         }
 
         .footer-section h3 {
             color: white;
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Reduced space below headings */
             font-size: 1.2em;
         }
 
@@ -120,7 +127,7 @@
         }
 
         .footer-nav ul li, .social-links ul li {
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* Reduced space between list items */
         }
 
         .social-links ul li {
@@ -140,9 +147,9 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-            margin-top: 20px;
+            padding-top: 15px; /* Reduced padding above copyright */
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin-top: 15px; /* Reduced margin above copyright */
             color: #aaa;
             font-size: 0.85em;
         }
@@ -155,11 +162,11 @@
             align-items: center;
             justify-content: center;
             padding: 50px 20px;
-            background: linear-gradient(135deg, #764911, #764ba2);
+            background: linear-gradient(135deg, #4b0082, #764ba2);
             color: white;
             margin: 20px auto;
             border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 15px 30px rgba(75, 0, 130, 0.5);
             max-width: 900px;
             width: 100%;
         }
@@ -174,24 +181,28 @@
             line-height: 1.6;
         }
         .hero-button {
-            background-color: white;
-            color: #007bff;
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            color: white;
             padding: 15px 30px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
             font-size: 1.2em;
-            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         .hero-button:hover {
-            background-color: #f0f0f0;
+            background: linear-gradient(90deg, #ff4b2b, #ff416c);
             transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 15px rgba(255, 65, 108, 0.4);
         }
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
+            body { padding-top: 60px; }
+            .main-header { padding: 10px 0; }
             .main-header .header-content {
                 flex-direction: column;
                 align-items: flex-start;
@@ -230,93 +241,6 @@
                 font-size: 1em;
             }
         }
-
-        /* --- Sign-Up Page Styles (integrated) --- */
-        /* Note: The 'body' styles from the original sign-up page (background, color, padding)
-           are NOT included here as they would conflict with your main portfolio page's body styles.
-           These styles are typically applied to a wrapper 'div' if the form is present on the page. */
-
-        .container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-            display: inline-block; /* Useful if a parent container doesn't use flex */
-            width: 350px;
-        }
-
-        h2 { /* This rule will now apply to all h2s unless more specific */
-            color: white; /* Will appear white on dark backgrounds, but contrast on light backgrounds */
-            margin-bottom: 15px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            outline: none;
-            background: rgba(249, 242, 242, 0.93); /* Very light background */
-            color: #333; /* Adjusted for readability on light background */
-        }
-
-        input::placeholder {
-            color: #777; /* Adjusted for readability */
-        }
-
-        button {
-            background: linear-gradient(90deg, #ff416c, #ff4b2b);
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        button:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #ff4b2b, #ff416c);
-        }
-
-        .error-message {
-            color: red;
-            font-size: 14px;
-            margin-top: 5px;
-            display: none; /* Hidden by default */
-        }
-
-        .login-section {
-            margin-top: 20px;
-            font-size: 14px;
-        }
-
-        .login-btn {
-            display: inline-block;
-            margin-top: 10px;
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-weight: bold;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-
-        .login-btn:hover {
-            transform: scale(1.05);
-            background: linear-gradient(90deg, #00f2fe, #4facfe);
-        }
     </style>
 </head>
 <body>
@@ -324,17 +248,17 @@
     <header class="main-header">
         <div class="header-content">
            <div class="logo">
-                <a href="{% url 'portfolio' %}">
-                    {% if user.is_authenticated %}
-                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
-                    {% else %}
-                        Your Name
-                    {% endif %}
-                </a>
-            </div>
+    <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'portfolio' %}{% endif %}">
+        {% if user.is_authenticated %}
+            {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+        {% else %}
+            Your Name
+        {% endif %}
+    </a>
+</div>
            <nav class="main-nav">
                 <ul>
-                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    <li><a href="{% url 'index' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
@@ -350,20 +274,20 @@
             </nav>
         </div>
     </header>
-    
+
     {# --- Hero Section for Homepage --- #}
     
     <div class="hero-section">
         <h1>Welcome to My Portfolio!</h1>
         <p>I'm a passionate developer creating awesome things. Explore my work and connect with me!</p>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'login' %}" class="hero-button">Get Started</a>
-        {% else %}
-            <a href="{% url 'dashboard' %}" class="hero-button">Go to Dashboard</a>
-        {% endif %}
+        {% if user.is_authenticated %}
+    <li><a href="{% url 'logout' %}">Logout</a></li>
+    <li><a href="{% url 'profile_edit' %}">Profile</a></li> {# <-- ADD THIS LINE #}
+{% else %}
+    <li><a href="{% url 'login' %}">Login</a></li>
+{% endif %}
     </div>
-    */
-
+    
     {# --- Footer --- #}
     <footer class="main-footer">
         <div class="footer-content">
@@ -389,11 +313,9 @@
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have static files setup for images, or replace with icon fonts/SVGs #}
                     <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
                     <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
                     <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
-                    {# Add more social links as needed #}
                 </ul>
             </div>
         </div>

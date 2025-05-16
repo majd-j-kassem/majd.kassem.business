@@ -7,14 +7,14 @@
     <title>Contact Me</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- General Body Styles --- */
+        /* --- General Body Styles (Updated to purple gradient) --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%); 
+            background: linear-gradient(135deg, #764ba2, #764ba2); /* Changed to purple gradient */
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: #333; /* Default text color for body */
+            color: white; /* Default text color for body, often white on dark backgrounds */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -152,21 +152,24 @@
             font-size: 0.85em;
         }
 
-        /* --- Page Content Specific Styling --- */
+        /* --- Page Content Specific Styling (Updated for transparent background) --- */
         .page-content {
             flex-grow: 1; /* Allows content to expand and push footer down */
             padding: 40px 20px;
-            max-width: 900px;
+            max-width: 900px; /* Adjust as needed for form width */
             width: 100%;
             margin: 30px auto;
-            background: white;
+            /* ADOPTED FROM signup.html/login.html's container aesthetic */
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(10px);
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
             text-align: left;
+            color: white; /* Changed text color for readability on dark background */
         }
         .page-content h1 {
-            color: #333;
+            color: white; /* Changed heading color for readability */
             font-size: 2.2em;
             margin-bottom: 25px;
             text-align: center;
@@ -174,7 +177,7 @@
         .page-content p {
             line-height: 1.7;
             font-size: 1.05em;
-            color: #555;
+            color: rgba(255, 255, 255, 0.9); /* Lighter text for readability */
             text-align: center;
             margin-bottom: 30px;
         }
@@ -190,25 +193,34 @@
             text-align: left;
             margin-bottom: 5px;
             font-weight: 500;
-            color: #444;
+            color: rgba(255, 255, 255, 0.9); /* Lighter label color */
         }
         .contact-form input[type="text"],
         .contact-form input[type="email"],
         .contact-form textarea {
             width: 100%;
             padding: 12px 15px;
-            border: 1px solid #ddd;
+            border: none; /* No border as per signup.html */
             border-radius: 8px;
             font-family: 'Poppins', sans-serif;
             font-size: 1em;
             box-sizing: border-box;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            outline: none;
+            /* ADOPTED FROM signup.html */
+            background: rgba(249, 242, 242, 0.93); /* Semi-transparent white */
+            color: #333; /* Dark text on light input background */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .contact-form input[type="text"]::placeholder,
+        .contact-form input[type="email"]::placeholder,
+        .contact-form textarea::placeholder {
+            color: rgba(51, 51, 51, 0.7); /* Darker placeholder text for readability */
         }
         .contact-form input[type="text"]:focus,
         .contact-form input[type="email"]:focus,
         .contact-form textarea:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+            background-color: white; /* Solid white on focus */
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2); /* Soft white glow */
             outline: none;
         }
         .contact-form textarea {
@@ -216,19 +228,23 @@
             resize: vertical;
         }
         .contact-button {
-            background-color: #007bff;
+            /* ADOPTED FROM signup.html/login.html buttons */
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
             color: white;
-            padding: 12px 25px;
+            padding: 15px 35px; /* Slightly larger padding for consistency */
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 1.1em;
+            font-size: 1.25em; /* Larger font size */
             font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.3s ease;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            margin-top: 20px;
+            width: 100%; /* Full width */
         }
         .contact-button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
+            background: linear-gradient(90deg, #ff4b2b, #ff416c); /* Reversed gradient on hover */
+            transform: scale(1.02); /* Slight scale for effect */
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
         }
 
         /* Responsive Adjustments */
@@ -250,30 +266,30 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-    <a href="{% url 'portfolio' %}">
-        {% if user.is_authenticated %}
-            {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
-        {% else %}
-            Your Name
-        {% endif %}
-    </a>
-</div>
+                <a href="{% url 'portfolio' %}">
+                    {% if user.is_authenticated %}
+                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                    {% else %}
+                        Your Name
+                    {% endif %}
+                </a>
+            </div>
             <nav class="main-nav">
-    <ul>
-        <li><a href="{% url 'portfolio' %}">Home</a></li>
-        <li><a href="{% url 'cv' %}">CV</a></li>
-        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-        <li><a href="{% url 'certificates' %}">Certificates</a></li>
-        <li><a href="{% url 'contact' %}">Contact</a></li>
-        <li><a href="{% url 'about' %}">About</a></li>
+                <ul>
+                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
 
-        {% if user.is_authenticated %}
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-        {% else %}
-            <li><a href="{% url 'login' %}">Login</a></li>
-        {% endif %}
-    </ul>
-</nav>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </header>
 
@@ -316,7 +332,7 @@
                     <li><a href="{% url 'portfolio' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-                    <li><a href="{% url 'certificates' %}">Certificates</a></li> 
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
                 </ul>
             </div>
             <div class="footer-section footer-contact">

@@ -7,14 +7,14 @@
     <title>About Me - Your Name</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- General Body Styles --- */
+        /* --- General Body Styles (Updated to purple gradient) --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%);
+            background: linear-gradient(135deg, #764ba2, #764ba2); /* Changed to purple gradient */
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: #333; /* Default text color for body */
+            color: white; /* Default text color for body, often white on dark backgrounds */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -152,21 +152,24 @@
             font-size: 0.85em;
         }
 
-        /* --- Page Content Specific Styling --- */
+        /* --- Page Content Specific Styling (Updated for transparent background) --- */
         .page-content {
             flex-grow: 1; /* Allows content to expand and push footer down */
             padding: 40px 20px;
             max-width: 900px;
             width: 100%;
             margin: 30px auto;
-            background: white;
+            /* ADOPTED FROM signup.html/login.html's container aesthetic */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
             text-align: left;
+            color: white; /* Changed text color for readability on dark background */
         }
         .page-content h1 {
-            color: #333;
+            color: white; /* Changed heading color for readability */
             font-size: 2.2em;
             margin-bottom: 25px;
             text-align: center;
@@ -174,13 +177,13 @@
         .about-section {
             margin-bottom: 30px;
             padding: 15px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
         }
         .about-section:last-child {
             border-bottom: none;
         }
         .about-section h2 {
-            color: #007bff;
+            color: #4facfe; /* Blue accent color consistent with signup/login */
             font-size: 1.8em;
             margin-bottom: 15px;
             text-align: center;
@@ -188,20 +191,29 @@
         .about-section p, .about-section ul {
             line-height: 1.7;
             font-size: 1.05em;
-            color: #555;
+            color: rgba(255, 255, 255, 0.9); /* Lighter text for readability */
             text-align: left;
         }
         .about-section ul {
             padding-left: 20px;
+        }
+        .about-section a { /* Style for links within about sections */
+            color: #4facfe;
+            text-decoration: none;
+            transition: color 0.3s ease, text-decoration 0.3s ease;
+        }
+        .about-section a:hover {
+            color: #00f2fe;
+            text-decoration: underline;
         }
         .profile-image {
             display: block;
             max-width: 200px;
             border-radius: 50%;
             margin: 0 auto 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); /* Keep shadow for depth */
+            border: 3px solid rgba(255, 255, 255, 0.5); /* Add a subtle white border */
         }
-
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
@@ -231,21 +243,21 @@
                 </a>
             </div>
             <nav class="main-nav">
-    <ul>
-        <li><a href="{% url 'portfolio' %}">Home</a></li>
-        <li><a href="{% url 'cv' %}">CV</a></li>
-        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-        <li><a href="{% url 'certificates' %}">Certificates</a></li>
-        <li><a href="{% url 'contact' %}">Contact</a></li>
-        <li><a href="{% url 'about' %}">About</a></li>
+                <ul>
+                    <li><a href="{% url 'portfolio' %}">Home</a></li>
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
 
-        {% if user.is_authenticated %}
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-        {% else %}
-            <li><a href="{% url 'login' %}">Login</a></li>
-        {% endif %}
-    </ul>
-</nav>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </header>
 

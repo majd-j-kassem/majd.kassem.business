@@ -4,42 +4,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Name - Portfolio</title>
+    <title>Your Name - Portfolio</title> {# Update with your name #}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* --- General Body Styles --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #e6e6e6 0%, #dcdcdc 100%); 
+            background: linear-gradient(135deg, #764ba2, #764ba2);
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: #333; /* Default text color for body */
+            color: white;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
+            line-height: 1.6; /* Improved readability */
         }
 
-        /* --- Header/Navigation Styles (Consistent across pages) --- */
+        /* --- Header/Navigation Styles --- */
         .main-header {
-            background-color: #333; /* Dark background */
+            background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
+            backdrop-filter: blur(8px);
             color: white;
             padding: 15px 0;
-            position: fixed; /* Makes header stick to top */
+            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            z-index: 1000; /* Ensures it's above other content */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15); /* More prominent shadow */
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
         .header-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px; /* Max width for your content */
+            max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
@@ -52,7 +54,7 @@
             transition: color 0.3s ease;
         }
         .logo a:hover {
-            color: #007bff; /* Highlight on hover */
+            color: #007bff;
         }
 
         .main-nav ul {
@@ -60,7 +62,7 @@
             margin: 0;
             padding: 0;
             display: flex;
-            gap: 25px; /* Spacing between menu items */
+            gap: 25px;
         }
 
         .main-nav ul li a {
@@ -72,38 +74,39 @@
         }
 
         .main-nav ul li a:hover {
-            color: #007bff; /* Highlight on hover */
+            color: #007bff;
         }
 
-        /* --- Footer Styles (Consistent across pages) --- */
+        /* --- Footer Styles --- */
         .main-footer {
-            background-color: #222; /* Darker background for footer */
+            background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
+            backdrop-filter: blur(8px);
             color: #ccc;
-            padding: 30px 20px;
+            padding: 25px 20px; /* Reduced overall padding */
             width: 100%;
-            margin-top: auto; /* Pushes footer to the bottom */
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
-            text-align: left; /* Align content to the left within the footer */
+            margin-top: auto;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+            text-align: left;
         }
 
         .footer-content {
             display: flex;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            flex-wrap: wrap;
             justify-content: space-between;
             max-width: 1200px;
             margin: 0 auto;
         }
 
         .footer-section {
-            flex: 1; /* Each section takes equal space */
-            min-width: 250px; /* Minimum width before wrapping */
-            margin-bottom: 20px; /* Space between sections on wrap */
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 15px; /* Reduced space between sections */
             padding-right: 20px;
         }
 
         .footer-section h3 {
             color: white;
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* Reduced space below headings */
             font-size: 1.2em;
         }
 
@@ -125,16 +128,16 @@
         }
 
         .footer-nav ul li, .social-links ul li {
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* Reduced space between list items */
         }
 
         .social-links ul li {
-            display: inline-block; /* Social links inline */
+            display: inline-block;
             margin-right: 15px;
         }
 
         .social-links img {
-            width: 24px; /* Size of social icons */
+            width: 24px;
             height: 24px;
             vertical-align: middle;
             transition: transform 0.3s ease;
@@ -145,107 +148,144 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-            margin-top: 20px;
+            padding-top: 15px; /* Reduced padding above copyright */
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin-top: 15px; /* Reduced margin above copyright */
             color: #aaa;
             font-size: 0.85em;
         }
 
-        /* --- Page Content Specific Styling --- */
+        /* --- Page Content Specific Styling (for Portfolio) --- */
         .page-content {
-            flex-grow: 1; /* Allows content to expand and push footer down */
+            flex-grow: 1;
             padding: 40px 20px;
-            max-width: 900px;
+            max-width: 1000px; /* Wider for portfolio items */
             width: 100%;
             margin: 30px auto;
-            background: white;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
             text-align: left;
+            color: white;
         }
         .page-content h1 {
-            color: #333;
+            color: white;
             font-size: 2.2em;
-            margin-bottom: 25px;
+            margin-bottom: 30px; /* More space below heading */
             text-align: center;
+            font-weight: 600;
         }
-        .page-content p, .page-content ul {
-            line-height: 1.7;
-            font-size: 1.05em;
-            color: #555;
-            text-align: left;
-        }
-        .page-content ul {
-            padding-left: 20px;
-        }
-        .project-grid {
+
+        .portfolio-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+            gap: 30px; /* Space between grid items */
         }
-        .project-card {
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+
+        .portfolio-item {
+            background: rgba(255, 255, 255, 0.15); /* Slightly lighter background for items */
+            border-radius: 12px;
+            overflow: hidden; /* Hide overflowing image corners */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
         }
-        .project-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+
+        .portfolio-item:hover {
+            transform: translateY(-5px); /* Slight lift effect on hover */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        .project-card h3 {
-            color: #007bff;
-            font-size: 1.5em;
+
+        .portfolio-item img {
+            width: 100%;
+            height: 200px; /* Fixed height for images */
+            object-fit: cover; /* Crop images to fit */
+            display: block;
+        }
+
+        .portfolio-item-content {
+            padding: 20px;
+            flex-grow: 1; /* Allow content area to grow */
+        }
+
+        .portfolio-item-content h3 {
+            color: white;
+            font-size: 1.4em;
+            margin-top: 0;
             margin-bottom: 10px;
+            font-weight: 600;
         }
-        .project-card p {
-            font-size: 0.95em;
-            color: #666;
+
+        .portfolio-item-content p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+            line-height: 1.6;
             margin-bottom: 15px;
         }
-        .project-card a.view-link {
+
+        .portfolio-item-link {
             display: inline-block;
-            background-color: #007bff;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
             color: white;
             padding: 10px 20px;
-            border-radius: 5px;
+            border-radius: 6px;
             text-decoration: none;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease;
+            font-weight: 500;
+            transition: background 0.3s ease;
         }
-        .project-card a.view-link:hover {
-            background-color: #0056b3;
+
+        .portfolio-item-link:hover {
+             background: linear-gradient(90deg, #00f2fe, #4facfe);
         }
 
 
-        /* Responsive Adjustments for Header/Nav/Footer/Content */
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
+            body { padding-top: 60px; }
+            .main-header { padding: 10px 0; }
             .main-header .header-content {
-                flex-direction: column; align-items: flex-start;
+                flex-direction: column;
+                align-items: flex-start;
             }
             .main-nav ul {
-                flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; padding-top: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+                width: 100%;
+                padding-top: 10px;
             }
             .logo { margin-bottom: 10px; }
             .footer-content {
-                flex-direction: column; align-items: center; text-align: center;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
             }
             .footer-section { padding-right: 0; }
             .footer-nav ul, .social-links ul {
-                display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
             }
             .social-links ul li { margin: 0 8px; }
-            .page-content {
-                margin: 20px; padding: 25px; border-radius: 15px;
+            .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
+            .portfolio-grid {
+                grid-template-columns: 1fr; /* Stack items on small screens */
             }
-            .project-grid {
-                grid-template-columns: 1fr; /* Stack projects on small screens */
+             .portfolio-item img {
+                height: 180px; /* Adjust image height for smaller screens */
+            }
+             .portfolio-item-content {
+                padding: 15px;
+            }
+             .portfolio-item-content h3 {
+                font-size: 1.2em;
+            }
+             .portfolio-item-content p {
+                font-size: 0.95em;
             }
         }
     </style>
@@ -255,94 +295,112 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-    <a href="{% url 'portfolio' %}">
-        {% if user.is_authenticated %}
-            {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
-        {% else %}
-            Your Name
-        {% endif %}
-    </a>
-</div>
-           <nav class="main-nav">
-    <ul>
-        <li><a href="{% url 'portfolio' %}">Home</a></li>
-        <li><a href="{% url 'cv' %}">CV</a></li>
-        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-        <li><a href="{% url 'certificates' %}">Certificates</a></li>
-        <li><a href="{% url 'contact' %}">Contact</a></li>
-        <li><a href="{% url 'about' %}">About</a></li>
+                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'portfolio' %}{% endif %}">
+                    {% if user.is_authenticated %}
+                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                    {% else %}
+                        Your Name {# Replace with your actual name #}
+                    {% endif %}
+                </a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{% url 'portfolio' %}">Home</a></li> {# Link to this page #}
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
 
-        {% if user.is_authenticated %}
-            <li><a href="{% url 'logout' %}">Logout</a></li>
-        {% else %}
-            <li><a href="{% url 'login' %}">Login</a></li>
-        {% endif %}
-    </ul>
-</nav>
+                    {% if user.is_authenticated %}
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                        <li><a href="{% url 'profile_edit' %}">Profile</a></li>
+                    {% else %}
+                        <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
         </div>
     </header>
 
     {# --- Main Portfolio Content --- #}
     <div class="page-content">
-        <h1>My Projects Portfolio</h1>
-        <p>Explore a selection of my recent projects and case studies.</p>
+        <h1>My Portfolio</h1> {# Update with your portfolio title #}
 
-        <div class="project-grid">
-            <div class="project-card">
-                <h3>Project Title 1</h3>
-                <p>Brief description of Project 1, highlighting technologies used and key features.</p>
-                <a href="#" class="view-link">View Details</a>
+        <div class="portfolio-grid">
+            {# --- Example Portfolio Item 1 --- #}
+            <div class="portfolio-item">
+                {# Replace with a static image or a media image URL for your project #}
+                <img src="{% static 'images/placeholder-project1.jpg' %}" alt="Project 1 Screenshot"> {# Example static image #}
+                <div class="portfolio-item-content">
+                    <h3>Project Title 1</h3> {# Replace with your project title #}
+                    <p>A brief description of your project. Mention the technologies used and its purpose.</p> {# Replace with project description #}
+                    <a href="#" class="portfolio-item-link">View Project</a> {# Replace # with project URL #}
+                </div>
             </div>
-            <div class="project-card">
-                <h3>Project Title 2</h3>
-                <p>Brief description of Project 2, highlighting technologies used and key features.</p>
-                <a href="#" class="view-link">View Details</a>
+
+            {# --- Example Portfolio Item 2 --- #}
+            <div class="portfolio-item">
+                 {# Replace with a static image or a media image URL for your project #}
+                <img src="{% static 'images/placeholder-project2.jpg' %}" alt="Project 2 Screenshot"> {# Example static image #}
+                <div class="portfolio-item-content">
+                    <h3>Project Title 2</h3> {# Replace with your project title #}
+                    <p>Another brief description of your project. Highlight key features.</p> {# Replace with project description #}
+                    <a href="#" class="portfolio-item-link">View Project</a> {# Replace # with project URL #}
+                </div>
             </div>
-            <div class="project-card">
-                <h3>Project Title 3</h3>
-                <p>Brief description of Project 3, highlighting technologies used and key features.</p>
-                <a href="#" class="view-link">View Details</a>
+
+             {# --- Example Portfolio Item 3 --- #}
+            <div class="portfolio-item">
+                 {# Replace with a static image or a media image URL for your project #}
+                <img src="{% static 'images/placeholder-project3.jpg' %}" alt="Project 3 Screenshot"> {# Example static image #}
+                <div class="portfolio-item-content">
+                    <h3>Project Title 3</h3> {# Replace with your project title #}
+                    <p>Description of your third project. What problem does it solve?</p> {# Replace with project description #}
+                    <a href="#" class="portfolio-item-link">View Project</a> {# Replace # with project URL #}
+                </div>
             </div>
-            {# Add more project cards as needed #}
+
+            {# Add more portfolio items as needed by copying and pasting the .portfolio-item div #}
+
         </div>
-        <p style="margin-top: 30px; text-align: center;">For more projects, please <a href="{% url 'contact' %}">contact me</a> or visit my GitHub.</p>
+
     </div>
 
     {# --- Footer --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3>
-                <p>A brief description about you or your project.</p>
+                <h3>Your Name</h3> {# Replace with your name #}
+                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
                 <ul>
                     <li><a href="{% url 'portfolio' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
                 </ul>
             </div>
             <div class="footer-section footer-contact">
                 <h3>Contact</h3>
-                <p>Email: your.email@example.com</p>
-                <p>Phone: +123 456 7890</p>
-                <p>Location: Your City, Country</p>
+                <p>Email: your.email@example.com</p> {# Replace with your email #}
+                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
+                <p>Location: Your City, Country</p> {# Replace with your location #}
             </div>
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have social icon images in your static files (e.g., /static/images/linkedin-icon.png) #}
-                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
-                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
-                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
-                    {# Add more social links as needed #}
+                    {# Ensure you have these icons in your static/images/ directory #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 Your Name. All rights reserved.
+            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
         </div>
     </footer>
 </body>
