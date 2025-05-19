@@ -1,0 +1,419 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Me</title> {# Update with your name or site title #}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- General Body Styles --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background: linear-gradient(135deg, #764ba2, #764ba2);
+            margin: 0;
+            padding-top: 70px; /* Space for the fixed header */
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            line-height: 1.6; /* Improved readability */
+        }
+
+        /* --- Header/Navigation Styles --- */
+        .main-header {
+            background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
+            backdrop-filter: blur(8px);
+            color: white;
+            padding: 15px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .logo a {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.8em;
+            transition: color 0.3s ease;
+        }
+        .logo a:hover {
+            color: #007bff;
+        }
+
+        .main-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 25px;
+        }
+
+        .main-nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.1em;
+            transition: color 0.3s ease;
+        }
+
+        .main-nav ul li a:hover {
+            color: #007bff;
+        }
+
+        /* --- Footer Styles --- */
+        .main-footer {
+            background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
+            backdrop-filter: blur(8px);
+            color: #ccc;
+            padding: 25px 20px; /* Reduced overall padding */
+            width: 100%;
+            margin-top: auto;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+            text-align: left;
+        }
+
+        .footer-content {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-section {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 15px; /* Reduced space between sections */
+            padding-right: 20px;
+        }
+
+        .footer-section h3 {
+            color: white;
+            margin-bottom: 10px; /* Reduced space below headings */
+            font-size: 1.2em;
+        }
+
+        .footer-section p, .footer-section a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .footer-section a:hover {
+            color: #007bff;
+        }
+
+        .footer-nav ul, .social-links ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-nav ul li, .social-links ul li {
+            margin-bottom: 5px; /* Reduced space between list items */
+        }
+
+        .social-links ul li {
+            display: inline-block;
+            margin-right: 15px;
+        }
+
+        .social-links img {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            transition: transform 0.3s ease;
+        }
+        .social-links img:hover {
+            transform: scale(1.1);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 15px; /* Reduced padding above copyright */
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            margin-top: 15px; /* Reduced margin above copyright */
+            color: #aaa;
+            font-size: 0.85em;
+        }
+
+        /* --- Page Content Specific Styling (for Contact) --- */
+        .page-content {
+            flex-grow: 1;
+            padding: 40px 20px;
+            max-width: 600px; /* Adjusted for a contact form */
+            width: 100%;
+            margin: 30px auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            text-align: left;
+            color: white;
+        }
+        .page-content h1 {
+            color: white;
+            font-size: 2.2em;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600; /* Make heading a bit bolder */
+        }
+        .contact-form-container { /* Wrapper for the form */
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .contact-form-group { /* Style for each form field row */
+            margin-bottom: 20px; /* Increased space between form groups */
+        }
+        .contact-form-group label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px; /* Increased space below labels */
+            font-weight: 500; /* Make labels slightly bolder */
+            color: rgba(255, 255, 255, 0.95); /* Slightly brighter label color */
+            font-size: 1.05em; /* Slightly larger label font size */
+        }
+        .contact-form-group input[type="text"],
+        .contact-form-group input[type="email"],
+        .contact-form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3); /* Added subtle border */
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1em;
+            box-sizing: border-box;
+            outline: none;
+            background: rgba(249, 242, 242, 0.93);
+            color: #333;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+        .contact-form-group input[type="text"]:focus,
+        .contact-form-group input[type="email"]:focus,
+        .contact-form-group textarea:focus {
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+            border-color: #007bff; /* Highlight border on focus */
+            outline: none;
+        }
+         .contact-form-group textarea {
+            resize: vertical; /* Allow vertical resizing but prevent horizontal */
+            min-height: 150px; /* Give it a default height */
+        }
+
+
+        .contact-button {
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            color: white;
+            padding: 15px 35px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.25em;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .contact-button:hover {
+            background: linear-gradient(90deg, #ff4b2b, #ff416c);
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
+        }
+
+        .message-success {
+            color: #d4edda;
+            background-color: rgba(40, 167, 69, 0.8); /* Semi-transparent green */
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(40, 167, 69, 0.4);
+        }
+
+        .message-error {
+            color: #f8d7da;
+            background-color: rgba(220, 53, 69, 0.8); /* Semi-transparent red */
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            border: 1px solid rgba(220, 53, 69, 0.4);
+        }
+
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            body { padding-top: 60px; }
+            .main-header { padding: 10px 0; }
+            .main-header .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .main-nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+                width: 100%;
+                padding-top: 10px;
+            }
+            .logo { margin-bottom: 10px; }
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .footer-section { padding-right: 0; }
+            .footer-nav ul, .social-links ul {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            .social-links ul li { margin: 0 8px; }
+            .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
+            .contact-form-container { padding: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+    {# --- Header / Navigation Bar --- #}
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo">
+                {# Link to the homepage using the 'index' URL name #}
+                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'index' %}{% endif %}">
+                    {% if user.is_authenticated %}
+                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                    {% else %}
+                        Your Name {# Replace with your actual name #}
+                    {% endif %}
+                </a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    {# Link to the homepage using the 'index' URL name #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    {# Link to this Contact page #}
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
+
+                    {% if user.is_authenticated %}
+                        {# Link to the logout view #}
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                        {# Link to the profile edit view #}
+                        <li><a href="{% url 'profile_edit' %}">Profile</a></li>
+                    {% else %}
+                        {# Link to the login view #}
+                        <li><a href="{% url 'login' %}">Login</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    {# --- Main Contact Content --- #}
+    <div class="page-content">
+        <h1>Contact Me</h1>
+
+        {# Display messages (success, error, info) #}
+        {# Note: Django messages framework automatically adds 'success', 'error', 'info' tags #}
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    {# Use the message tags directly as CSS class #}
+                    <div class="{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {# Assuming you have a contact form passed in the context as 'form' #}
+        <form method="post" class="contact-form-container">
+            {% csrf_token %}
+
+            {% for field in form %}
+                <div class="contact-form-group"> {# Add a div for each form group for spacing #}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }} {# Render the input field or textarea #}
+                    {% if field.help_text %}
+                        <small style="color: rgba(255,255,255,0.7); margin-top: 5px; display: block;">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p style="color: #ff9999; font-size: 0.9em; margin-top: 5px;">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <button type="submit" class="contact-button">Send Message</button>
+        </form>
+
+    </div>
+
+    {# --- Footer --- #}
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section footer-about">
+                <h3>Your Name</h3> {# Replace with your name #}
+                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
+            </div>
+            <div class="footer-section footer-nav">
+                <h3>Quick Links</h3>
+                <ul>
+                    {# Ensure these links use valid URL names #}
+                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to homepage #}
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                </ul>
+            </div>
+            <div class="footer-section footer-contact">
+                <h3>Contact</h3>
+                <p>Email: your.email@example.com</p> {# Replace with your email #}
+                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
+                <p>Location: Your City, Country</p> {# Replace with your location #}
+            </div>
+            <div class="footer-section footer-social">
+                <h3>Follow Me</h3>
+                <ul class="social-links">
+                    {# Ensure you have these icons in your static/images/ directory #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            {# This is likely line 269 or close to it - ensure it uses {% url 'index' %} #}
+            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
+        </div>
+    </footer>
+</body>
+</html>
