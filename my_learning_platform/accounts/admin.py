@@ -4,9 +4,59 @@ from django.contrib import admin, messages # Import messages for user feedback
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone # Import timezone to get current date/time
-
+from django.contrib import admin
 # Import all your models
 from .models import CustomUser, Profile, CourseCategory, CourseLevel, TeacherCourse
+
+
+# 1. Create an Inline Admin for the Profile model
+class ProfileInline(admin.StackedInline): # Use StackedInline for a more expanded view, or TabularInline for a compact table
+    model = Profile
+    can_delete = False # You usually don't want to delete a profile independently of a user
+    verbose_name_plural = 'Profile Info'
+    # Specify the fields you want to display and edit in the admin for the Profile
+    fields = (
+        'full_name_en',
+        'full_name_ar',
+        'phone_number',
+        'bio',
+        'profile_picture',
+        # Teacher-specific fields
+        'experience_years',
+        'university',
+        'graduation_year',
+        'major',
+        # Application status fields
+        'is_teacher_application_pending',
+        'is_teacher_approved',
+        'approved_by',
+        'approval_date',
+        'rejected_by',
+        'rejection_date',
+        'rejection_reason',
+    )
+    # You might want to group fields into fieldsets for better organization
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('full_name_en', 'full_name_ar', 'phone_number', 'bio', 'profile_picture')
+        }),
+        ('Teacher Professional Details', {
+            'fields': ('experience_years', 'university', 'graduation_year', 'major'),
+            'classes': ('collapse',), # Optional: make this section collapsible
+        }),
+        ('Teacher Application Status', {
+            'fields': (
+                'is_teacher_application_pending',
+                'is_teacher_approved',
+                'approved_by',
+                'approval_date',
+                'rejected_by',
+                'rejection_date',
+                'rejection_reason',
+            ),
+            'classes': ('wide',), # Optional: make this section wider
+        }),
+    )
 
 
 # --- Custom Admin for CustomUser ---
@@ -21,6 +71,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
+
 
 admin.site.register(CustomUser, CustomUserAdmin)
 
@@ -187,3 +238,5 @@ class TeacherCourseAdmin(admin.ModelAdmin):
     def get_categories_display(self, obj):
         return ", ".join([category.name for category in obj.categories.all()])
     get_categories_display.short_description = 'Categories'
+    
+

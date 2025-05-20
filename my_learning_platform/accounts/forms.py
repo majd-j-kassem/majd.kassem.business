@@ -212,3 +212,33 @@ class TeacherCourseOfferingForm(forms.Form): # Not a ModelForm if it's for creat
     )
 
     # You can add clean methods for validation here if needed
+class PasswordSettingForm(forms.Form):
+    password = forms.CharField(
+        label=("Password"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        strip=False, # Important for password fields
+        help_text=("Your password must contain at least 8 characters.")
+    )
+    password_confirm = forms.CharField(
+        label=("Confirm Password"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        strip=False,
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        password_confirm = cleaned_data.get("password_confirm")
+
+        if password and password_confirm:
+            if password != password_confirm:
+                raise forms.ValidationError(
+                    ("The two password fields didn't match.")
+                )
+            # You can add more password validation rules here (e.g., complexity)
+            # if they are not already handled by your CustomUser model validators.
+            if len(password) < 8:
+                raise forms.ValidationError(
+                    ("Your password must be at least 8 characters long.")
+                )
+        return cleaned_data

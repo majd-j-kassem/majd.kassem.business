@@ -202,3 +202,4 @@ JAZZMIN_SETTINGS = {
         {"app": "accounts"}, # Link to accounts app
     ],
 }
+# your_project/settings.py

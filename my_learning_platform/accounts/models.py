@@ -115,7 +115,14 @@ class Profile(models.Model):
         help_text="Reason for rejection, if applicable."
     )
     # ... (rest of your Profile model fields) ...
-
+    is_teacher_application_pending = models.BooleanField(default=False)
+    is_teacher_approved = models.BooleanField(default=False)
+    # (Optional: If you track who approved/rejected and when)
+    approved_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_teachers')
+    approval_date = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_teachers')
+    rejection_date = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
     def __str__(self):
         return f"{self.user.username}'s Profile"
     def __str__(self):

@@ -222,22 +222,7 @@
                     <li><strong>Bio:</strong> <span>{{ teacher_data.bio }}</span></li>
                 </ul>
 
-                <h3>Course Information</h3>
-                <ul class="review-list">
-                    <li><strong>Course Title:</strong> <span>{{ teacher_data.title }}</span></li>
-                    <li><strong>Course Description:</strong> <span>{{ teacher_data.description }}</span></li>
-                    <li><strong>Course Price:</strong> <span>${{ teacher_data.price }}</span></li>
-                    <li><strong>Instruction Language:</strong> <span>{{ teacher_data.language }}</span></li>
-                    <li><strong>Categories:</strong> <span>
-                        {% for category in teacher_data.categories_names %}
-                            {{ category }}{% if not forloop.last %}, {% endif %}
-                        {% empty %}
-                            No categories selected.
-                        {% endfor %}
-                    </span></li>
-                    <li><strong>Level:</strong> <span>{{ teacher_data.level_name }}</span></li>
-                </ul>
-
+               
                 <div class="d-flex justify-content-between mt-4">
     <a href="{% url 'teacher_register_stage2' %}" class="cta-button" style="background: #6c757d;">Previous</a>
     <button type="submit" class="cta-button">Submit Application</button>
