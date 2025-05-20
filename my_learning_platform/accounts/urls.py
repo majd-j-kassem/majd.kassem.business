@@ -19,10 +19,11 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('signup/', views.signup_view, name='signup'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
-    path('teacher/register/', views.teacher_register_wizard, name='teacher_register_wizard'),
+    path('teacher/register/', views.teacher_register_wizard, name='teacher_register_stage1'),
     path('teacher/register/stage2/', views.teacher_register_stage2, name='teacher_register_stage2'),
     path('teacher/register/stage3/', views.teacher_register_stage3, name='teacher_register_stage3'),
-
+    path('teacher/register/stage4/', views.teacher_register_stage4, name='teacher_register_stage4'),
+    path('teacher/register/success/', views.application_success_view, name='application_success'),
     # Optional: If 'courses' was just an alias for 'certificates', you can remove it.
     # If you still want it, keep it here:
     # path('courses/', views.certificates_view, name='courses'),

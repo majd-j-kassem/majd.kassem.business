@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from .models import Profile # Import the new Profile model
+from .models import Profile, CourseCategory, CourseLevel # <-- THIS LINE IS CRUCIAL
 
 
 # Get the currently active User model (handles custom user models if you ever use one)
@@ -32,6 +33,7 @@ class TeacherPersonalInfoForm(forms.ModelForm):
         self.fields['full_name_ar'].required = True
         self.fields['phone_number'].required = True
         '''
+
         # Pre-populate initial values if a user or profile instance is provided
         if self.user:
             self.fields['email'].initial = self.user.email
@@ -151,3 +153,62 @@ class ContactForm(forms.Form):
         widget=forms.Textarea(attrs={'placeholder': 'Enter your message', 'rows': 6})
     )
 
+class TeacherProfessionalDetailsForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['experience_years', 'university', 'graduation_year', 'major', 'bio']
+
+    # You can add custom validation or initial data here if needed.
+    def __init__(self, *args, **kwargs):
+        # We pass a profile instance to the form if we want to pre-populate it
+        self.profile_instance = kwargs.pop('profile_instance', None)
+        super().__init__(*args, **kwargs)
+
+        # Pre-populate fields if a profile instance is provided
+        if self.profile_instance:
+            self.fields['experience_years'].initial = self.profile_instance.experience_years
+            self.fields['university'].initial = self.profile_instance.university
+            self.fields['graduation_year'].initial = self.profile_instance.graduation_year
+            self.fields['major'].initial = self.profile_instance.major
+            self.fields['bio'].initial = self.profile_instance.bio
+
+        # You can make fields required here if needed, e.g.:
+        # self.fields['university'].required = True
+# --- NEW Teacher Course Offering Form ---
+class TeacherCourseOfferingForm(forms.Form): # Not a ModelForm if it's for creation
+    categories = forms.ModelMultipleChoiceField(
+        queryset=CourseCategory.objects.all(),
+        widget=forms.CheckboxSelectMultiple, # Or forms.SelectMultiple for a dropdown
+        label="Course Categories",
+        help_text="Select all categories that apply to your course."
+    )
+    level = forms.ModelChoiceField(
+        queryset=CourseLevel.objects.all(),
+        empty_label="Select Level",
+        label="Course Level",
+        help_text="Difficulty level of your course."
+    )
+    title = forms.CharField(
+        max_length=255,
+        label="Course Title",
+        help_text="A descriptive title for your course."
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 4}),
+        label="Course Description",
+        help_text="Provide a detailed description of what your course covers."
+    )
+    price = forms.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        label="Course Price ($)",
+        min_value=0.01,
+        help_text="Price per student for your course."
+    )
+    language = forms.CharField(
+        max_length=100,
+        label="Instruction Language",
+        help_text="The primary language of instruction for this course."
+    )
+
+    # You can add clean methods for validation here if needed

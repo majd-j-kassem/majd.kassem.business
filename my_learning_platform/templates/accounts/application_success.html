@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Application Success{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg p-4">
+                <div class="card-body text-center">
+                    <h2 class="card-title text-success mb-4">Application Submitted Successfully!</h2>
+                    <p class="lead mb-4">
+                        Thank you for completing your teacher application.
+                    </p>
+                    <p class="mb-5">
+                        You will receive a confirmation email with important details, including your password, shortly.
+                        Please check your inbox (and spam folder).
+                    </p>
+                    <a href="{% url 'index' %}" class="btn btn-primary btn-lg">
+                        OK to Close
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

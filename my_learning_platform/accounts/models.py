@@ -4,7 +4,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.auth import get_user_model # <--- THIS LINE
 
+User = get_user_model() 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
         ('student', 'Student'),
@@ -23,7 +25,34 @@ class CustomUser(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-
+        # --- New Fields for Teacher Professional Details ---
+    experience_years = models.IntegerField(
+        verbose_name="Years of Experience",
+        default=0,
+        blank=True,
+        null=True,
+        help_text="Number of years of teaching experience."
+    )
+    university = models.CharField(
+        max_length=255,
+        verbose_name="University Attended",
+        blank=True,
+        null=True,
+        help_text="Name of the university you graduated from."
+    )
+    graduation_year = models.IntegerField(
+        verbose_name="Graduation Year",
+        blank=True,
+        null=True,
+        help_text="Year of your graduation."
+    )
+    major = models.CharField(
+        max_length=255,
+        verbose_name="Major/Specialization",
+        blank=True,
+        null=True,
+        help_text="Your primary field of study."
+    )
     # Existing fields
     profile_picture = models.ImageField(
         upload_to='images/profiles/',
@@ -52,7 +81,45 @@ class Profile(models.Model):
         null=True,
         verbose_name="Phone Number"
     )
+     # --- New Fields for Teacher Application Status ---
+    is_teacher_application_pending = models.BooleanField(
+        default=True, # New applications are pending by default
+        help_text="Is the teacher application awaiting admin approval?"
+    )
+    is_teacher_approved = models.BooleanField(
+        default=False, # Not approved until admin acts
+        help_text="Has the teacher application been approved by an admin?"
+    )
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL, # If the approving admin is deleted, don't delete the approval record
+        null=True, blank=True,
+        related_name='approved_teacher_applications',
+        help_text="Admin who approved this teacher application."
+    )
+    approval_date = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Date and time when the application was approved."
+    )
+    rejected_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL, # If the rejecting admin is deleted, don't delete the rejection record
+        null=True, blank=True,
+        related_name='rejected_teacher_applications',
+        help_text="Admin who rejected this teacher application."
+    )
+    rejection_date = models.DateTimeField(
+        null=True, blank=True,
+        help_text="Date and time when the application was rejected."
+    )
+    rejection_reason = models.TextField(
+        null=True, blank=True,
+        help_text="Reason for rejection, if applicable."
+    )
+    # ... (rest of your Profile model fields) ...
 
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
     def __str__(self):
         return f'{self.user.username} Profile'
 
@@ -74,3 +141,83 @@ def save_user_profile(sender, instance, **kwargs):
     if not hasattr(instance, 'profile'):
         Profile.objects.create(user=instance)
     instance.profile.save()
+
+# auth_system/accounts/models.py
+
+# ... (Keep all your existing imports and models like CustomUser and Profile) ...
+# Ensure CustomUser and Profile are imported correctly.
+# Example: from .models import CustomUser # if CustomUser is in this same file
+
+# --- New Models for Course Offerings ---
+
+class CourseCategory(models.Model):
+    """
+    Represents categories for courses (e.g., 'Art', 'Computer Science').
+    Managed by admin.
+    """
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        verbose_name_plural = "Course Categories"
+        ordering = ['name'] # Order alphabetically in admin
+
+    def __str__(self):
+        return self.name
+
+class CourseLevel(models.Model):
+    """
+    Represents difficulty levels for courses (e.g., 'Beginner', 'Intermediate').
+    Managed by admin.
+    """
+    name = models.CharField(max_length=50, unique=True)
+
+    class Meta:
+        verbose_name_plural = "Course Levels"
+        ordering = ['name'] # Order alphabetically in admin
+
+    def __str__(self):
+        return self.name
+
+class TeacherCourse(models.Model):
+    """
+    Represents a specific course offered by a teacher.
+    Linked to the teacher's Profile.
+    """
+    teacher_profile = models.ForeignKey(
+        'Profile',  # Use string literal if Profile is defined later in the file, or import it
+        on_delete=models.CASCADE,
+        related_name='offered_courses',
+        verbose_name="Teacher Profile"
+    )
+    categories = models.ManyToManyField(
+        CourseCategory,
+        related_name='courses_offered',
+        verbose_name="Categories"
+    )
+    level = models.ForeignKey(
+        CourseLevel,
+        on_delete=models.SET_NULL, # If a level is deleted, courses remain but level becomes null
+        null=True,
+        blank=True,
+        related_name='courses_at_level',
+        verbose_name="Level"
+    )
+    title = models.CharField(max_length=255, verbose_name="Course Title")
+    description = models.TextField(verbose_name="Course Description")
+    price = models.DecimalField(
+        max_digits=8,          # Allows numbers up to 999999.99
+        decimal_places=2,      # Two decimal places for currency
+        verbose_name="Course Price"
+    )
+    language = models.CharField(
+        max_length=100,
+        verbose_name="Instruction Language",
+        help_text="e.g., English, Arabic, French"
+    )
+
+    class Meta:
+        verbose_name_plural = "Teacher Courses"
+        ordering = ['title'] # Order by title by default
+
+    def __str__(self):
+        return f"{self.title} ({self.language}) by {self.teacher_profile.user.username}"

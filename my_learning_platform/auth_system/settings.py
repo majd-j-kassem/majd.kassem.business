@@ -24,6 +24,7 @@ ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STRING.split(',') if hos
 
 # Application definition
 INSTALLED_APPS = [
+     'jazzmin', 
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -37,6 +38,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
 ]
+AUTH_USER_MODEL = 'accounts.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -105,17 +107,18 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files
-STATIC_URL = '/static/'
+STATIC_URL = '/static/' # Keep only one of these lines
+
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
+    BASE_DIR / 'static', # Updated to use Path object with / operator
 ]
-# For production, you might need STATIC_ROOT configured as well:
-# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# This is the ABSOLUTE path to the directory where collectstatic will collect all static files for deployment.
+STATIC_ROOT = BASE_DIR / 'staticfiles' # UNCOMMENTED and using Path object
 
 # Media files
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = BASE_DIR / 'media' # Also update this for consistency
 MEDIA_URL = '/media/'
-
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -141,7 +144,6 @@ LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'portfolio'
 
 # Custom User Model
-AUTH_USER_MODEL = 'accounts.CustomUser'
 
 # Production-specific security settings (example - adjust as needed)
 if not DEBUG:
@@ -162,3 +164,41 @@ if not DEBUG:
 #     "http://localhost:3000",
 #     "https://your-frontend-domain.com",
 # ]
+JAZZMIN_SETTINGS = {
+    # title of the window (Will default to current_admin_site.site_title if absent or None)
+    "site_title": "My Learning Platform Admin",
+
+    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
+    "site_header": "Learning Platform",
+
+    # square logo to use for your site, must be a static file
+    "site_logo": "admin/img/logo.png", # You can replace this with your own logo later
+
+    # Welcome text
+    "welcome_sign": "Welcome to the Learning Platform Admin!",
+
+    # Copyright on the footer
+    "copyright": "Majd Kassem Business",
+
+    # The model admin to search from the search bar, search bar omitted if excluded
+    "search_model": ["accounts.CustomUser", "accounts.Profile", "accounts.TeacherCourse"],
+
+    # Field name on user model that contains name for display in the template
+    "user_avatar": None, # Set to 'profile.profile_picture' if you link user's profile pic to their admin icon
+
+    #############
+    # UI Tweaks #
+    #############
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    "hide_apps": [], # List apps to hide e.g., ["auth", "authtoken"]
+    "hide_models": [], # List models to hide e.g., ["auth.group", "auth.permission"]
+
+    # Custom links to include in the sidebar (top level)
+    "topmenu_links": [
+        {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Website", "url": "admin:index", "url": "/", "new_window": True}, # Link to your main site
+        {"model": "auth.User"}, # Link to User model
+        {"app": "accounts"}, # Link to accounts app
+    ],
+}
