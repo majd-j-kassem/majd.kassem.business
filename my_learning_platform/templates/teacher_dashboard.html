@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %} {# This line is standard for static files, even with embedded CSS #}
+
+{% block title %}Teacher Dashboard{% endblock %}
+
+{# This block is used to override the default container class in base.html #}
+{# By leaving it empty, we ensure the parent container is effectively full width #}
+{% block main_container_class %}{% endblock %}
+
+{% block extra_head %}
+{# All custom CSS for this page is embedded here #}
+<style>
+    /* Custom CSS for Teacher Dashboard Enhancements */
+
+    /* Main wrapper for the dashboard content, ensures 90% width and centering */
+    .dashboard-content-wrapper {
+        max-width: 90%; /* Dashboard content takes up 90% of the available horizontal space */
+        margin-left: auto; /* Centers the dashboard content */
+        margin-right: auto; /* Centers the dashboard content */
+        padding: 0 15px; /* Adds padding on the left and right edges */
+    }
+
+    /* Custom text color for the main heading */
+    .text-purple {
+        color: #6a0dad; /* A deep purple color */
+    }
+
+    /* Gradient background for the profile card header */
+    .bg-gradient-purple {
+        background: linear-gradient(to right, #8A2BE2, #6A0DAD); /* Purple gradient */
+    }
+
+    /* Gradient background for the courses card header */
+    .bg-gradient-green {
+        background: linear-gradient(to right, #28a745, #218838); /* Green gradient */
+    }
+
+    /* Styles for individual course cards */
+    .course-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth transition for hover effects */
+    }
+
+    .course-card:hover {
+        transform: translateY(-5px); /* Lifts the card slightly on hover */
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; /* Adds a stronger shadow on hover */
+    }
+
+    .course-card .card-title {
+        font-size: 1.35rem;
+        font-weight: bold;
+        color: #007bff; /* Primary blue color for course titles */
+    }
+
+    .course-card .card-subtitle {
+        font-size: 0.95rem;
+        color: #6c757d; /* Muted color for subtitles */
+    }
+
+    .course-card .card-text strong {
+        color: #495057; /* Darker text for strong labels within card text */
+    }
+
+    .course-card .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.7em;
+        border-radius: 0.25rem;
+        text-transform: uppercase;
+        font-weight: normal;
+    }
+
+    /* Visual border for profile section columns */
+    .profile-section-border {
+        border-right: 1px solid rgba(0, 0, 0, 0.1); /* Light border on the right */
+    }
+
+    /* Utility classes for margin spacing */
+    .mr-2 {
+        margin-right: 0.5rem !important;
+    }
+
+    .ml-2 {
+        margin-left: 0.5rem !important;
+    }
+
+    /* Styles for the upper profile row to make it smaller and centered */
+    .profile-section-wrapper {
+        display: flex; /* Enables flexbox for alignment */
+        justify-content: center; /* Centers the profile card horizontally within its wrapper */
+        width: 100%; /* The wrapper takes full width of dashboard-content-wrapper */
+        margin-bottom: 2rem; /* Adds space below the profile section */
+    }
+
+    /* Controls the maximum width of the profile card itself */
+    .profile-card-width {
+        max-width: 600px; /* Limits the profile card to a maximum width of 600px, making it "smaller" */
+        width: 100%; /* Ensures it scales down on smaller screens */
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-content-wrapper my-5">
+    <h2 class="text-center mb-5 display-4 text-purple">Welcome to Your Teacher Dashboard, <span class="font-weight-bold">{{ request.user.username }}</span>!</h2>
+
+    {# Conditional display for teacher application approval status #}
+    {% if not teacher_profile.is_teacher_approved %}
+    <div class="alert alert-warning text-center shadow-sm mb-4" role="alert">
+        <h4 class="alert-heading">Application Pending!</h4>
+        Your teacher application is currently **pending approval**. You will gain full access to teacher features once an administrator reviews and approves your application.
+    </div>
+    {% else %}
+    <div class="alert alert-success text-center shadow-sm mb-4" role="alert">
+        <h4 class="alert-heading">Application Approved!</h4>
+        Your teacher application has been **approved**! You now have full access to all teacher features.
+    </div>
+
+    {# UPPER ROW: Teacher Profile Section - Smaller and Centered #}
+    <div class="profile-section-wrapper"> {# Wrapper for centering the profile card #}
+        <div class="card shadow-lg mb-0 border-0 profile-card-width"> {# Profile card with max-width #}
+            <div class="card-header bg-gradient-purple text-white py-3">
+                <h3 class="mb-0">Your Profile</h3>
+            </div>
+            <div class="card-body p-4">
+                <div class="row">
+                    <div class="col-md-6 border-right pr-4"> {# Left column for profile details #}
+                        <p class="mb-2"><strong class="text-secondary">Full Name (English):</strong> {{ teacher_profile.full_name_en|default_if_none:"N/A" }}</p>
+                        <p class="mb-2"><strong class="text-secondary">Full Name (Arabic):</strong> {{ teacher_profile.full_name_ar|default_if_none:"N/A" }}</p>
+                        <p class="mb-2"><strong class="text-secondary">Email:</strong> {{ request.user.email }}</p>
+                        <p class="mb-2"><strong class="text-secondary">Phone Number:</strong> {{ teacher_profile.phone_number|default_if_none:"N/A" }}</p>
+                        <p class="mb-0"><strong class="text-secondary">Bio:</strong></p>
+                        <p class="text-muted">{{ teacher_profile.bio|truncatechars:100|default_if_none:"N/A" }}</p>
+                    </div>
+                    <div class="col-md-6 pl-4"> {# Right column for more profile details and edit button #}
+                        <p class="mb-2"><strong class="text-secondary">Years of Experience:</strong> {{ teacher_profile.experience_years|default_if_none:"N/A" }}</p>
+                        <p class="mb-2"><strong class="text-secondary">University:</strong> {{ teacher_profile.university|default_if_none:"N/A" }}</p>
+                        <p class="mb-2"><strong class="text-secondary">Graduation Year:</strong> {{ teacher_profile.graduation_year|default_if_none:"N/A" }}</p>
+                        <p class="mb-2"><strong class="text-secondary">Major:</strong> {{ teacher_profile.major|default_if_none:"N/A" }}</p>
+                        <p class="mt-4 text-center">
+                            <a href="{% url 'profile' %}" class="btn btn-outline-info btn-lg">Edit Profile <i class="fas fa-edit ml-2"></i></a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# LOWER ROW: Your Courses Section - Takes full 90% width #}
+    <div class="card shadow-lg mb-5 border-0">
+        <div class="card-header bg-gradient-green text-white py-3">
+            <h3 class="d-flex justify-content-between align-items-center mb-0">
+                Your Courses
+                <a href="{% url 'add_teacher_course' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-plus-circle"></i> Add New Course
+                </a>
+            </h3>
+        </div>
+        <div class="card-body p-4">
+            {% if teacher_courses %}
+                {# Responsive grid for course cards #}
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for course in teacher_courses %}
+                    <div class="col mb-4">
+                        <div class="card h-100 shadow-sm border-0 course-card">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title text-primary">{{ course.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">Level: {{ course.level }}</h6>
+                                <p class="card-text">
+                                    <strong>Price:</strong> {{ course.price }} $<br>
+                                    <strong>Language:</strong> {{ course.language }}<br>
+                                    <strong>Categories:</strong>
+                                    {% for category in course.categories.all %}
+                                        <span class="badge bg-info text-dark mx-1">{{ category.name }}</span>
+                                    {% empty %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endfor %}
+                                </p>
+                                <p class="card-text flex-grow-1">{{ course.description|truncatechars:150 }}</p>
+                                <div class="mt-auto d-flex justify-content-end">
+                                    <a href="#" class="btn btn-sm btn-outline-primary mr-2">Edit</a>
+                                    <a href="#" class="btn btn-sm btn-outline-danger">Delete</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center" role="alert">
+                    <h4 class="alert-heading">No Courses Added!</h4>
+                    You haven't added any courses yet. Click "Add New Course" above to get started!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %} {# End of is_teacher_approved check #}
+</div>
+{% endblock %}

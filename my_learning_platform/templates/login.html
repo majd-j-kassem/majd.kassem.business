@@ -306,6 +306,33 @@
             .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
             .login-form-container { padding: 0 10px; }
         }
+        .message-container {
+    text-align: center; /* Center the content within the container */
+    margin-bottom: 20px; /* Add some space below the message */
+    padding: 10px;
+    /* Optional: Add a subtle background or border if you like */
+    /* background-color: #f8d7da; */
+    /* border: 1px solid #f5c6cb; */
+    /* border-radius: 5px; */
+}
+
+.approval-message {
+    font-size: 1.1em; /* Make the font size a bit larger */
+    font-weight: bold; /* Make the text bold */
+    color: #25cc9a; /* Example: A blue color for the message */
+    /* You can adjust color based on your theme. For an info message, blue or green might be suitable */
+    list-style: none; /* Remove bullet points from the list item */
+    padding: 0;
+    margin: 0;
+}
+
+/* If you have specific classes for message tags like 'success', 'warning', 'error', you might adjust them too */
+/* Example for a warning message (like pending approval might be classified) */
+.messages .warning.approval-message {
+    color: #ffc107; /* Yellowish for warning */
+    background-color: #fff3cd; /* Light yellow background */
+    border: 1px solid #ffeeba;
+}
     </style>
 </head>
 <body>
@@ -352,13 +379,16 @@
         {# Note: Django messages framework automatically adds 'success', 'error', 'info' tags #}
         {# --- ADD/VERIFY THIS MESSAGE DISPLAY BLOCK --- #}
                 {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
+    <div class="message-container">
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{% if message.tags %}{{ message.tags }}{% endif %} approval-message">
+                {{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
                 {# --- END MESSAGE DISPLAY BLOCK --- #}
 
         <form method="post" class="login-form-container">

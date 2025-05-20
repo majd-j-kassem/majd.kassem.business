@@ -17,6 +17,7 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('teacher_dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
     path('signup/', views.signup_view, name='signup'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
     path('teacher/register/', views.teacher_register_wizard, name='teacher_register_stage1'),
@@ -26,6 +27,10 @@ urlpatterns = [
     path('teacher/register/confirm/', views.teacher_register_confirm, name='teacher_register_confirm'),
     path('teacher/register/password-setting/', views.teacher_register_password_setting, name='teacher_register_password_setting'),
     path('teacher/register/success/', views.application_success_view, name='application_success'),
+    # --- Teacher Specific URLs ---
+    path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/courses/add/', views.add_teacher_course, name='add_teacher_course'),
+    path('profile/', views.profile_view, name='profile'),
     # Optional: If 'courses' was just an alias for 'certificates', you can remove it.
     # If you still want it, keep it here:
     # path('courses/', views.certificates_view, name='courses'),

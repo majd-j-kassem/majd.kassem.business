@@ -279,11 +279,11 @@
     </header>
 
     {# --- Main Page Content (Block) --- #}
-    <div class="page-content">
-        {% block content %}
-            {# Default content if a child template doesn't override this block #}
-        {% endblock %}
-    </div>
+   <div class="{% block main_container_class %}container{% endblock %}"> 
+    {% block content %}
+    {# Page specific content will be rendered here #}
+    {% endblock %}
+</div>
 
     {# --- Footer --- #}
     <footer class="main-footer">

@@ -5,12 +5,13 @@ import string
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.messages.storage import default_storage
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required, user_passes_test
+
 
 User = get_user_model() # Get your CustomUser model instance
 
@@ -193,7 +194,7 @@ def login_view(request):
                         profile = Profile.objects.get(user=user) # Get their profile
                         if not profile.is_teacher_approved: # If NOT approved
                             messages.error(request, "Your teacher application is pending approval. Please wait for an administrator to review it.")
-                            return render(request, 'accounts/login.html', {'form': form, 'page_title': 'Login'}) # Stop login, show error
+                            return render(request, 'login.html', {'form': form, 'page_title': 'Login'}) # Stop login, show error
                     except Profile.DoesNotExist:
                         messages.error(request, "Your teacher profile could not be found. Please contact support.")
                         return render(request, 'accounts/login.html', {'form': form, 'page_title': 'Login'})
@@ -254,6 +255,33 @@ def dashboard(request):
 
 
 # --- Profile Edit View ---
+# --- Profile View ---
+@login_required
+def profile_view(request):
+    user = request.user
+    profile, created = Profile.objects.get_or_create(user=user) # Get or create profile
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your profile has been updated successfully!')
+            return redirect('profile') # Redirect back to the profile page to show changes
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = ProfileForm(instance=profile)
+
+    context = {
+        'form': form,
+        'profile': profile, # Pass the profile instance to the template
+        'user': user,
+        'title': 'My Profile'
+    }
+    return render(request, 'accounts/profile.html', context)
+
+# --- Your other views (teacher_dashboard, login_view, etc.) ---
+# ...
 @login_required
 def profile_edit(request):
     print(f"\n--- Profile Edit View Accessed (Method: {request.method}) ---")
@@ -664,3 +692,21 @@ def teacher_register_password_setting(request):
         'page_title': 'Set Your Password'
     }
     return render(request, 'accounts/teacher_register_password_setting.html', context)
+
+@login_required
+@user_passes_test(lambda user: user.user_type == 'teacher' and user.profile.is_teacher_approved)
+def teacher_dashboard(request):
+    # This is a placeholder for the teacher's dashboard content
+    # You can fetch courses taught by the teacher, pending requests, etc.
+    teacher_profile = request.user.profile
+    teacher_courses = TeacherCourse.objects.filter(teacher_profile=teacher_profile)
+
+    context = {
+        'teacher_profile': teacher_profile,
+        'teacher_courses': teacher_courses,
+        'title': 'Teacher Dashboard',
+    }
+    return render(request, 'teacher_dashboard.html', context)
+
+# --- Your other views (login_view, logout_view, signup_view, profile_view, etc.) ---
+# ...
