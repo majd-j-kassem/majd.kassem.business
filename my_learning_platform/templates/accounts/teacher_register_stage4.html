@@ -188,25 +188,19 @@
                 <div class="step-circle active">2</div>
                 <div>Professional Details</div>
             </div>
+          
             <div class="step-line"></div>
             <div class="step">
-                <div class="step-circle active">3</div> {# Current stage is 3 (Course Info) #}
-                <div>Course Info</div>
-            </div>
-            <div class="step-line"></div>
-            <div class="step">
-                <div class="step-circle active">4</div> {# Current stage is 4 (Review) #}
+                <div class="step-circle active">3</div> {# Current stage is 4 (Review) #}
                 <div>Review & Submit</div>
             </div>
             <div class="step-line"></div>
             <div class="step">
-                <div class="step-circle">5</div> {# Final stage is 5 (Confirmation) #}
+                <div class="step-circle">4</div> {# Final stage is 5 (Confirmation) #}
                 <div>Confirmation</div>
             </div>
         </div>
-        <h2>Step 4: Review and Submit Your Application</h2>
-        <p>Please review the information you have provided carefully before submitting your application.</p>
-
+     
 
         <form method="post">
             {% csrf_token %}
@@ -245,9 +239,9 @@
                 </ul>
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a href="{% url 'teacher_register_stage3' %}" class="cta-button" style="background: #6c757d;">Previous</a>
-                    <button type="submit" class="cta-button">Submit Application</button>
-                </div>
+    <a href="{% url 'teacher_register_stage2' %}" class="cta-button" style="background: #6c757d;">Previous</a>
+    <button type="submit" class="cta-button">Submit Application</button>
+</div>
             </div>
         </form>
     </div>

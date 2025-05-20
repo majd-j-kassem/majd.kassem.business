@@ -178,25 +178,19 @@
                 <div class="step-circle active">2</div>
                 <div>Professional Details</div>
             </div>
+           
             <div class="step-line"></div>
             <div class="step">
-                <div class="step-circle active">3</div> {# Current stage is 3 (Course Info) #}
-                <div>Course Info</div>
-            </div>
-            <div class="step-line"></div>
-            <div class="step">
-                <div class="step-circle">4</div> {# Next stage is 4 (Review) #}
+                <div class="step-circle">3</div> {# Next stage is 4 (Review) #}
                 <div>Review & Submit</div>
             </div>
             <div class="step-line"></div>
             <div class="step">
-                <div class="step-circle">5</div> {# Final stage is 5 (Confirmation) #}
+                <div class="step-circle">4</div> {# Final stage is 5 (Confirmation) #}
                 <div>Confirmation</div>
             </div>
         </div>
-        <h2>Step 3: Provide Course Information</h2>
-        <p>Tell us about the course you plan to offer.</p>
-
+        
 
         <form method="post">
             {% csrf_token %}

@@ -4,9 +4,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth import get_user_model # <--- THIS LINE
 
-User = get_user_model() 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
         ('student', 'Student'),
@@ -91,7 +89,7 @@ class Profile(models.Model):
         help_text="Has the teacher application been approved by an admin?"
     )
     approved_by = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.SET_NULL, # If the approving admin is deleted, don't delete the approval record
         null=True, blank=True,
         related_name='approved_teacher_applications',
@@ -102,7 +100,7 @@ class Profile(models.Model):
         help_text="Date and time when the application was approved."
     )
     rejected_by = models.ForeignKey(
-        User,
+        CustomUser,
         on_delete=models.SET_NULL, # If the rejecting admin is deleted, don't delete the rejection record
         null=True, blank=True,
         related_name='rejected_teacher_applications',
