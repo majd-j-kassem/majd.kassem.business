@@ -435,8 +435,8 @@ def teacher_register_stage4(request):
                     while CustomUser.objects.filter(username=username).exists():
                         username = f"{username_base}{i}"
                         i += 1
-
                     user = CustomUser.objects.create_user(username=username, email=email, password=CustomUser.objects.make_random_password())
+
                     user.is_active = True # Or set to False if you require email verification
                     # Assuming user_type is handled later or defaults correctly
                     user.save()
