@@ -8,10 +8,16 @@ from django.contrib import messages
 from django.contrib.messages.storage import default_storage
 from django.core.mail import send_mail # Import send_mail
 from django.conf import settings # Import settings
+from .forms import TeacherPersonalInfoForm
 
 from .forms import SignupForm, CustomUserChangeForm, ProfileForm, ContactForm # Import ContactForm
 from .models import Profile # Import Profile model if not already imported
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+##############3
+from django.contrib.auth.models import User  # If you are using the default User
+from .models import CustomUser, Profile  # Make sure to import your CustomUser
 
 # --- Core Homepage View ---
 def index_view(request):
@@ -280,3 +286,146 @@ def profile_edit(request):
         }
         print("Rendering template.")
         return render(request, 'profile.html', context)
+    
+def teacher_register_wizard(request):
+    if request.method == 'POST':
+        # Instantiate the form with POST data, and pass the user/profile instance
+        # to allow the form to save changes to both CustomUser (for email) and Profile
+        form = TeacherPersonalInfoForm(request.POST,
+                                       user=request.user,
+                                       profile_instance=request.user.profile)
+
+        if form.is_valid():
+            # Extract cleaned, validated data directly from the form
+            full_name_en = form.cleaned_data['full_name_en']
+            full_name_ar = form.cleaned_data['full_name_ar']
+            email = form.cleaned_data['email']
+            phone_number = form.cleaned_data['phone_number']
+
+            # --- Store Data Temporarily in Session ---
+            # IMPORTANT: Store all fields needed for final saving in the session
+            request.session['teacher_data'] = {
+                'full_name_en': full_name_en,
+                'full_name_ar': full_name_ar,
+                'email': email,
+                'phone_number': phone_number,
+                # If 'bio' is part of this stage and form, include it too:
+                # 'bio': form.cleaned_data.get('bio', ''),
+            }
+            request.session.modified = True # Crucial to save session changes immediately
+
+            messages.success(request, 'Basic information saved! Proceed to the next step.')
+            return redirect('teacher_register_stage2') # Redirect to the next stage URL name
+
+        else: # Form is NOT valid
+            messages.error(request, 'Please correct the errors below.')
+            # The form object 'form' already contains the errors, so just render with it.
+    else:  # request.method == 'GET'
+        # For a GET request, create an empty form or pre-populate if user is logged in
+        if request.user.is_authenticated:
+            form = TeacherPersonalInfoForm(user=request.user, profile_instance=request.user.profile)
+        else:
+            form = TeacherPersonalInfoForm() # Or redirect to login/signup if required
+
+    return render(request, 'accounts/teacher_register_stage1.html', {'form': form})    
+    
+
+def teacher_register_stage2(request):
+    if request.method == 'POST':
+        # Process the form data for courses offered
+        course1_name = request.POST.get('course1_name')
+        course1_description = request.POST.get('course1_description')
+        course2_name = request.POST.get('course2_name')
+        course2_description = request.POST.get('course2_description')
+        # Add more course fields as needed
+
+        # --- Validation ---
+        if not course1_name or not course1_description:
+            messages.error(request, 'Please provide information for at least one course.')
+            return render(request, 'accounts/teacher_register_stage2.html')
+
+        # --- Retrieve data from the previous stage ---
+        teacher_data = request.session.get('teacher_data', {})
+
+        # --- Update session with current stage data ---
+        teacher_data['courses_offered'] = [
+            {'name': course1_name, 'description': course1_description},
+        ]
+        if course2_name and course2_description:
+            teacher_data['courses_offered'].append(
+                {'name': course2_name, 'description': course2_description}
+            )
+        request.session['teacher_data'] = teacher_data
+        request.session.modified = True  # Ensure session changes are saved
+
+        # --- Redirect to the next stage ---
+        return redirect('teacher_register_stage3')
+
+    else:  # request.method == 'GET'
+        # Retrieve data from the previous stage to pre-fill the form (optional)
+        teacher_data = request.session.get('teacher_data', {})
+        return render(request, 'accounts/teacher_register_stage2.html', {'teacher_data': teacher_data})
+
+
+def teacher_register_stage3(request):
+    if request.method == 'POST':
+        # Process the schedule and max students data
+        availability = request.POST.get('availability')
+        max_students = request.POST.get('max_students')
+
+        # --- Validation ---
+        if not availability or not max_students:
+            messages.error(request, 'Please provide your availability and maximum number of students.')
+            return render(request, 'accounts/teacher_register_stage3.html')
+
+        try:
+            max_students = int(max_students)
+            if max_students <= 0:
+                messages.error(request, 'Maximum number of students must be a positive number.')
+                return render(request, 'accounts/teacher_register_stage3.html')
+        except ValueError:
+            messages.error(request, 'Maximum number of students must be a number.')
+            return render(request, 'accounts/teacher_register_stage3.html')
+
+        # --- Retrieve data from previous stages ---
+        teacher_data = request.session.get('teacher_data', {})
+
+        # --- Update session with final stage data ---
+        teacher_data['availability'] = availability
+        teacher_data['max_students'] = max_students
+        request.session['teacher_data'] = teacher_data
+        request.session.modified = True
+
+        # --- Create the new teacher user ---
+        full_name_parts = teacher_data.get('full_name', '').split()
+        first_name = full_name_parts[0] if full_name_parts else ''
+        last_name = ' '.join(full_name_parts[1:]) if len(full_name_parts) > 1 else ''
+        email = teacher_data.get('email')
+        bio = teacher_data.get('bio', '')
+
+        username = email  # You might want to generate a unique username
+
+        try:
+            user = CustomUser.objects.create_user(username=username, email=email, password='defaultpassword') # You might want a better way to handle initial password
+            user.first_name = first_name
+            user.last_name = last_name
+            user.user_type = 'teacher'
+            user.is_staff = True  # Optionally make them a staff member for admin access
+            user.save()
+
+            # Update the profile with the bio
+            user.profile.bio = bio
+            user.profile.save()
+
+            # Optionally create course models based on teacher_data['courses_offered']
+
+            messages.success(request, 'Your teacher application has been submitted successfully! We will review it shortly.')
+            del request.session['teacher_data']  # Clear the session data
+            return redirect('index')  # Redirect to the homepage or a thank you page
+
+        except Exception as e:
+            messages.error(request, f'An error occurred during registration: {e}')
+            return render(request, 'accounts/teacher_register_stage3.html')
+
+    else:  # request.method == 'GET'
+        return render(request, 'accounts/teacher_register_stage3.html')

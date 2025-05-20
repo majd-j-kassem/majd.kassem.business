@@ -19,6 +19,9 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('signup/', views.signup_view, name='signup'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),
+    path('teacher/register/', views.teacher_register_wizard, name='teacher_register_wizard'),
+    path('teacher/register/stage2/', views.teacher_register_stage2, name='teacher_register_stage2'),
+    path('teacher/register/stage3/', views.teacher_register_stage3, name='teacher_register_stage3'),
 
     # Optional: If 'courses' was just an alias for 'certificates', you can remove it.
     # If you still want it, keep it here:

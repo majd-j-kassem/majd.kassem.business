@@ -5,8 +5,56 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from .models import Profile # Import the new Profile model
 
+
 # Get the currently active User model (handles custom user models if you ever use one)
 User = get_user_model()
+
+# --- Teacher Personal Information Form ---
+class TeacherPersonalInfoForm(forms.ModelForm):
+    # The 'email' field is on CustomUser, so we add it explicitly to this form
+    # It allows us to combine fields from different models in one form.
+    email = forms.EmailField(label="Email", required=False)
+    
+
+    class Meta:
+        model = Profile # This form primarily manages Profile fields
+        fields = ['full_name_en', 'full_name_ar', 'phone_number']
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        self.profile_instance = kwargs.pop('profile_instance', None)
+        super().__init__(*args, **kwargs)
+
+        # Explicitly make these fields required in the form.
+        # This overrides any `blank=True` or `null=True` settings on the model fields
+        # at the form validation level, forcing the user to provide a value.
+        '''
+        self.fields['full_name_en'].required = True
+        self.fields['full_name_ar'].required = True
+        self.fields['phone_number'].required = True
+        '''
+        # Pre-populate initial values if a user or profile instance is provided
+        if self.user:
+            self.fields['email'].initial = self.user.email
+        if self.profile_instance:
+            self.fields['full_name_en'].initial = self.profile_instance.full_name_en
+            self.fields['full_name_ar'].initial = self.profile_instance.full_name_ar
+            self.fields['phone_number'].initial = self.profile_instance.phone_number
+
+
+    # Override save method to handle saving data to both CustomUser (for email) and Profile
+    def save(self, commit=True):
+        # Save the Profile instance first
+        profile = super().save(commit=False)
+
+        # Update the user's email if it has changed
+        if self.user and self.cleaned_data['email'] != self.user.email:
+            self.user.email = self.cleaned_data['email']
+            self.user.save()
+
+        if commit:
+            profile.save() # Save the profile instance to the database
+        return profile
+
 
 # --- Signup Form (Updated to include profile_picture and bio) ---
 class SignupForm(UserCreationForm):

@@ -1,10 +1,9 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Name - Home</title> {# Update with your name #}
+    <title>Become a Teacher - Stage 2: Professional Details</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* --- General Body Styles --- */
@@ -155,7 +154,7 @@
             font-size: 0.85em;
         }
 
-        /* --- Page Content Specific Styling (for Home/Index) --- */
+        /* --- Page Content Area --- */
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
@@ -167,7 +166,7 @@
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
-            text-align: center; /* Center content in the box */
+            text-align: center; /* Default text alignment for content */
             color: white;
         }
         .page-content h1 {
@@ -249,34 +248,28 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                {# Updated link: goes to courses when logged in, index when logged out #}
                 <a href="{% if user.is_authenticated %}{% url 'courses' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
-                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                        {{ user.username }}
                     {% else %}
-                        Your Name {# Replace with your actual name #}
+                        Your Name
                     {% endif %}
                 </a>
             </div>
             <nav class="main-nav">
                 <ul>
-                    {# Link to the homepage using the 'index' URL name #}
-                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to this page (using 'index') #}
+                    <li><a href="{% url 'index' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
-                        {# Link to the Courses page - shown when logged in #}
                         <li><a href="{% url 'courses' %}">Courses</a></li>
-                        {# Link to the logout view #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
-                        {# Link to the profile edit view #}
                         <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     {% else %}
-                        {# Link to the login view - shown when logged out #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -284,50 +277,56 @@
         </div>
     </header>
 
-    {# --- Main Homepage Content --- #}
+    {# --- Main Page Content --- #}
     <div class="page-content">
-        <h1>Welcome to My Portfolio</h1> {# Update with your main heading #}
-        <h2>A brief tagline or introduction</h2> {# Update with your tagline #}
-        <p>This is the main content area for your homepage. You can introduce yourself, your skills, or your passion here.</p> {# Replace with your introductory text #}
-        {# Example Call to Action Button #}
-        <a href="{% url 'portfolio_page' %}" class="cta-button">View My Work</a> {# Link to your main portfolio page #}
+        <h1>Become a Teacher</h1>
+        <h2>Step 2: Professional Details</h2>
+        <p>Please provide information about your professional background and teaching experience.</p>
+        <form method="post">
+            {% csrf_token %}
+            {{ wizard.management_form }}
+            {{ wizard.form|crispy }}
+            <button type="submit" class="cta-button">Next</button>
+            <button type="submit" name="{{ wizard.management_form.prefix }}-current_step" value="{{ wizard.steps.prev }}" class="cta-button">Previous</button>
+        </form>
+        <br>
+        <p><a href="{% url 'index' %}">Back to Homepage</a></p>
     </div>
 
     {# --- Footer --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3> {# Replace with your name #}
-                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
+                <h3>Your Name</h3>
+                <p>A brief description about you or your project. You can add more text here.</p>
             </div>
             <div class="footer-section footer-nav">
-    <h3>Quick Links</h3>
-    <ul>
-        <li><a href="{% url 'index' %}">Home</a></li>
-        <li><a href="{% url 'cv' %}">CV</a></li>
-        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-        <li><a href="{% url 'certificates' %}">Certificates</a></li>
-        <li><a href="{% url 'teacher_register_wizard' %}">Join us as a teacher</a></li>
-    </ul>
-</div>
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="{% url 'index' %}">Home</a></li>
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'teacher_register_wizard' %}">Join us as a teacher</a></li>
+                </ul>
+            </div>
             <div class="footer-section footer-contact">
                 <h3>Contact</h3>
-                <p>Email: your.email@example.com</p> {# Replace with your email #}
-                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
-                <p>Location: Your City, Country</p> {# Replace with your location #}
+                <p>Email: your.email@example.com</p>
+                <p>Phone: +123 456 7890</p>
+                <p>Location: Your City, Country</p>
             </div>
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have these icons in your static/images/ directory #}
-                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
-                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
-                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
+            &copy; 2026 Your Name. All rights reserved.
         </div>
     </footer>
 </body>
