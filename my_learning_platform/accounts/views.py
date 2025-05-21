@@ -105,7 +105,7 @@ def course_detail(request, course_id):
         'course': course,
         'is_enrolled': is_enrolled,
     }
-    return render(request, 'accounts/course_detail.html', context) # Corrected template path
+    return render(request, 'course_detail.html', context) # Corrected template path
 
 # --- Contact Page View ---
 def contact_view(request):
@@ -200,7 +200,7 @@ def login_view(request):
                 if hasattr(user, 'user_type') and user.user_type == 'teacher':
                     if not profile.is_teacher_approved: # Check profile's approval status
                         messages.error(request, "Your teacher application is pending approval. Please wait for an administrator to review it.")
-                        return render(request, 'accounts/login.html', {'form': form, 'page_title': 'Login'})
+                        return render(request, 'login.html', {'form': form, 'page_title': 'Login'})
 
                 # If we reach here, the user is allowed to log in (student, approved teacher, or admin)
                 login(request, user)
@@ -228,7 +228,7 @@ def login_view(request):
         'form': form,
         'page_title': 'Login'
     }
-    return render(request, 'accounts/login.html', context) # Consistently use 'accounts/login.html'
+    return render(request, 'login.html', context) # Consistently use 'login.html'
 
 # --- Logout View ---
 @login_required
