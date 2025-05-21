@@ -282,9 +282,7 @@
         .profile-info {
             text-align: center; /* Center text when stacked */
         }
-        .profile-status {
-            text-align: center;
-        }
+       
         .teacher-courses-grid {
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
@@ -336,35 +334,6 @@
     <div class="dashboard-card">
         <div class="dashboard-card-header">
             Teacher Profile
-            <a href="{% url 'profile_edit' %}" class="btn btn-info btn-sm">Edit Profile</a>
-        </div>
-        <div class="card-body"> {# Retaining card-body for Bootstrap compatibility if you have other Bootstrap styles #}
-            <div class="profile-section">
-                <div class="profile-picture-container">
-                    {% if teacher_profile.profile_picture %}
-                        <img src="{{ teacher_profile.profile_picture.url }}" alt="Profile Picture">
-                    {% else %}
-                        <img src="{% static 'images/profiles/default.jpg' %}" alt="Default Profile Picture">
-                    {% endif %}
-                    {# Moved name below image for better alignment with the reference image #}
-                    <h5>{{ teacher_profile.full_name_en }}</h5>
-                    {% if teacher_profile.full_name_ar %}
-                        <p class="text-muted small">({{ teacher_profile.full_name_ar }})</p>
-                    {% endif %}
-                </div>
-                <div class="profile-info">
-                    <div class="profile-details">
-                        <p><strong>Email:</strong> {{ teacher_profile.user.email }}</p>
-                        <p><strong>Phone:</strong> {{ teacher_profile.phone_number|default:"N/A" }}</p>
-                        <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
-                        <hr>
-                        <p><strong>Experience:</strong> {{ teacher_profile.experience_years|default:"0" }} years</p>
-                        <p><strong>University:</strong> {{ teacher_profile.university|default:"N/A" }}</p>
-                        <p><strong>Major:</strong> {{ teacher_profile.major|default:"N/A" }}</p>
-                        <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
-                    </div>
-                </div>
-            </div>
             <div class="profile-status">
                 <strong>Application Status:</strong>
                 {% if teacher_profile.is_teacher_application_pending %}
@@ -382,6 +351,78 @@
                     <span class="badge bg-secondary">Status Not Set</span>
                 {% endif %}
             </div>
+            <a href="{% url 'profile_edit' %}" class="btn btn-info btn-sm">Edit Profile</a>
+        </div>
+        <div class="card-body"> {# Retaining card-body for Bootstrap compatibility if you have other Bootstrap styles #}
+            <div class="profile-section">
+                <div class="profile-picture-container">
+                    {% if teacher_profile.profile_picture %}
+                        <img src="{{ teacher_profile.profile_picture.url }}" alt="Profile Picture">
+                    {% else %}
+                        <img src="{% static 'images/profiles/default.jpg' %}" alt="Default Profile Picture">
+                    {% endif %}
+                    {# Moved name below image for better alignment with the reference image #}
+                    <h5>{{ teacher_profile.full_name_en }}</h5>
+                    {% if teacher_profile.full_name_ar %}
+                        <p class="text-muted small">({{ teacher_profile.full_name_ar }})</p>
+                    {% endif %}
+                </div>
+                <div class="profile-info">
+    <div class="profile-details">
+        {# Existing profile picture/name section (assuming it's here or similar) #}
+        {% comment %}
+        If you have a section for profile picture and name like this:
+        <div class="row mb-4">
+            <div class="col-md-3 text-center">
+                {% if teacher_profile.profile_picture %}
+                    <img src="{{ teacher_profile.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                    <img src="{% static 'images/default_profile.png' %}" alt="Default Profile Picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% endif %}
+                <h4>{{ teacher_profile.user.first_name }} {{ teacher_profile.user.last_name }}</h4>
+                <p>({{ teacher_profile.user.get_user_type_display }})</p>
+            </div>
+        </div>
+        {% endcomment %}
+
+        {# --- START New Layout for Profile Details --- #}
+
+        <div class="row mb-3"> {# mb-3 adds margin-bottom for spacing between rows #}
+            <div class="col-md-4 col-12">
+                <p><strong>Email:</strong> {{ teacher_profile.user.email }}</p>
+            </div>
+            <div class="col-md-4 col-12">
+                <p><strong>Phone:</strong> {{ teacher_profile.phone_number|default:"N/A" }}</p>
+            </div>
+            
+        </div>
+        <hr> {# Keep the horizontal rule if you like the separation #}
+
+        <div class="row mb-3">
+            <div class="col-md-3 col-12">
+                <p><strong>Experience:</strong> {{ teacher_profile.experience_years|default:"0" }} years</p>
+            </div>
+            <div class="col-md-3 col-12">
+                <p><strong>University:</strong> {{ teacher_profile.university|default:"N/A" }}</p>
+            </div>
+            <div class="col-md-3 col-12">
+                <p><strong>Major:</strong> {{ teacher_profile.major|default:"N/A" }}</p>
+            </div>
+            <div class="col-md-3 col-12">
+                <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
+            </div>
+        </div>
+        <div class="col-md-4 col-12">
+                <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
+            </div>
+        {# --- END New Layout for Profile Details --- #}
+
+        {# ... (Any other content you have after the profile details, like application status, edit button) ... #}
+
+    </div>
+</div>
+            </div>
+            
         </div>
     </div>
 

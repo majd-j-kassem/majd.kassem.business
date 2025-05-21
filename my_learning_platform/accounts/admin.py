@@ -13,10 +13,10 @@ from .models import CustomUser, Profile, CourseCategory, CourseLevel, TeacherCou
 # This allows Profile fields to be edited directly when editing a CustomUser
 class ProfileInline(admin.StackedInline):
     model = Profile
-    fk_name = 'user' # <--- ADD THIS LINE
+    fk_name = 'user'
     can_delete = False
     verbose_name_plural = 'Profile Info'
-    
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('full_name_en', 'full_name_ar', 'phone_number', 'bio', 'profile_picture')
@@ -25,7 +25,8 @@ class ProfileInline(admin.StackedInline):
             'fields': ('experience_years', 'university', 'graduation_year', 'major'),
             'classes': ('collapse',),
         }),
-        ('Teacher Application Status', {
+        ('Teacher Application Status',
+         {
             'fields': (
                 'is_teacher_application_pending',
                 'is_teacher_approved',
@@ -38,7 +39,7 @@ class ProfileInline(admin.StackedInline):
             'classes': ('wide',),
         }),
     )
-    # Fields can also be listed directly if not using fieldsets, e.g.:
+    # Fields can also be listed directly if not using fieldsets, eg:
     # fields = ('full_name_en', 'full_name_ar', 'phone_number', 'bio', 'profile_picture', ...)
 
 
@@ -191,17 +192,18 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         'level',
         'price',
         'language',
-        'status',          # Added: Display status
-        'created_at',      # Added: Display creation date
-        'updated_at',      # Added: Display last update date
+        'status',
+        'created_at',
+        'updated_at',
+        'is_published_display', # This will show a checkmark if status is 'published'
     )
     list_filter = (
-        'status',          # Added: Filter by status
+        'status',
         'categories',
         'level',
         'language',
-        'created_at',      # Added: Filter by creation date
-        'updated_at',      # Added: Filter by update date
+        'created_at',
+        'updated_at',
     )
     search_fields = (
         'title',
@@ -209,28 +211,37 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         'teacher_profile__user__username',
         'language',
     )
-    raw_id_fields = ('teacher_profile',) # Useful for selecting related objects when there are many
-    filter_horizontal = ('categories',) # Better UI for ManyToMany fields
-    date_hierarchy = 'created_at' # Adds a date drill-down navigation
+    raw_id_fields = ('teacher_profile',)
+    filter_horizontal = ('categories',)
+    date_hierarchy = 'created_at'
+    ordering = ('-created_at',) # Default ordering
 
-    # Full fieldsets to include all TeacherCourse fields
     fieldsets = (
         (None, {
-            'fields': ('teacher_profile', 'title', 'description', 'price', 'language', 'status')
-        }),
-        ('Course Media', {
-            'fields': ('course_picture', 'video_trailer_url'),
-            'classes': ('collapse',),
+            'fields': ('teacher_profile', 'title', 'description', 'price', 'language')
         }),
         ('Categorization', {
             'fields': ('categories', 'level'),
         }),
+        ('Media', {
+            'fields': ('course_picture', 'video_trailer_url'),
+            'classes': ('collapse',)
+        }),
+        ('Course Status', { # Admin will primarily change status here
+            'fields': ('status',)
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
-            'classes': ('collapse',),
+            'classes': ('collapse',)
         }),
     )
     readonly_fields = ('created_at', 'updated_at') # These fields are automatically set
+
+    # Custom method to display 'Published' status clearly in list_display
+    def is_published_display(self, obj):
+        return obj.status == 'published'
+    is_published_display.boolean = True # Display as a nice checkmark/X
+    is_published_display.short_description = 'Published'
 
     # Custom method to display the teacher's username as a link to their profile
     def teacher_profile_link(self, obj):
@@ -243,3 +254,30 @@ class TeacherCourseAdmin(admin.ModelAdmin):
     def get_categories_display(self, obj):
         return ", ".join([category.name for category in obj.categories.all()])
     get_categories_display.short_description = 'Categories'
+
+    # --- Custom Admin Actions for Course Approval/Publishing ---
+    actions = ['mark_as_pending_review', 'mark_as_approved', 'mark_as_rejected', 'mark_as_published']
+
+    def mark_as_pending_review(self, request, queryset):
+        queryset.update(status='pending')
+        self.message_user(request, "Selected courses marked as 'Pending Review'.")
+    mark_as_pending_review.short_description = "Mark selected as Pending Review"
+
+    def mark_as_approved(self, request, queryset):
+        queryset.update(status='approved')
+        self.message_user(request, "Selected courses marked as 'Approved'.")
+    mark_as_approved.short_description = "Mark selected as Approved"
+
+    def mark_as_rejected(self, request, queryset):
+        queryset.update(status='rejected')
+        self.message_user(request, "Selected courses marked as 'Rejected'.")
+    mark_as_rejected.short_description = "Mark selected as Rejected"
+
+    def mark_as_published(self, request, queryset):
+        # Only allow transition to 'published' from 'approved' or 'pending' for logical flow
+        updated_count = queryset.filter(status__in=['approved', 'pending']).update(status='published')
+        if updated_count > 0:
+            self.message_user(request, f"{updated_count} course(s) successfully marked as 'Published'.")
+        else:
+            self.message_user(request, "No eligible courses selected for publishing (must be Approved or Pending).", level='warning')
+    mark_as_published.short_description = "Mark selected as Published (Available to Customers)"

@@ -2,86 +2,116 @@
 
 import secrets
 import string
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout, get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
-from django.contrib.messages.storage import default_storage
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.utils import timezone # Ensure this is imported for timezone.now()
+from django.utils import timezone
+from django.db import IntegrityError # Ensure this is imported for enrollment
 
 # --- Consolidated Model Imports ---
-from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel
+# Assuming TeacherCourse is your main course model now.
+from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse
 
 # --- Consolidated Form Imports ---
 from .forms import (
     SignupForm, CustomUserChangeForm, ProfileForm, ContactForm,
     TeacherPersonalInfoForm, TeacherProfessionalDetailsForm,
-    TeacherCourseForm, # Make sure TeacherCourseForm is here if used by add_teacher_course
+    TeacherCourseForm,
+    PaymentForm,
     PasswordSettingForm
 )
 
-User = get_user_model() # Get your CustomUser model instance (keep this line once)
-
+User = get_user_model() # Get your CustomUser model instance
 
 def generate_random_password(length=12):
     """Generate a secure random password."""
     characters = string.ascii_letters + string.digits + string.punctuation
     return ''.join(secrets.choice(characters) for i in range(length))
 
+# --- Helper Function: Check if user is an approved teacher ---
+# IMPORTANT: This assumes 'user_type' is on the CustomUser model.
+# If 'user_type' is on the Profile model, change user.user_type to user.profile.user_type.
+def is_approved_teacher(user):
+    """
+    Test to check if the user is a teacher and their application is approved.
+    Also checks if the profile exists to prevent AttributeError.
+    """
+    # Check if user is authenticated, has a user_type, and if it's 'teacher'
+    if not user.is_authenticated or not hasattr(user, 'user_type') or user.user_type != 'teacher':
+        return False
+    
+    # Check if user has a profile and if that profile is approved
+    if not hasattr(user, 'profile') or not user.profile:
+        logging.warning(f"User {user.username} is a teacher but has no profile.")
+        return False
+        
+    return user.profile.is_teacher_approved
+
+
 # --- Core Homepage View ---
 def index_view(request):
-    print("\n--- Index View Accessed (Homepage) ---")
+    published_courses = TeacherCourse.objects.filter(status='published').select_related('teacher_profile__user').order_by('-created_at')
     context = {
-        'page_title': 'Welcome to My Portfolio'
+        'page_title': 'Welcome to My Portfolio',
+        'published_courses': published_courses,
     }
     return render(request, 'index.html', context)
 
-
 # --- CV Page View ---
 def cv_view(request):
-    print("\n--- CV View Accessed ---")
     context = {}
     return render(request, 'cv.html', context)
 
 # --- Portfolio Page View ---
 def portfolio_page_view(request):
-    print("\n--- Portfolio Page View Accessed ---")
     context = {}
     return render(request, 'portfolio_page.html', context)
 
 # --- Certificates Page View ---
 def certificates_view(request):
-    print("\n--- Certificates View Accessed ---")
     context = {}
     return render(request, 'certificates.html', context)
 
-# --- Course Page View (UPDATED TO FETCH COURSES FROM DB) ---
-def course_view(request):
-    print("\n--- Course View Accessed (Fetching Published Courses) ---")
-    
-    # Fetch all TeacherCourse objects that have a 'published' status
-    # .select_related() is an optimization to fetch related Profile and CustomUser data
-    # .order_by('-created_at') ensures newer courses appear first.
+# --- Course List View ---
+def course_list_view(request):
+    # Changed from 'Course' to 'TeacherCourse' consistently
     courses = TeacherCourse.objects.filter(status='published').select_related('teacher_profile__user').order_by('-created_at')
+    context = {
+        'page_title': 'Our Courses & Learning',
+        'courses': courses
+    }
+    return render(request, 'accounts/course_list.html', context) # Corrected template path
+
+# --- Individual Course Detail View ---
+def course_detail(request, course_id):
+    # Changed from 'Course' to 'TeacherCourse' consistently
+    course = get_object_or_404(TeacherCourse, id=course_id, status='published')
+
+    is_enrolled = False
+    if request.user.is_authenticated:
+        # Check if user has a profile for enrollment check
+        if hasattr(request.user, 'profile') and request.user.profile:
+            is_enrolled = EnrolledCourse.objects.filter(student=request.user.profile, course=course).exists()
+        else:
+            logging.warning(f"User {request.user.username} is authenticated but has no profile.")
 
     context = {
-        'page_title': 'Our Courses & Learning', # You can adjust this title
-        'courses': courses # This is the crucial part: pass the fetched courses to the template
+        'page_title': course.title,
+        'course': course,
+        'is_enrolled': is_enrolled,
     }
-    return render(request, 'courses.html', context)
-
+    return render(request, 'accounts/course_detail.html', context) # Corrected template path
 
 # --- Contact Page View ---
 def contact_view(request):
-    print(f"\n--- Contact View Accessed (Method: {request.method}) ---")
     if request.method == 'POST':
         form = ContactForm(request.POST)
-        print("Contact form instantiated with POST data.")
         if form.is_valid():
-            print("Contact form is valid. Processing message...")
             name = form.cleaned_data['name']
             email = form.cleaned_data['email']
             phone = form.cleaned_data['phone']
@@ -97,248 +127,165 @@ def contact_view(request):
                 from_email = settings.DEFAULT_FROM_EMAIL
                 to_email = [settings.CONTACT_EMAIL]
 
+                # In a real app, uncomment send_mail
                 # send_mail(subject, body, from_email, to_email, fail_silently=False)
-                print("Email sending logic executed (send_mail commented out).")
-
                 messages.success(request, 'Your message has been sent successfully!')
-                print("Contact message processed. Redirecting to contact page...")
                 return redirect('contact')
 
             except Exception as e:
-                print(f"Error processing contact message (or sending email): {e}")
+                logging.error(f"Error sending contact email: {e}", exc_info=True)
                 messages.error(request, 'There was an error sending your message. Please try again later.')
-
         else:
-            print("Contact form is NOT valid.")
             messages.error(request, 'Please correct the errors below.')
-
-    else: # GET request
+    else:
         form = ContactForm()
-        print("Contact form instantiated for GET.")
 
     context = {
         'form': form,
     }
     return render(request, 'contact.html', context)
 
-
 # --- About Page View ---
 def about_view(request):
-    print("\n--- About View Accessed ---")
     context = {}
     return render(request, 'about.html', context)
 
 # --- Signup View ---
 def signup_view(request):
-    print(f"\n--- Signup View Accessed (Method: {request.method}) ---")
-
     if request.method == 'POST':
         form = SignupForm(request.POST, request.FILES)
-        print("Signup form instantiated with POST and FILES.")
         if form.is_valid():
-            print("Signup form is valid. Saving user and profile...")
             user = form.save()
             messages.success(request, f'Account created successfully for {user.username}! You are now logged in.')
             login(request, user)
-            print("User logged in after signup. Redirecting to dashboard...")
-            return redirect('dashboard')
+            # Redirect logic after signup - simplified
+            if hasattr(user, 'user_type') and user.user_type == 'teacher':
+                messages.info(request, "Your teacher application is pending approval.")
+                return redirect('index') # Or a specific pending page
+            else: # Default for students or unassigned user types
+                return redirect('index')
         else:
-            print("Signup form is NOT valid.")
             messages.error(request, 'Please correct the errors below.')
     else:
         form = SignupForm()
-        print("Signup form instantiated for GET.")
 
     context = {
         'form': form,
     }
     return render(request, 'signup.html', context)
 
-
 # --- Login View ---
 def login_view(request):
-    print(f"\n--- Login View Accessed (Method: {request.method}) ---")
-
     if request.method == 'GET':
-        print("Handling GET request for login page.")
         storage = messages.get_messages(request)
-        print(f"GET request. Messages in storage BEFORE clear: {[str(m) for m in storage]}")
-        storage.used = True
+        storage.used = True # Clear any existing messages on GET
         if '_messages' in request.session:
-             print("GET request. '_messages' key found in session. Attempting to delete.")
-             del request.session['_messages']
-        else:
-             print("GET request. '_messages' key not found in session initially.")
-
-        storage = messages.get_messages(request)
-        print(f"GET request. Messages in storage AFTER clear: {[str(m) for m in storage]}")
-        print(f"GET request. Session keys AFTER message clear: {list(request.session.keys())}")
-
+            del request.session['_messages']
 
     if request.method == 'POST':
-        print("--- Handling POST request for login ---")
         form = AuthenticationForm(request, data=request.POST)
-        print("Login form instantiated with POST data.")
+
         if form.is_valid():
-            print("Login form is valid. Attempting authentication...")
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            print(f"Received Username: '{username}'")
-
             user = authenticate(request, username=username, password=password)
 
             if user is not None:
-                print("Authentication successful.")
-                # --- START NEW LOGIC FOR TEACHER APPROVAL ---
-                if user.user_type == 'teacher': # Check if the user is a teacher
-                    try:
-                        profile = Profile.objects.get(user=user) # Get their profile
-                        if not profile.is_teacher_approved: # If NOT approved
-                            messages.error(request, "Your teacher application is pending approval. Please wait for an administrator to review it.")
-                            return render(request, 'login.html', {'form': form, 'page_title': 'Login'}) # Stop login, show error
-                    except Profile.DoesNotExist:
-                        messages.error(request, "Your teacher profile could not be found. Please contact support.")
+                # Always ensure a profile exists for the user after authentication
+                profile, created = Profile.objects.get_or_create(user=user)
+                if created:
+                    logging.info(f"Profile created for new user {user.username} during login.")
+
+                # Handle Teacher Approval Status *before* logging in, if applicable
+                if hasattr(user, 'user_type') and user.user_type == 'teacher':
+                    if not profile.is_teacher_approved: # Check profile's approval status
+                        messages.error(request, "Your teacher application is pending approval. Please wait for an administrator to review it.")
                         return render(request, 'accounts/login.html', {'form': form, 'page_title': 'Login'})
-                # --- END NEW LOGIC ---
+
+                # If we reach here, the user is allowed to log in (student, approved teacher, or admin)
                 login(request, user)
-                print(f"Login successful. Session keys: {list(request.session.keys())}")
                 messages.success(request, f'Welcome back, {user.username}!')
-                print(f"Login successful. Messages in storage after login: {[str(m) for m in messages.get_messages(request)]}")
-                
-                # --- REVISED REDIRECT LOGIC BASED ON USER TYPE ---
-                if hasattr(user, 'profile') and user.user_type == 'teacher' and user.profile.is_teacher_approved:
-                    print(f"Approved Teacher '{user.username}' logged in. Redirecting to teacher_dashboard.")
+
+                next_url = request.GET.get('next')
+
+                # Redirect based on user type or 'next' parameter
+                if hasattr(user, 'user_type') and user.user_type == 'teacher' and profile.is_teacher_approved:
                     return redirect('teacher_dashboard')
-                elif user.user_type == 'student' or (user.user_type == 'teacher' and not user.profile.is_teacher_approved):
-                    print(f"User '{user.username}' (Student or Pending Teacher) logged in. Redirecting to regular dashboard.")
-                    return redirect('dashboard') # Regular dashboard for students or pending teachers
-                else:
-                    # Fallback for other user types or unexpected scenarios
-                    print(f"User '{user.username}' logged in (type: {user.user_type}). Redirecting to general dashboard as fallback.")
-                    return redirect('dashboard')
-                # --- END REVISED LOGIC ---
-            else:
-                print("Authentication failed.")
+                elif next_url:
+                    return redirect(next_url)
+                else: # Default for students or other users
+                    return redirect('index') # or 'dashboard' if you have a general user dashboard
+
+            else: # Authentication failed (user is None)
                 messages.error(request, 'Invalid username or password.')
-        else:
-            print("Login form is NOT valid.")
-            print("Form errors:", form.errors) # This will show validation errors
+        else: # Form is not valid
             messages.error(request, 'Please enter a valid username and password.')
 
-    else:
+    else: # GET request
         form = AuthenticationForm()
 
     context = {
         'form': form,
+        'page_title': 'Login'
     }
-    return render(request, 'login.html', context)
-
+    return render(request, 'accounts/login.html', context) # Consistently use 'accounts/login.html'
 
 # --- Logout View ---
 @login_required
 def logout_view(request):
-    print("\n--- Logout View Accessed ---")
     logout(request)
     messages.info(request, 'You have been logged out.')
-    print(f"User logged out. Messages in storage after logout: {[str(m) for m in messages.get_messages(request)]}")
     return redirect('index')
 
-
-# --- Dashboard View ---
+# --- Dashboard View (General, likely for students or general users) ---
 @login_required
 def dashboard(request):
-    print("\n--- Dashboard View Accessed ---")
     context = {
         'user': request.user,
+        'page_title': 'Dashboard'
     }
-    print("Rendering dashboard template.")
     return render(request, 'dashboard.html', context)
 
-
-# --- Profile View ---
+# --- Profile View (for display) ---
 @login_required
 def profile_view(request):
     user = request.user
-    profile, created = Profile.objects.get_or_create(user=user) # Get or create profile
-
-    if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Your profile has been updated successfully!')
-            return redirect('profile') # Redirect back to the profile page to show changes
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = ProfileForm(instance=profile)
+    profile, created = Profile.objects.get_or_create(user=user)
 
     context = {
-        'form': form,
-        'profile': profile, # Pass the profile instance to the template
+        'profile': profile,
         'user': user,
-        'title': 'My Profile'
+        'page_title': 'My Profile'
     }
-    return render(request, 'accounts/profile.html', context)
+    return render(request, 'profile.html', context)
 
 # --- Profile Edit View ---
 @login_required
 def profile_edit(request):
-    print(f"\n--- Profile Edit View Accessed (Method: {request.method}) ---")
+    user = request.user
+    profile, created = Profile.objects.get_or_create(user=user) # Ensure profile exists
 
     if request.method == 'POST':
-        print("--- Handling POST request for profile edit ---")
-        try:
-            user_form = CustomUserChangeForm(request.POST, instance=request.user)
-            profile_form = ProfileForm(request.POST, request.FILES, instance=request.user.profile)
-            print("Forms instantiated in POST block.")
+        user_form = CustomUserChangeForm(request.POST, instance=user)
+        profile_form = ProfileForm(request.POST, request.FILES, instance=profile)
 
-            if user_form.is_valid() and profile_form.is_valid():
-                print("Forms are valid. Saving...")
-                user_form.save()
-                profile_form.save()
-                messages.success(request, 'Your profile was successfully updated!')
-                print("Forms saved. Redirecting...")
-                return redirect('profile_edit')
-            else:
-                print("Forms are NOT valid.")
-                messages.error(request, 'Please correct the errors below.')
-                print(f"user_form defined after invalid POST: { 'user_form' in locals() }")
-                print(f"profile_form defined after invalid POST: { 'profile_form' in locals() }")
-
-        except Exception as e:
-            print(f"An unexpected error occurred in the POST block: {e}")
-            raise
-
-
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, 'Your profile was successfully updated!')
+            return redirect('profile_view')
+        else:
+            messages.error(request, 'Please correct the errors below.')
     else: # GET request
-        print("--- Handling GET request for profile edit ---")
-        user_form = CustomUserChangeForm(instance=request.user)
+        user_form = CustomUserChangeForm(instance=user)
+        profile_form = ProfileForm(instance=profile)
 
-        try:
-            profile_instance = request.user.profile
-            print(f"Profile instance retrieved for user: {profile_instance}")
-            print(f"Profile instance ID: {profile_instance.id}")
-
-            print(f"Profile Picture field value: {profile_instance.profile_picture}")
-            print(f"Profile Picture URL: {profile_instance.profile_picture.url if profile_instance.profile_picture else 'None'}")
-            print(f"Bio field value: '{profile_instance.bio}'")
-
-            profile_form = ProfileForm(instance=profile_instance)
-            print("ProfileForm instantiated with profile instance.")
-
-        except Exception as e:
-            print(f"Error retrieving or instantiating ProfileForm: {e}")
-            profile_form = ProfileForm()
-            print("ProfileForm instantiated as empty due to error.")
-
-
-        context = {
-            'user_form': user_form,
-            'profile_form': profile_form,
-        }
-        print("Rendering template.")
-        return render(request, 'profile.html', context)
-
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'page_title': 'Edit Profile'
+    }
+    return render(request, 'accounts/profile_edit.html', context) # Assuming a dedicated edit template or rename profile.html to profile_edit.html
 
 # --- Teacher Registration Stage 1 (Basic Info) ---
 def teacher_register_wizard(request):
@@ -378,8 +325,7 @@ def teacher_register_wizard(request):
         else:
             form = TeacherPersonalInfoForm()
 
-    return render(request, 'accounts/teacher_register_stage1.html', {'form': form})
-
+    return render(request, 'accounts/teacher_register_stage1.html', {'form': form, 'page_title': 'Teacher Application - Step 1'})
 
 # --- Teacher Registration Stage 2 (Professional Details) ---
 def teacher_register_stage2(request):
@@ -414,7 +360,6 @@ def teacher_register_stage2(request):
             request.session.modified = True
 
             messages.success(request, 'Professional details saved! Proceed to review.')
-            # Redirect directly to stage4 (Review and Submit), skipping stage3 (Course Info)
             return redirect('teacher_register_confirm')
 
         else: # Form is NOT valid
@@ -427,34 +372,21 @@ def teacher_register_stage2(request):
 
     context = {
         'form': form,
+        'page_title': 'Teacher Application - Step 2',
     }
     return render(request, 'accounts/teacher_register_stage2.html', context)
 
-
-# --- OLD/REMOVED Teacher Registration Stage 3 (Course Information Input) ---
-# This function is now commented out/removed because we are skipping this stage.
-# def teacher_register_stage3(request):
-#     # ... (original logic for stage3) ...
-#     pass
-
-
-# --- Teacher Registration Stage 3 (formerly Stage 4: Review and Submit) ---
-def teacher_register_confirm(request): # Renamed from teacher_register_stage4
-    """
-    Handles the review stage of teacher registration.
-    On POST, redirects to the password setting stage.
-    """
+# --- Teacher Registration Stage 3 (Review and Submit) ---
+def teacher_register_confirm(request):
     teacher_data = request.session.get('teacher_data')
 
-    # Ensure previous stages were completed
     if not teacher_data:
         messages.error(request, 'Please complete all previous stages of registration.')
         return redirect('teacher_register_stage1')
 
     if request.method == 'POST':
-        print("\n--- POST Request Received at teacher_register_confirm (Confirm) ---")
         messages.info(request, 'Review confirmed. Now set your password.')
-        return redirect('teacher_register_password_setting') # <<< Redirect to new password setting stage
+        return redirect('teacher_register_password_setting')
 
     else: # GET request for Review
         displayed_teacher_data = teacher_data.copy()
@@ -465,57 +397,34 @@ def teacher_register_confirm(request): # Renamed from teacher_register_stage4
         }
         return render(request, 'accounts/teacher_register_confirm.html', context)
 
-
-# --- New View for Application Success Page (ensure this is in your urls.py) ---
+# --- Application Success Page View ---
 def application_success_view(request):
-    """Simple view for displaying application success message."""
     return render(request, 'accounts/application_success.html', {'page_title': 'Application Submitted'})
 
-# --- Helper Function: Check if user is an approved teacher ---
-def is_approved_teacher(user):
-    """
-    Test to check if the user is a teacher and their application is approved.
-    Also checks if the profile exists to prevent AttributeError.
-    """
-    return user.is_authenticated and user.user_type == 'teacher' and \
-           hasattr(user, 'profile') and user.profile.is_teacher_approved
-
-
-# --- NEW: Add Course View (for Approved Teachers) ---
+# --- Add Course View (for Approved Teachers) ---
 @login_required
-@user_passes_test(is_approved_teacher, login_url='/login/')
+@user_passes_test(is_approved_teacher, login_url='login') # Use 'login' as the URL name
 def add_teacher_course(request):
-    """
-    Allows an approved teacher to add a new course.
-    """
-    # Get the teacher's profile. If not found, it's a critical error for an approved teacher.
     teacher_profile = get_object_or_404(Profile, user=request.user)
 
     if request.method == 'POST':
-        # When handling forms with files (ImageField), you MUST pass request.FILES
         form = TeacherCourseForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                # Save the course instance, but don't commit to the database yet.
-                # We need to set the teacher_profile before saving.
                 course = form.save(commit=False)
-                course.teacher_profile = teacher_profile # Assign the logged-in teacher's profile
+                course.teacher_profile = teacher_profile
                 course.status = 'pending' # Default to pending review upon creation
-                course.save() # Now save the instance to the database
-
-                # For ManyToMany relationships (like 'categories'), save them after the instance is saved.
-                form.save_m2m()
+                course.save()
+                form.save_m2m() # For ManyToMany fields like categories
 
                 messages.success(request, 'Your course has been submitted for review successfully!')
-                return redirect('teacher_dashboard') # Redirect to the teacher's dashboard
+                return redirect('teacher_dashboard')
             except Exception as e:
                 messages.error(request, f'An unexpected error occurred while saving the course: {e}')
-                # Log the full traceback for debugging purposes
-                import traceback
-                traceback.print_exc()
+                logging.error(f"Error saving new course: {e}", exc_info=True)
         else:
             messages.error(request, 'Please correct the errors below.')
-    else: # GET request, display an empty form
+    else:
         form = TeacherCourseForm()
 
     context = {
@@ -526,27 +435,17 @@ def add_teacher_course(request):
 
 # --- Teacher Password Setting View ---
 def teacher_register_password_setting(request):
-    """
-    Handles setting the password for new teacher accounts and finalizes submission.
-    """
     teacher_data = request.session.get('teacher_data')
 
-    # Ensure previous stages were completed
     if not teacher_data:
         messages.error(request, 'Please complete all previous stages of registration.')
         return redirect('teacher_register_stage1')
 
-    # For authenticated users (existing users applying as teacher), they don't set a password here.
     is_authenticated = teacher_data.get('is_authenticated_at_stage1')
     if is_authenticated and request.user.is_authenticated:
         user = request.user
         profile, created_profile = Profile.objects.get_or_create(user=user)
-        if created_profile:
-            messages.info(request, "New profile created for your existing account.")
-        else:
-            messages.info(request, "Updating existing profile.")
 
-        # Update all profile fields from session data
         profile.full_name_en = teacher_data.get('full_name_en', profile.full_name_en)
         profile.full_name_ar = teacher_data.get('full_name_ar', profile.full_name_ar)
         profile.phone_number = teacher_data.get('phone_number', profile.phone_number)
@@ -556,11 +455,9 @@ def teacher_register_password_setting(request):
         profile.major = teacher_data.get('major', profile.major)
         profile.bio = teacher_data.get('bio', profile.bio)
 
-        # Set user_type to 'teacher' if it's not already
-        if user.user_type != 'teacher':
+        if hasattr(user, 'user_type') and user.user_type != 'teacher':
             user.user_type = 'teacher'
             user.save()
-            print(f"User type updated to 'teacher' for {user.username}")
 
         profile.is_teacher_application_pending = True
         profile.is_teacher_approved = False
@@ -579,13 +476,10 @@ def teacher_register_password_setting(request):
             return redirect('application_success')
         except Exception as e:
             messages.error(request, f"An error occurred while saving your teacher profile: {e}")
-            import traceback
-            traceback.print_exc()
+            logging.error(f"Error updating existing user's profile for teacher application: {e}", exc_info=True)
             return redirect('teacher_register_stage1')
 
-
     if request.method == 'POST':
-        print("\n--- POST Request Received at teacher_register_password_setting ---")
         form = PasswordSettingForm(request.POST)
 
         if form.is_valid():
@@ -607,7 +501,6 @@ def teacher_register_password_setting(request):
                 try:
                     user = CustomUser.objects.get(email=email)
                     messages.warning(request, "An account with this email already exists. Please log in to update your profile.")
-                    print(f"Account with email '{email}' already exists. Redirecting to login.")
                     return redirect('login')
                 except CustomUser.DoesNotExist:
                     username_base = email.split('@')[0]
@@ -621,17 +514,12 @@ def teacher_register_password_setting(request):
                         username=username,
                         email=email,
                         password=password,
-                        user_type='teacher',
+                        user_type='teacher', # Set user_type here during creation
                         is_active=True,
                     )
                     messages.success(request, f"New account created for '{user.username}'.")
-                    print(f"NEW User created: {user.username}, Password Set by User.")
 
                 profile, created_profile = Profile.objects.get_or_create(user=user)
-                if created_profile:
-                    print(f"Profile {profile.pk} was newly created (by get_or_create).")
-                else:
-                    print(f"Existing profile {profile.pk} fetched.")
 
                 profile.full_name_en = full_name_en
                 profile.full_name_ar = full_name_ar
@@ -651,26 +539,21 @@ def teacher_register_password_setting(request):
                 profile.rejection_reason = None
 
                 profile.save()
-                print(f"\n--- Profile SUCCESSFULLY SAVED! ID: {profile.pk} ---")
 
                 if 'teacher_data' in request.session:
                     del request.session['teacher_data']
                     request.session.modified = True
-                    print("Teacher data cleared from session.")
 
                 messages.success(request, 'Your teacher application has been submitted successfully and is awaiting approval! You can now log in.')
                 return redirect('application_success')
 
             except Exception as e:
                 messages.error(request, f"An error occurred during account creation/submission: {e}")
-                print(f"\n!!! ERROR DURING FINAL SUBMISSION: {e} !!!")
-                import traceback
-                traceback.print_exc()
+                logging.error(f"Error during new teacher account creation/submission: {e}", exc_info=True)
                 return redirect('teacher_register_stage1')
 
         else:
             messages.error(request, 'Please correct the password errors below.')
-            print("PasswordSettingForm errors:", form.errors)
 
     else:
         form = PasswordSettingForm()
@@ -681,15 +564,58 @@ def teacher_register_password_setting(request):
     }
     return render(request, 'accounts/teacher_register_password_setting.html', context)
 
+# --- Teacher Dashboard View ---
 @login_required
-@user_passes_test(lambda user: user.user_type == 'teacher' and user.profile.is_teacher_approved)
+@user_passes_test(is_approved_teacher, login_url='login') # Use 'login' as the URL name
 def teacher_dashboard(request):
-    teacher_profile = request.user.profile
-    teacher_courses = TeacherCourse.objects.filter(teacher_profile=teacher_profile)
+    teacher_profile = get_object_or_404(Profile, user=request.user)
+    teacher_courses = TeacherCourse.objects.filter(teacher_profile=teacher_profile).order_by('-created_at')
 
     context = {
         'teacher_profile': teacher_profile,
         'teacher_courses': teacher_courses,
-        'page_title': 'Teacher Dashboard'
+        'page_title': 'Teacher Dashboard',
     }
     return render(request, 'accounts/teacher_dashboard.html', context)
+
+# --- Register for Course View ---
+@login_required
+def register_for_course(request, course_id):
+    # Changed from 'Course' to 'TeacherCourse' consistently
+    course = get_object_or_404(TeacherCourse, id=course_id)
+
+    # Pre-check: User profile existence
+    if not hasattr(request.user, 'profile') or not request.user.profile:
+        messages.error(request, "Your user profile is incomplete. Please update your profile before registering.")
+        return redirect('course_detail', course_id=course.id)
+
+    # Pre-check: Is the user already enrolled?
+    if EnrolledCourse.objects.filter(student=request.user.profile, course=course).exists():
+        messages.info(request, f"You are already enrolled in {course.title}.")
+        return redirect('course_detail', course_id=course.id)
+
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment_successful = True # Simulate payment success
+
+            if payment_successful:
+                try:
+                    EnrolledCourse.objects.create(student=request.user.profile, course=course)
+                    messages.success(request, f"Payment successful! You are now enrolled in {course.title}.")
+                    return redirect('course_detail', course_id=course.id)
+                except IntegrityError: # Catch if somehow already enrolled (unique_together)
+                    messages.info(request, f"You are already enrolled in {course.title}.")
+                    return redirect('course_detail', course_id=course.id)
+                except Exception as e:
+                    messages.error(request, f"Error completing enrollment after payment: {e}")
+                    logging.error(f"Error enrolling user {request.user.username} in course {course.id}: {e}", exc_info=True)
+                    return redirect('register_for_course', course_id=course.id)
+            else:
+                messages.error(request, "Payment failed. Please check your details and try again.")
+        else:
+            messages.error(request, "Please correct the errors in the payment form.")
+    else:
+        form = PaymentForm()
+
+    return render(request, 'payment_form.html', {'course': course, 'form': form})

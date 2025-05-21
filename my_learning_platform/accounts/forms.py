@@ -307,3 +307,49 @@ class TeacherCourseForm(forms.ModelForm):
             # If you want default styling for each checkbox, you might add:
             # elif isinstance(field.widget, forms.CheckboxInput):
             #     field.widget.attrs['class'] = 'form-check-input'
+class PaymentForm(forms.Form):
+    card_number = forms.CharField(label='Card Number', max_length=16, min_length=16,
+                                  widget=forms.TextInput(attrs={'placeholder': '•••• •••• •••• ••••', 'pattern': '[0-9]{16}', 'title': '16-digit card number', 'inputmode': 'numeric'}))
+    cardholder_name = forms.CharField(label='Cardholder Name', max_length=100,
+                                      widget=forms.TextInput(attrs={'placeholder': 'Full Name'}))
+    expiry_month = forms.ChoiceField(label='Expiry Month', choices=[(i, f'{i:02d}') for i in range(1, 13)])
+    expiry_year = forms.ChoiceField(label='Expiry Year', choices=[(i, str(i)) for i in range(2025, 2036)]) # Adjust years as needed
+    cvv = forms.CharField(label='CVV', max_length=3, min_length=3,
+                          widget=forms.TextInput(attrs={'placeholder': '•••', 'pattern': '[0-9]{3,4}', 'title': '3 or 4-digit CVV', 'inputmode': 'numeric'}))
+# --- Add these forms if they are missing or incomplete ---
+
+class UserLoginForm(forms.Form):
+    username = forms.CharField(
+        label='Username',
+        widget=forms.TextInput(attrs={'placeholder': 'Your Username'})
+    )
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Your Password'})
+    )
+
+class UserRegistrationForm(forms.ModelForm):
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Enter Password'})
+    )
+    password2 = forms.CharField(
+        label='Repeat Password',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password'})
+    )
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password')
+
+    def clean_password2(self):
+        cd = self.cleaned_data
+        if cd['password'] != cd['password2']:
+            raise forms.ValidationError('Passwords don\'t match.')
+        return cd['password2']
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email is already registered.')
+        return email

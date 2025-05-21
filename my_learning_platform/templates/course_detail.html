@@ -1,0 +1,403 @@
+{% extends 'base.html' %} {# Assuming you have a base.html, otherwise remove this and add your full HTML structure #}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block head %}
+    {# Add any specific CSS for this page here, or include it in your main style block #}
+   
+{% endblock %}
+
+{% block content %}
+<div class="course-detail-container">
+    <h1>{{ course.title }}</h1>
+
+    {% if course.course_picture %}
+        <img src="{{ course.course_picture.url }}" alt="{{ course.title }}">
+    {% else %}
+        <img src="{% static 'images/default_course_picture.png' %}" alt="Default Course Image">
+    {% endif %}
+
+    <div class="info-item">
+        <strong>Price:</strong> <span class="price-section">${{ course.price }}</span>
+    </div>
+    <div class="info-item">
+        <strong>Level:</strong> {{ course.level }}
+    </div>
+    <div class="info-item">
+        <strong>Teacher:</strong> {{ course.teacher_profile.user.get_full_name|default:course.teacher_profile.user.username }}
+    </div>
+    <div class="info-item">
+        <strong>Categories:</strong>
+        <div class="categories-list">
+            {% for category in course.categories.all %}
+                <span>{{ category.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="course-description">
+        <p>{{ course.description }}</p>
+    </div>
+
+    {# --- Register Button Logic --- #}
+    {% if user.is_authenticated %}
+        {% if is_enrolled %}
+            <div class="enrolled-message">You are already enrolled in this course!</div>
+        {% else %}
+            {# This form will handle the registration. We'll create the URL and view next. #}
+            <form action="{% url 'register_for_course' course.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="register-button">Register for Course</button>
+            </form>
+        {% endif %}
+    {% else %}
+        <p class="text-center" style="font-size:1.1em; margin-top:20px;">
+            <a href="{% url 'login' %}?next={{ request.path }}" style="color: #007bff; text-decoration: underline;">Log in</a> to register for this course.
+        </p>
+    {% endif %}
+
+    <p class="text-center" style="margin-top: 30px;">
+        <a href="{% url 'course_view' %}" class="back-button">Back to All Courses</a>
+    </p>
+
+</div>
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+        text-align: center;
+        background: linear-gradient(135deg, #764ba2, #764ba2); /* Your site's background */
+        margin: 0;
+        padding-top: 70px; /* Space for the fixed header */
+        color: white; /* Default text color for the body */
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        line-height: 1.6; /* Improved readability */
+    }
+
+    /* --- Header/Navigation Styles (FROM YOUR INDEX.HTML) --- */
+    .main-header {
+        background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
+        backdrop-filter: blur(8px);
+        color: white;
+        padding: 15px 0;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .logo a {
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.8em;
+        transition: color 0.3s ease;
+    }
+    .logo a:hover {
+        color: #007bff;
+    }
+
+    .main-nav ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 25px;
+    }
+
+    .main-nav ul li a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1.1em;
+        transition: color 0.3s ease;
+    }
+
+    .main-nav ul li a:hover {
+        color: #007bff;
+    }
+
+    /* --- Footer Styles (FROM YOUR INDEX.HTML) --- */
+    .main-footer {
+        background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
+        backdrop-filter: blur(8px);
+        color: #ccc;
+        padding: 25px 20px; /* Reduced overall padding */
+        width: 100%;
+        margin-top: auto;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+        text-align: left;
+    }
+
+    .footer-content {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .footer-section {
+        flex: 1;
+        min-width: 250px;
+        margin-bottom: 15px; /* Reduced space between sections */
+        padding-right: 20px;
+    }
+
+    .footer-section h3 {
+        color: white;
+        margin-bottom: 10px; /* Reduced space below headings */
+        font-size: 1.2em;
+    }
+
+    .footer-section p, .footer-section a {
+        color: #ccc;
+        text-decoration: none;
+        font-size: 0.95em;
+        line-height: 1.6;
+    }
+
+    .footer-section a:hover {
+        color: #007bff;
+    }
+
+    .footer-nav ul, .social-links ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-nav ul li, .social-links ul li {
+        margin-bottom: 5px; /* Reduced space between list items */
+    }
+
+    .social-links ul li {
+        display: inline-block;
+        margin-right: 15px;
+    }
+
+    .social-links img {
+        width: 24px;
+        height: 24px;
+        vertical-align: middle;
+        transition: transform 0.3s ease;
+    }
+    .social-links img:hover {
+        transform: scale(1.1);
+    }
+
+    .footer-bottom {
+        text-align: center;
+        padding-top: 15px; /* Reduced padding above copyright */
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+        margin-top: 15px; /* Reduced margin above copyright */
+        color: #aaa;
+        font-size: 0.85em;
+    }
+
+    /* Styles specific to the Course Detail Page */
+    .course-detail-container {
+        max-width: 1200px; /* Wider container */
+        margin: 20px auto;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        backdrop-filter: blur(10px);
+        display: flex; /* Enable flexbox for columns */
+        gap: 30px; /* Space between columns */
+        align-items: flex-start; /* Align items to the top of the columns */
+        min-height: 400px; /* <--- ADD or INCREASE THIS LINE */
+        /* You can experiment with values like 700px, 800px, etc. */
+    }
+    .course-detail-info {
+        flex: 1; /* Takes up remaining space on the left */
+        text-align: left; /* Align text to the left */
+    }
+    .course-detail-video {
+        flex: 0 0 40%; /* Fixed width for the video section (adjust as needed) */
+        background-color: rgba(0, 0, 0, 0.2); /* Placeholder background */
+        border-radius: 10px;
+        padding: 20px;
+        box-sizing: border-box; /* Include padding in width */
+    }
+    .course-detail-video h2 {
+        text-align: center;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+    .course-detail-video p {
+        text-align: center;
+        font-size: 1.1em;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .course-detail-container h1 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        text-align: left; /* Align heading to the left */
+        color: #fff;
+    }
+    .course-detail-info img {
+        max-width: 100%;
+        height: auto; /* Adjust height automatically */
+        border-radius: 10px;
+        margin-bottom: 25px;
+        display: block;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .info-item {
+        margin-bottom: 15px;
+        font-size: 1.1em;
+    }
+    .info-item strong {
+        color: #e0e0e0;
+        margin-right: 10px;
+    }
+    .course-description {
+        margin-top: 25px;
+        margin-bottom: 30px;
+        line-height: 1.8;
+        font-size: 1.1em;
+        background: rgba(0,0,0,0.1);
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .price-section {
+        font-size: 2em;
+        font-weight: 700;
+        color: #4CAF50; /* Green for price */
+        margin-top: 20px;
+        display: block; /* Ensure it's on its own line */
+    }
+    .register-button {
+        display: inline-block; /* Adjust to fit within the left column */
+        padding: 15px 20px;
+        background: linear-gradient(90deg, #ff416c, #ff4b2b);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.3em;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        margin-top: 20px;
+        transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    .register-button:hover {
+        background: linear-gradient(90deg, #ff4b2b, #ff416c);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
+    }
+    .enrolled-message {
+        text-align: left; /* Align message to the left */
+        padding: 15px;
+        background-color: rgba(76, 175, 80, 0.2); /* Greenish translucent */
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 1.2em;
+        font-weight: 500;
+        color: #a5d6a7; /* Lighter green text */
+        border: 1px solid rgba(76, 175, 80, 0.4);
+        display: block; /* Ensure it takes full width of the left column */
+    }
+    .back-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 20px;
+        transition: background-color 0.3s ease;
+    }
+    .back-button:hover {
+        background-color: #0056b3;
+    }
+
+    .categories-list span {
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 5px 10px;
+        border-radius: 5px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        display: inline-block;
+        font-size: 0.9em;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 992px) { /* Adjust for smaller screens (e.g., tablets) */
+        .course-detail-container {
+            flex-direction: column; /* Stack columns vertically */
+            gap: 20px;
+            margin: 30px 20px; /* Adjust margin for smaller viewports */
+            padding: 25px;
+        }
+        .course-detail-video {
+            flex: none; /* Remove flex sizing */
+            width: 100%; /* Take full width */
+        }
+        .course-detail-container h1,
+        .course-detail-info img,
+        .info-item,
+        .course-description,
+        .price-section,
+        .register-button,
+        .enrolled-message,
+        .back-button {
+            text-align: left; /* Keep left alignment within the single column */
+            display: block; /* Ensure block-level elements take full width */
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .course-detail-info img {
+             width: 100%; /* Ensure image scales correctly */
+             height: auto;
+        }
+    }
+
+    @media (max-width: 768px) { /* Further adjustments for mobile phones */
+        body { padding-top: 60px; }
+        .course-detail-container {
+            margin: 15px;
+            padding: 15px;
+        }
+        .course-detail-container h1 {
+            font-size: 2em;
+        }
+        .course-detail-info img {
+            height: auto; /* Let image adjust on smaller screens */
+        }
+        .price-section {
+            font-size: 1.5em;
+        }
+        .register-button {
+            font-size: 1.1em;
+            padding: 12px 15px;
+        }
+        .categories-list span {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            margin-right: 4px;
+            margin-bottom: 4px;
+        }
+    }
+</style>
+{% endblock %}

@@ -9,7 +9,9 @@ class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
         ('student', 'Student'),
         ('teacher', 'Teacher'),
+         ('admin', 'Admin'),
     )
+    user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='student')
     user_type = models.CharField(
         max_length=10,
         choices=USER_TYPE_CHOICES,
@@ -217,3 +219,16 @@ class TeacherCourse(models.Model):
     # Consolidated __str__ method (more descriptive)
     def __str__(self):
         return f"{self.title} ({self.language}) by {self.teacher_profile.user.username}"
+    
+class EnrolledCourse(models.Model):
+    student = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='enrolled_courses')
+    course = models.ForeignKey(TeacherCourse, on_delete=models.CASCADE, related_name='enrolled_students')
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'course') # Ensures a student can enroll in a course only once
+        verbose_name = "Enrolled Course"
+        verbose_name_plural = "Enrolled Courses"
+
+    def __str__(self):
+        return f"{self.student.user.username} enrolled in {self.course.title}"

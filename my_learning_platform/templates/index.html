@@ -4,9 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Available Courses</title>
+    <title>{{ page_title|default:"My Portfolio" }}</title> {# Use page_title from context, with default #}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
         /* ******************************************************************
            IMPORTANT:
@@ -164,8 +164,6 @@
         }
 
         /* --- Page Content Specific Styling (for Home/Index) --- */
-        /* This .page-content style is for the index.html's main content area.
-           The courses-page-container below is for the courses page's content area. */
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
@@ -216,52 +214,52 @@
             box-shadow: 8px 20px rgba(255, 65, 108, 0.4);
         }
 
-        /* --- Course Page Specific Styles (NEW!) --- */
-        /* This content wrapper will be similar to .page-content but for the courses page */
-        .courses-page-container {
-            flex-grow: 1;
-            padding: 40px 20px;
-            max-width: 1200px; /* Wider for 3 columns */
+        /* --- Course Listing Section Styles for Homepage (NEWLY ADDED/MODIFIED) --- */
+        /* This applies to the section where published courses are displayed on the homepage */
+        .featured-courses-section {
+            padding: 50px 20px;
+            max-width: 1200px;
             width: 100%;
-            margin: 30px auto;
+            margin: 30px auto; /* Center the section */
             background: rgba(255, 255, 255, 0.1); /* Consistent translucent background */
             backdrop-filter: blur(10px);
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
-            text-align: center; /* Center the heading */
-            color: white; /* Default text color for this container */
+            text-align: center;
+            color: white;
         }
 
-        .courses-page-container h1 {
-            color: white; /* Consistent heading color */
-            font-size: 2.5em; /* Slightly adjusted size for course page */
-            margin-bottom: 30px;
+        .featured-courses-section h2 {
+            color: white;
+            font-size: 2.2em;
+            margin-bottom: 40px;
             font-weight: 700;
         }
 
-        .courses-grid {
+        .courses-grid { /* Reused from your existing CSS for layout */
             display: flex;
-            flex-wrap: wrap; /* Allows items to wrap to the next line */
-            justify-content: center; /* Centers items horizontally */
-            gap: 25px; /* Space between course cards, slightly adjusted for consistency */
-            padding: 0; /* Remove default padding */
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 25px;
+            padding: 0;
         }
 
         .course-card {
-            background: rgba(255, 255, 255, 0.08); /* Slightly less opaque card background */
-            backdrop-filter: blur(8px); /* Consistent blur effect */
-            border-radius: 12px; /* Slightly less rounded than main containers */
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06); /* Consistent shadow */
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
             width: calc(33.333% - 25px); /* 3 items per row, accounting for gap */
-            box-sizing: border-box; /* Include padding and border in the width */
-            padding: 25px; /* Increased padding slightly */
+            box-sizing: border-box;
+            padding: 25px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            text-align: left; /* Align text left within cards for readability */
-            min-height: 280px; /* Ensures cards have a similar minimum height */
+            text-align: left;
+            min-height: 280px; /* Adjust as needed */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden; /* Ensures image corners are rounded */
         }
 
         .course-card:hover {
@@ -269,26 +267,68 @@
             box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
         }
 
-        .course-card h2 {
-            color: white; /* White heading for cards */
-            margin-top: 0;
-            font-size: 1.35em; /* Slightly adjusted font size */
+        .course-card img {
+            width: 100%;
+            height: 150px; /* Fixed height for consistent image size */
+            object-fit: cover; /* Ensures image covers the area without distortion */
+            border-radius: 8px; /* Slightly rounded corners for images */
             margin-bottom: 15px;
+        }
+
+        .course-card h3 { /* Changed from h2 to h3 for card titles */
+            color: white;
+            margin-top: 0;
+            font-size: 1.35em;
+            margin-bottom: 10px; /* Reduced for better spacing */
             font-weight: 600;
         }
         .course-card p {
-            font-size: 0.95em; /* Slightly adjusted font size */
+            font-size: 0.9em; /* Slightly smaller for card text */
             line-height: 1.6;
-            flex-grow: 1; /* Allows description to take available space */
-            color: rgba(255, 255, 255, 0.85); /* Lighter text for description */
+            flex-grow: 1;
+            color: rgba(255, 255, 255, 0.8);
             margin-bottom: 15px;
         }
         .course-card .teacher-name {
             font-style: italic;
-            color: rgba(255, 255, 255, 0.7); /* Lighter text for teacher name */
-            margin-top: auto; /* Pushes teacher name to the bottom */
-            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: auto;
+            font-size: 0.85em;
+            margin-bottom: 10px; /* Add margin to separate from price/button */
         }
+        .course-card .price {
+            font-weight: 700;
+            font-size: 1.2em;
+            color: #4CAF50; /* A nice green for price */
+            margin-bottom: 15px;
+        }
+        .course-card .course-action {
+            display: block;
+            background: linear-gradient(90deg, #007bff, #0056b3); /* Blue gradient for action button */
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s ease, transform 0.2s ease;
+            margin-top: 10px; /* Space above button */
+        }
+        .course-card .course-action:hover {
+            background: linear-gradient(90deg, #0056b3, #007bff);
+            transform: translateY(-2px);
+        }
+        .course-card .category-badge, .level-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.75em;
+            margin-right: 5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
 
         /* Responsive Adjustments (FROM YOUR INDEX.HTML & NEW COURSE STYLES) */
         @media (max-width: 992px) {
@@ -320,10 +360,10 @@
             .social-links ul li { margin: 0 8px; }
 
             /* Page Content specific responsive */
-            .page-content, .courses-page-container { /* Applies to both content wrappers */
+            .page-content, .featured-courses-section { /* Applies to both content wrappers */
                 margin: 20px; padding: 25px; border-radius: 15px;
             }
-            .page-content h1, .courses-page-container h1 { font-size: 2em; }
+            .page-content h1, .featured-courses-section h2 { font-size: 2em; }
             .page-content h2 { font-size: 1.4em; }
             .page-content p { font-size: 1em; }
             .cta-button { padding: 12px 25px; font-size: 1.1em; }
@@ -339,9 +379,10 @@
             body { padding-top: 60px; } /* Adjust for smaller header height */
             .course-card {
                 width: calc(100% - 20px); /* 1 item per row on small screens, adjusted gap */
-                min-height: 200px;
+                min-height: auto; /* Allow height to adjust on mobile */
             }
             .courses-grid { gap: 15px; } /* Smaller gap on mobile */
+            .course-card img { height: 120px; } /* Smaller image on mobile */
         }
     </style>
 </head>
@@ -364,14 +405,14 @@
                     {# Link to the homepage using the 'index' URL name #}
                     <li><a href="{% url 'index' %}">Home</a></li> {# Link to this page (using 'index') #}
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
                         {# Link to the Courses page - shown when logged in #}
-                        <li><a href="{% url 'courses' %}">Courses</a></li>
+                        <li><a href="{% url 'course_view' %}">Courses</a></li> {# Corrected URL name to 'course_view' #}
                         {# Link to the logout view #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
                         {# Link to the profile edit view #}
@@ -385,47 +426,57 @@
         </div>
     </header>
 
-    {# --- Main Courses Page Content --- #}
-    <div class="courses-page-container"> {# This is the new container for your courses #}
-        <h1>Available Courses</h1>
+    {# --- Main Page Content (Hero Section) --- #}
+    <div class="page-content"> {# This is for your main homepage content #}
+        <h1>Welcome to Our Learning Platform!</h1>
+        <h2>Explore a world of knowledge and skill development.</h2>
+        <p>
+            Dive into our diverse range of courses taught by expert instructors.
+            Whether you're looking to start a new career, enhance existing skills,
+            or simply learn something new, we have something for everyone.
+            Join our community and embark on your learning journey today!
+        </p>
+        <a href="{% url 'course_view' %}" class="cta-button">Explore All Courses</a> {# Link to your full courses page #}
+    </div>
 
+    {# --- Featured Courses Section (Dynamically rendered from DB) --- #}
+    <div class="featured-courses-section">
+        <h2>Our Latest Published Courses</h2>
         <div class="courses-grid">
-            <div class="course-card">
-                <h2>Introduction to Web Development</h2>
-                <p>Learn the basics of HTML, CSS, and JavaScript to build your first websites. This course covers fundamental concepts and practical exercises.</p>
-                <p class="teacher-name">Taught by: Jane Doe</p>
-            </div>
-
-            <div class="course-card">
-                <h2>Advanced Python Programming</h2>
-                <p>Dive deeper into Python with advanced topics like data structures, algorithms, and web frameworks. Perfect for intermediate programmers.</p>
-                <p class="teacher-name">Taught by: John Smith</p>
-            </div>
-
-            <div class="course-card">
-                <h2>Digital Marketing Fundamentals</h2>
-                <p>Understand the core principles of digital marketing, SEO, social media marketing, and content strategy to grow your online presence.</p>
-                <p class="teacher-name">Taught by: Emily White</p>
-            </div>
-
-            <div class="course-card">
-                <h2>Data Science with R</h2>
-                <p>Explore data analysis, visualization, and machine learning techniques using the R programming language. Hands-on projects included.</p>
-                <p class="teacher-name">Taught by: David Green</p>
-            </div>
-
-            <div class="course-card">
-                <h2>UI/UX Design Principles</h2>
-                <p>Learn how to create intuitive and user-friendly interfaces. This course covers user research, wireframing, prototyping, and usability testing.</p>
-                <p class="teacher-name">Taught by: Sarah Blue</p>
-            </div>
-
-             <div class="course-card">
-                <h2>Creative Writing Workshop</h2>
-                <p>Unleash your creativity and improve your writing skills across various genres. Focus on storytelling, character development, and narrative structure.</p>
-                <p class="teacher-name">Taught by: Michael Brown</p>
-            </div>
+            {% if published_courses %}
+                {% for course in published_courses %}
+                <div class="course-card">
+                    {% if course.course_picture %}
+                        <img src="{{ course.course_picture.url }}" alt="{{ course.title }}">
+                    {% else %}
+                        {# Ensure you have a default_course_picture.png in your static/images/ directory #}
+                        <img src="{% static 'images/default_course_picture.png' %}" alt="Default Course Image">
+                    {% endif %}
+                    {# Changed h2 to h3 for semantic structure within a card #}
+                    <h3>{{ course.title }}</h3>
+                    <div class="badges">
+                        {% if course.level %}<span class="level-badge">{{ course.level }}</span>{% endif %}
+                        {% for category in course.categories.all %}
+                            <span class="category-badge">{{ category.name }}</span>
+                        {% endfor %}
+                    </div>
+                    <p>{{ course.description|truncatechars:120 }}</p> {# Truncate description #}
+                    <p class="teacher-name">Taught by: {{ course.teacher_profile.user.get_full_name|default:course.teacher_profile.user.username }}</p>
+                    <div class="price">${{ course.price }}</div>
+                    {# Assuming you will have a 'course_detail' URL pattern for single course view #}
+                    <a href="{% url 'course_detail' course.id %}" class="course-action">View Course</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No published courses available yet. Check back soon!</p>
+            {% endif %}
         </div>
+        {# Link to the full courses page if there are many courses #}
+        {% if published_courses|length > 3 %} {# Show "View All" if more than 3 courses are displayed #}
+            <div style="margin-top: 30px;">
+                <a href="{% url 'course_view' %}" class="cta-button">View All Courses</a>
+            </div>
+        {% endif %}
     </div>
 
     {# --- Footer (Copied directly from your index.html) --- #}
@@ -436,17 +487,17 @@
                 <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
             </div>
             <div class="footer-section footer-nav">
-    <h3>Quick Links</h3>
-    <ul>
-        <li><a href="{% url 'index' %}">Home</a></li>
-        <li><a href="{% url 'cv' %}">CV</a></li>
-        <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
-        <li><a href="{% url 'certificates' %}">Certificates</a></li>
-        <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="{% url 'index' %}">Home</a></li>
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
 
-    </ul>
-</div>
-            <div clsass="footer-section footer-contact">
+                </ul>
+            </div>
+            <div class="footer-section footer-contact"> {# Corrected class name #}
                 <h3>Contact</h3>
                 <p>Email: your.email@example.com</p> {# Replace with your email #}
                 <p>Phone: +123 456 7890</p> {# Replace with your phone #}
