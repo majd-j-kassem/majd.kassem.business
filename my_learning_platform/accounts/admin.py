@@ -1,48 +1,29 @@
 # auth_system/accounts/admin.py
 
-from django.contrib import admin, messages # Import messages for user feedback
+from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.urls import reverse
-from django.utils import timezone # Import timezone to get current date/time
-from django.contrib import admin
+from django.utils import timezone
+
 # Import all your models
 from .models import CustomUser, Profile, CourseCategory, CourseLevel, TeacherCourse
 
 
 # 1. Create an Inline Admin for the Profile model
-class ProfileInline(admin.StackedInline): # Use StackedInline for a more expanded view, or TabularInline for a compact table
+# This allows Profile fields to be edited directly when editing a CustomUser
+class ProfileInline(admin.StackedInline):
     model = Profile
-    can_delete = False # You usually don't want to delete a profile independently of a user
+    fk_name = 'user' # <--- ADD THIS LINE
+    can_delete = False
     verbose_name_plural = 'Profile Info'
-    # Specify the fields you want to display and edit in the admin for the Profile
-    fields = (
-        'full_name_en',
-        'full_name_ar',
-        'phone_number',
-        'bio',
-        'profile_picture',
-        # Teacher-specific fields
-        'experience_years',
-        'university',
-        'graduation_year',
-        'major',
-        # Application status fields
-        'is_teacher_application_pending',
-        'is_teacher_approved',
-        'approved_by',
-        'approval_date',
-        'rejected_by',
-        'rejection_date',
-        'rejection_reason',
-    )
-    # You might want to group fields into fieldsets for better organization
+    
     fieldsets = (
         ('Basic Information', {
             'fields': ('full_name_en', 'full_name_ar', 'phone_number', 'bio', 'profile_picture')
         }),
         ('Teacher Professional Details', {
             'fields': ('experience_years', 'university', 'graduation_year', 'major'),
-            'classes': ('collapse',), # Optional: make this section collapsible
+            'classes': ('collapse',),
         }),
         ('Teacher Application Status', {
             'fields': (
@@ -54,12 +35,15 @@ class ProfileInline(admin.StackedInline): # Use StackedInline for a more expande
                 'rejection_date',
                 'rejection_reason',
             ),
-            'classes': ('wide',), # Optional: make this section wider
+            'classes': ('wide',),
         }),
     )
+    # Fields can also be listed directly if not using fieldsets, e.g.:
+    # fields = ('full_name_en', 'full_name_ar', 'phone_number', 'bio', 'profile_picture', ...)
 
 
 # --- Custom Admin for CustomUser ---
+@admin.register(CustomUser) # Using decorator for CustomUser as well for consistency
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = ('username', 'email', 'user_type', 'is_staff', 'is_active', 'date_joined')
     list_filter = ('user_type', 'is_staff', 'is_active')
@@ -71,9 +55,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
-
-
-admin.site.register(CustomUser, CustomUserAdmin)
+    inlines = [ProfileInline] # Link ProfileInline here to show Profile fields when editing a User
 
 
 # --- Custom Admin for Profile with Approve/Reject Actions ---
@@ -94,7 +76,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = (
         'is_teacher_application_pending',
         'is_teacher_approved',
-        'user__user_type',
+        'user__user_type', # Filter profiles by the user's type
     )
     search_fields = (
         'user__username',
@@ -123,6 +105,7 @@ class ProfileAdmin(admin.ModelAdmin):
             ),
         }),
     )
+    raw_id_fields = ('user', 'approved_by', 'rejected_by') # Useful for ForeignKey fields
 
     # Add custom admin actions here
     actions = ['approve_teacher_applications', 'reject_teacher_applications']
@@ -132,13 +115,13 @@ class ProfileAdmin(admin.ModelAdmin):
         updated_count = 0
         for profile in queryset:
             # Only process if it's a teacher and the application is pending
+            # (or if it was approved and needs re-approval, etc. - adjust logic as needed)
             if profile.user.user_type == 'teacher' and profile.is_teacher_application_pending:
                 profile.is_teacher_application_pending = False
                 profile.is_teacher_approved = True
-                profile.approved_by = request.user # Set the admin who approved
-                profile.approval_date = timezone.now() # Record approval time
-                # Clear any previous rejection details
-                profile.rejected_by = None
+                profile.approved_by = request.user
+                profile.approval_date = timezone.now()
+                profile.rejected_by = None # Clear rejection details
                 profile.rejection_date = None
                 profile.rejection_reason = None
                 profile.save()
@@ -146,9 +129,8 @@ class ProfileAdmin(admin.ModelAdmin):
         self.message_user(
             request,
             f"{updated_count} teacher application(s) successfully approved.",
-            messages.SUCCESS # Display a success message
+            messages.SUCCESS
         )
-    # Short description for the action in the admin dropdown
     approve_teacher_applications.short_description = "Approve selected teacher applications"
 
     # --- Admin Action: Reject Teacher Applications ---
@@ -158,42 +140,45 @@ class ProfileAdmin(admin.ModelAdmin):
             # Only process if it's a teacher and the application is pending
             if profile.user.user_type == 'teacher' and profile.is_teacher_application_pending:
                 profile.is_teacher_application_pending = False
-                profile.is_teacher_approved = False # Explicitly set to False for rejection
-                profile.rejected_by = request.user # Set the admin who rejected
-                profile.rejection_date = timezone.now() # Record rejection time
-                # Clear any previous approval details
-                profile.approved_by = None
+                profile.is_teacher_approved = False
+                profile.rejected_by = request.user
+                profile.rejection_date = timezone.now()
+                profile.approved_by = None # Clear approval details
                 profile.approval_date = None
-                # Note: For batch rejection, we don't prompt for a reason here.
-                # The admin can edit individual profiles to add a rejection_reason if needed.
                 profile.save()
                 updated_count += 1
         self.message_user(
             request,
             f"{updated_count} teacher application(s) successfully rejected.",
-            messages.WARNING # Display a warning message for rejection
+            messages.WARNING
         )
-    # Short description for the action in the admin dropdown
     reject_teacher_applications.short_description = "Reject selected teacher applications"
 
-
-    # Custom method to display the username as a clickable link to the CustomUser's admin page
+    # Custom method to display the username as a clickable link
     def username_link(self, obj):
         link = reverse("admin:%s_%s_change" % (obj.user._meta.app_label, obj.user._meta.model_name), args=[obj.user.id])
         return format_html('<a href="%s">%s</a>' % (link, obj.user.username))
     username_link.short_description = 'User'
     username_link.admin_order_field = 'user__username'
 
-    # Custom method to display the user type from the related CustomUser
+    # Custom method to display the user type
     def user_type(self, obj):
         return obj.user.user_type
     user_type.short_description = 'User Type'
     user_type.admin_order_field = 'user__user_type'
 
 
-# Register basic models (CourseCategory and CourseLevel don't need custom admin classes yet)
-admin.site.register(CourseCategory)
-admin.site.register(CourseLevel)
+# --- Custom Admin for CourseCategory ---
+@admin.register(CourseCategory) # Using decorator for consistency
+class CourseCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+
+# --- Custom Admin for CourseLevel ---
+@admin.register(CourseLevel) # Using decorator for consistency
+class CourseLevelAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
 
 
 # --- Custom Admin for TeacherCourse ---
@@ -206,11 +191,17 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         'level',
         'price',
         'language',
+        'status',          # Added: Display status
+        'created_at',      # Added: Display creation date
+        'updated_at',      # Added: Display last update date
     )
     list_filter = (
+        'status',          # Added: Filter by status
         'categories',
         'level',
         'language',
+        'created_at',      # Added: Filter by creation date
+        'updated_at',      # Added: Filter by update date
     )
     search_fields = (
         'title',
@@ -218,14 +209,28 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         'teacher_profile__user__username',
         'language',
     )
+    raw_id_fields = ('teacher_profile',) # Useful for selecting related objects when there are many
+    filter_horizontal = ('categories',) # Better UI for ManyToMany fields
+    date_hierarchy = 'created_at' # Adds a date drill-down navigation
+
+    # Full fieldsets to include all TeacherCourse fields
     fieldsets = (
         (None, {
-            'fields': ('teacher_profile', 'title', 'description', 'price', 'language')
+            'fields': ('teacher_profile', 'title', 'description', 'price', 'language', 'status')
         }),
-        ('Course Details', {
+        ('Course Media', {
+            'fields': ('course_picture', 'video_trailer_url'),
+            'classes': ('collapse',),
+        }),
+        ('Categorization', {
             'fields': ('categories', 'level'),
         }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
     )
+    readonly_fields = ('created_at', 'updated_at') # These fields are automatically set
 
     # Custom method to display the teacher's username as a link to their profile
     def teacher_profile_link(self, obj):
@@ -238,5 +243,3 @@ class TeacherCourseAdmin(admin.ModelAdmin):
     def get_categories_display(self, obj):
         return ", ".join([category.name for category in obj.categories.all()])
     get_categories_display.short_description = 'Categories'
-    
-

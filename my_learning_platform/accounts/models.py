@@ -23,7 +23,8 @@ class CustomUser(AbstractUser):
 
 class Profile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-        # --- New Fields for Teacher Professional Details ---
+    
+    # --- Teacher Professional Details ---
     experience_years = models.IntegerField(
         verbose_name="Years of Experience",
         default=0,
@@ -51,6 +52,7 @@ class Profile(models.Model):
         null=True,
         help_text="Your primary field of study."
     )
+    
     # Existing fields
     profile_picture = models.ImageField(
         upload_to='images/profiles/',
@@ -60,12 +62,12 @@ class Profile(models.Model):
     )
     bio = models.TextField(max_length=500, blank=True, null=True)
 
-    # New fields for basic teacher information
+    # Basic teacher information (consolidated)
     full_name_en = models.CharField(
         max_length=255,
-        blank=True, # Allows the field to be blank in the form
-        null=True,  # Allows the field to be NULL in the database
-        verbose_name="Full Name (English)" # User-friendly name for admin/forms
+        blank=True,
+        null=True,
+        verbose_name="Full Name (English)"
     )
     full_name_ar = models.CharField(
         max_length=255,
@@ -74,12 +76,13 @@ class Profile(models.Model):
         verbose_name="Full Name (Arabic)"
     )
     phone_number = models.CharField(
-        max_length=20, # Adjust max_length based on expected phone number formats
+        max_length=20,
         blank=True,
         null=True,
         verbose_name="Phone Number"
     )
-     # --- New Fields for Teacher Application Status ---
+    
+    # --- Teacher Application Status (consolidated) ---
     is_teacher_application_pending = models.BooleanField(
         default=True, # New applications are pending by default
         help_text="Is the teacher application awaiting admin approval?"
@@ -90,9 +93,9 @@ class Profile(models.Model):
     )
     approved_by = models.ForeignKey(
         CustomUser,
-        on_delete=models.SET_NULL, # If the approving admin is deleted, don't delete the approval record
+        on_delete=models.SET_NULL,
         null=True, blank=True,
-        related_name='approved_teacher_applications',
+        related_name='approved_teacher_applications', # Good related_name
         help_text="Admin who approved this teacher application."
     )
     approval_date = models.DateTimeField(
@@ -101,9 +104,9 @@ class Profile(models.Model):
     )
     rejected_by = models.ForeignKey(
         CustomUser,
-        on_delete=models.SET_NULL, # If the rejecting admin is deleted, don't delete the rejection record
+        on_delete=models.SET_NULL,
         null=True, blank=True,
-        related_name='rejected_teacher_applications',
+        related_name='rejected_teacher_applications', # Good related_name
         help_text="Admin who rejected this teacher application."
     )
     rejection_date = models.DateTimeField(
@@ -114,30 +117,19 @@ class Profile(models.Model):
         null=True, blank=True,
         help_text="Reason for rejection, if applicable."
     )
-    # ... (rest of your Profile model fields) ...
-    is_teacher_application_pending = models.BooleanField(default=False)
-    is_teacher_approved = models.BooleanField(default=False)
-    # (Optional: If you track who approved/rejected and when)
-    approved_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_teachers')
-    approval_date = models.DateTimeField(null=True, blank=True)
-    rejected_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='rejected_teachers')
-    rejection_date = models.DateTimeField(null=True, blank=True)
-    rejection_reason = models.TextField(blank=True, null=True)
+
+    # Consolidated __str__ method
     def __str__(self):
         return f"{self.user.username}'s Profile"
-    def __str__(self):
-        return f'{self.user.username} Profile'
 
 
 # --- Signals to automatically create/save Profile when User is created/saved ---
 
-# Signal receiver function to create a Profile whenever a new User is created
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
-# Signal receiver function to save the Profile whenever the User is saved
 @receiver(post_save, sender=CustomUser)
 def save_user_profile(sender, instance, **kwargs):
     # Ensure the profile exists before attempting to save it.
@@ -147,47 +139,29 @@ def save_user_profile(sender, instance, **kwargs):
         Profile.objects.create(user=instance)
     instance.profile.save()
 
-# auth_system/accounts/models.py
-
-# ... (Keep all your existing imports and models like CustomUser and Profile) ...
-# Ensure CustomUser and Profile are imported correctly.
-# Example: from .models import CustomUser # if CustomUser is in this same file
-
 # --- New Models for Course Offerings ---
 
 class CourseCategory(models.Model):
-    """
-    Represents categories for courses (e.g., 'Art', 'Computer Science').
-    Managed by admin.
-    """
     name = models.CharField(max_length=100, unique=True)
 
     class Meta:
         verbose_name_plural = "Course Categories"
-        ordering = ['name'] # Order alphabetically in admin
+        ordering = ['name']
 
     def __str__(self):
         return self.name
 
 class CourseLevel(models.Model):
-    """
-    Represents difficulty levels for courses (e.g., 'Beginner', 'Intermediate').
-    Managed by admin.
-    """
     name = models.CharField(max_length=50, unique=True)
 
     class Meta:
         verbose_name_plural = "Course Levels"
-        ordering = ['name'] # Order alphabetically in admin
+        ordering = ['name']
 
     def __str__(self):
         return self.name
 
 class TeacherCourse(models.Model):
-    """
-    Represents a specific course offered by a teacher.
-    Linked to the teacher's Profile.
-    """
     STATUS_CHOICES = (
         ('draft', 'Draft'),
         ('pending', 'Pending Review'),
@@ -197,40 +171,36 @@ class TeacherCourse(models.Model):
         ('archived', 'Archived'),
     )
 
-    # Fields that were missing in your provided model snippet:
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
 
-
-    # Your fields, with slight adjustments for consistency (related_name) if desired,
-    # and ensuring 'Profile', 'CourseCategory', 'CourseLevel' are correctly referenced (string literals are good).
     course_picture = models.ImageField(upload_to='course_thumbnails/', blank=True, null=True)
     video_trailer_url = models.URLField(max_length=200, blank=True, null=True)
 
     teacher_profile = models.ForeignKey(
-        'Profile',  # Use string literal to avoid circular import if Profile is defined after
+        'Profile',
         on_delete=models.CASCADE,
-        related_name='courses', # Changed from 'offered_courses' for consistency, but 'offered_courses' also works.
+        related_name='courses',
         verbose_name="Teacher Profile"
     )
     categories = models.ManyToManyField(
-        'CourseCategory', # Use string literal
-        related_name='courses', # Changed from 'courses_offered' for consistency.
+        'CourseCategory',
+        related_name='courses',
         verbose_name="Categories"
     )
     level = models.ForeignKey(
-        'CourseLevel', # Use string literal
+        'CourseLevel',
         on_delete=models.SET_NULL,
         null=True,
-        blank=True, # Added blank=True as it's null=True
-        related_name='courses', # Changed from 'courses_at_level' for consistency.
+        blank=True,
+        related_name='courses',
         verbose_name="Level"
     )
     title = models.CharField(max_length=255, verbose_name="Course Title")
     description = models.TextField(verbose_name="Course Description")
     price = models.DecimalField(
-        max_digits=10,          # Changed to 10 from 8 for broader currency support (e.g., 9,999,999.99)
+        max_digits=10,
         decimal_places=2,
         verbose_name="Course Price"
     )
@@ -240,11 +210,10 @@ class TeacherCourse(models.Model):
         help_text="e.g., English, Arabic, French"
     )
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         verbose_name_plural = "Teacher Courses"
-        ordering = ['-created_at'] # Changed to order by creation date, more typical for new courses
+        ordering = ['-created_at']
+
+    # Consolidated __str__ method (more descriptive)
     def __str__(self):
         return f"{self.title} ({self.language}) by {self.teacher_profile.user.username}"

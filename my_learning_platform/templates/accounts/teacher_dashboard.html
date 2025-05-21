@@ -1,110 +1,445 @@
 {% extends 'base.html' %}
+{% load static %} {# Ensure static files can be loaded #}
 
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
+<style>
+    /* --- General Dashboard Container Styling --- */
+    .dashboard-container {
+        max-width: 90vw; /* This makes it 90% of the viewport width */
+        margin: 50px auto 30px auto; /* Keeps it centered with top/bottom margins */
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.08); /* Slightly more opaque for content contrast */
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15); /* Stronger shadow for depth */
+        color: white; /* Default text color for inside container */
+        min-height: calc(100vh - 180px); /* Adjust based on header/footer height */
+        display: flex;
+        flex-direction: column;
+        gap: 30px; /* Space between sections */
+    }
+
+    .dashboard-container h2 {
+        text-align: center;
+        color: white;
+        font-size: 2.8em;
+        margin-bottom: 40px;
+        font-weight: 700;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.3); /* Subtle text shadow */
+    }
+
+    /* --- Card General Styling (for both profile and course sections) --- */
+    .dashboard-card {
+        background: rgba(255, 255, 255, 0.05); /* Very light, almost transparent */
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Subtle border */
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+        /* height: 100%; Remove fixed height for flexibility */
+    }
+
+    .dashboard-card-header {
+        font-size: 1.6em;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #fff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .dashboard-card-header .btn {
+        font-size: 0.8em;
+        padding: 8px 15px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+    }
+
+    /* --- Teacher Profile Specific Styling --- */
+    .profile-section {
+        display: flex; /* Use flexbox */
+        align-items: flex-start; /* Align items to the top */
+        gap: 30px;
+        margin-bottom: 20px;
+    }
+
+    .profile-picture-container {
+        flex-shrink: 0;
+        text-align: left; /* Align text within its container to the left */
+        padding-right: 15px; /* Add some spacing to the right of the image */
+    }
+
+    .profile-picture-container img {
+        width: 80px; /* Reduced width */
+        height: 80px; /* Reduced height */
+        object-fit: cover;
+        border-radius: 10px; /* Slightly less rounded, more like the image you provided */
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-info {
+        flex-grow: 1;
+        text-align: left;
+    }
+
+    .profile-info h5 {
+        font-size: 1.2em; /* Smaller font size for name */
+        margin-top: 5px; /* Adjust top margin for name */
+        margin-bottom: 5px;
+        color: white;
+    }
+
+    .profile-info .text-muted { /* For Arabic name */
+        color: rgba(255, 255, 255, 0.6) !important;
+        font-size: 0.8em; /* Smaller font size for Arabic name */
+        margin-bottom: 15px; /* Space below Arabic name */
+    }
+
+    .profile-details p {
+        margin-bottom: 5px; /* Reduced margin between paragraphs */
+        font-size: 0.9em; /* Slightly smaller font for details */
+        color: rgba(255, 255, 255, 0.9);
+    }
+    .profile-details p strong {
+        color: white;
+        font-weight: 600;
+    }
+
+    .profile-status {
+        margin-top: 15px; /* Reduced top margin */
+        padding-top: 15px; /* Reduced padding top */
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: left;
+    }
+
+    .profile-status strong {
+        font-size: 1.0em; /* Slightly smaller font for status strong */
+        color: white;
+    }
+
+    /* --- Course Grid Styling (Similar to courses.html) --- */
+    .teacher-courses-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Adjusted minmax for better cards */
+        gap: 25px; /* Consistent gap with courses.html */
+        flex-grow: 1; /* Allows grid to take up available space */
+        padding-top: 10px; /* Space from header */
+    }
+
+    .teacher-course-card {
+        background: rgba(255, 255, 255, 0.08); /* Matches courses.html cards */
+        backdrop-filter: blur(8px);
+        border-radius: 15px; /* Slightly more rounded */
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        text-align: left;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 420px; /* Increased min-height for consistent card size with image/details */
+        color: white;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .teacher-course-card:hover {
+        transform: translateY(-8px); /* More pronounced lift on hover */
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .teacher-course-card img {
+        max-width: 100%;
+        height: 180px; /* Fixed height for consistent images */
+        object-fit: cover;
+        border-radius: 10px; /* Rounded image corners */
+        margin-bottom: 15px;
+        align-self: center;
+    }
+
+    .teacher-course-card h5 {
+        color: white;
+        font-size: 1.5em; /* Larger title */
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .teacher-course-card p {
+        font-size: 0.95em;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.85);
+        flex-grow: 1; /* Allows description to take space */
+        margin-bottom: 15px;
+    }
+
+    .teacher-course-card .course-price {
+        font-size: 1.3em;
+        font-weight: 700;
+        color: #28a745; /* Green for price */
+        margin-bottom: 10px;
+    }
+
+    .teacher-course-card .course-status {
+        font-size: 0.85em;
+        font-weight: 500;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    .teacher-course-card .course-status .badge {
+        margin-left: 8px; /* Space between text and badge */
+        padding: 5px 10px; /* Larger badge padding */
+        border-radius: 5px;
+        font-size: 0.8em;
+    }
+
+    .teacher-course-card .course-details {
+        font-size: 0.85em;
+        color: rgba(255, 255, 255, 0.7);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px; /* Space between detail spans */
+        margin-bottom: 15px;
+    }
+    .teacher-course-card .course-details span {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
+        padding: 4px 10px;
+        white-space: nowrap;
+    }
+    .teacher-course-card .course-details strong {
+        color: white;
+    }
+
+
+    .teacher-course-card .course-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end; /* Align buttons to the right */
+        padding-top: 10px; /* Space from content */
+        border-top: 1px solid rgba(255, 255, 255, 0.05); /* Subtle separator */
+    }
+
+    /* Bootstrap button overrides for consistency */
+    .btn-success {
+        background-color: #28a745;
+        border-color: #28a745;
+    }
+    .btn-success:hover {
+        background-color: #218838;
+        border-color: #1e7e34;
+    }
+    .btn-info {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+    }
+    .btn-info:hover {
+        background-color: #138496;
+        border-color: #117a8b;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+    }
+    .badge {
+        font-weight: 600;
+    }
+    .badge-info { /* Assuming you might use this for status */
+        background-color: #17a2b8 !important;
+        color: white;
+    }
+
+
+    /* --- Responsive Adjustments --- */
+    @media (max-width: 992px) {
+        .dashboard-container {
+            margin: 30px auto;
+            padding: 20px;
+            gap: 20px;
+        }
+        .dashboard-container h2 {
+            font-size: 2.2em;
+            margin-bottom: 30px;
+        }
+        /* Profile section adjustment for smaller screens */
+        .profile-section {
+            flex-direction: column; /* Stack image and text vertically */
+            align-items: center; /* Center align when stacked */
+            text-align: center; /* Center text when stacked */
+            gap: 15px;
+        }
+        .profile-picture-container {
+            padding-right: 0; /* Remove padding when stacked */
+        }
+        .profile-info {
+            text-align: center; /* Center text when stacked */
+        }
+        .profile-status {
+            text-align: center;
+        }
+        .teacher-courses-grid {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .teacher-course-card {
+            min-height: 400px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-container {
+            margin: 20px;
+            padding: 15px;
+        }
+        .dashboard-container h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        .profile-picture-container img {
+            width: 80px; /* Keep size consistent */
+            height: 80px; /* Keep size consistent */
+        }
+        .profile-info h5 {
+            font-size: 1.5em;
+        }
+        .teacher-courses-grid {
+            grid-template-columns: 1fr; /* Single column layout for small screens */
+            gap: 15px;
+        }
+        .teacher-course-card {
+            min-height: auto; /* Allow height to adjust on very small screens */
+        }
+        .dashboard-card-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 1.4em;
+        }
+        .dashboard-card-header .btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="dashboard-container">
     <h2>{{ teacher_profile.full_name_en }}'s Teacher Dashboard</h2>
 
-    {# Main layout container for the 20/80 split #}
-    <div class="d-flex flex-column" style="min-height: 80vh;"> {# Added min-height to ensure flex works as expected #}
-
-        {# Upper Row (20% for Profile Data) #}
-        <div class="mb-4" style="flex-basis: 20%; flex-grow: 0; flex-shrink: 0;"> {# Sets height and prevents shrinking/growing #}
-            <div class="card h-100"> {# h-100 makes the card fill its parent's height #}
-                <div class="card-header">
-                    Teacher Profile
+    {# Teacher Profile Section #}
+    <div class="dashboard-card">
+        <div class="dashboard-card-header">
+            Teacher Profile
+            <a href="{% url 'profile_edit' %}" class="btn btn-info btn-sm">Edit Profile</a>
+        </div>
+        <div class="card-body"> {# Retaining card-body for Bootstrap compatibility if you have other Bootstrap styles #}
+            <div class="profile-section">
+                <div class="profile-picture-container">
+                    {% if teacher_profile.profile_picture %}
+                        <img src="{{ teacher_profile.profile_picture.url }}" alt="Profile Picture">
+                    {% else %}
+                        <img src="{% static 'images/profiles/default.jpg' %}" alt="Default Profile Picture">
+                    {% endif %}
+                    {# Moved name below image for better alignment with the reference image #}
+                    <h5>{{ teacher_profile.full_name_en }}</h5>
+                    {% if teacher_profile.full_name_ar %}
+                        <p class="text-muted small">({{ teacher_profile.full_name_ar }})</p>
+                    {% endif %}
                 </div>
-                <div class="card-body">
-                    <div class="row align-items-center">
-                        <div class="col-md-3 text-center">
-                            {% if teacher_profile.profile_picture %}
-                                <img src="{{ teacher_profile.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
-                            {% else %}
-                                <img src="/static/images/profiles/default.jpg" alt="Default Profile Picture" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
-                            {% endif %}
-                            <h5 class="mt-2 mb-0">{{ teacher_profile.full_name_en }}</h5>
-                            {% if teacher_profile.full_name_ar %}
-                                <p class="text-muted small">({{ teacher_profile.full_name_ar }})</p>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-9">
-                            <p><strong>Email:</strong> {{ teacher_profile.user.email }}</p>
-                            <p><strong>Phone:</strong> {{ teacher_profile.phone_number|default:"N/A" }}</p>
-                            <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
-                            {% if teacher_profile.user.user_type == 'teacher' %}
-                                <hr>
-                                <p><strong>Experience:</strong> {{ teacher_profile.experience_years|default:"0" }} years</p>
-                                <p><strong>University:</strong> {{ teacher_profile.university|default:"N/A" }}</p>
-                                <p><strong>Major:</strong> {{ teacher_profile.major|default:"N/A" }}</p>
-                                <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <hr>
-                    {# Application Status moved here, inside the profile section #}
-                    <div>
-                        <strong>Application Status:</strong>
-                        {% if teacher_profile.is_teacher_application_pending %}
-                            <span class="badge bg-warning text-dark">Pending Review</span>
-                        {% elif teacher_profile.is_teacher_approved %}
-                            <span class="badge bg-success">Approved</span>
-                            {% if teacher_profile.approved_by %}
-                                <small class="d-block">Approved by: {{ teacher_profile.approved_by.username }} on {{ teacher_profile.approval_date|date:"M d, Y" }}</small>
-                            {% endif %}
-                        {% elif teacher_profile.rejected_by %}
-                            <span class="badge bg-danger">Rejected</span>
-                            <small class="d-block">Reason: {{ teacher_profile.rejection_reason|default:"No specific reason provided." }}</small>
-                            <small class="d-block">Rejected by: {{ teacher_profile.rejected_by.username }} on {{ teacher_profile.rejection_date|date:"M d, Y" }}</small>
-                        {% else %}
-                            <span class="badge bg-secondary">Status Not Set</span>
-                        {% endif %}
+                <div class="profile-info">
+                    <div class="profile-details">
+                        <p><strong>Email:</strong> {{ teacher_profile.user.email }}</p>
+                        <p><strong>Phone:</strong> {{ teacher_profile.phone_number|default:"N/A" }}</p>
+                        <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
+                        <hr>
+                        <p><strong>Experience:</strong> {{ teacher_profile.experience_years|default:"0" }} years</p>
+                        <p><strong>University:</strong> {{ teacher_profile.university|default:"N/A" }}</p>
+                        <p><strong>Major:</strong> {{ teacher_profile.major|default:"N/A" }}</p>
+                        <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
                     </div>
                 </div>
             </div>
-        </div>
-
-        {# Lower Row (80% for Courses) #}
-        <div style="flex-basis: 80%; flex-grow: 1;"> {# flex-grow: 1 makes this div take up remaining space #}
-            <div class="card h-100"> {# h-100 makes the card fill its parent's height #}
-                <div class="card-header">
-                    Your Courses
-                    <a href="{% url 'add_teacher_course' %}" class="btn btn-success btn-sm float-end">Add New Course</a>
-                </div>
-                <div class="card-body overflow-auto"> {# Added overflow-auto for scrollable content if many courses #}
-                    {% if teacher_courses %}
-                        <ul class="list-group">
-                            {% for course in teacher_courses %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center mb-2">
-                                    <div>
-                                        <h5>{{ course.title }}</h5>
-                                        <p class="mb-1 text-muted">
-                                            Category:
-                                            {% for category in course.categories.all %}
-                                                {{ category.name }}{% if not forloop.last %}, {% endif %}
-                                            {% empty %}
-                                                N/A
-                                            {% endfor %}
-                                            | Level: {{ course.level.name }}
-                                        </p>
-                                        <p class="mb-0">{{ course.description|truncatechars:150 }}</p>
-                                    </div>
-                                    {# Add actions like Edit/Delete here if needed #}
-                                    <div class="ms-auto"> {# Pushes buttons to the right #}
-                                        <a href="{% url 'edit_teacher_course' course.pk %}" class="btn btn-sm btn-info me-2">Edit</a>
-                                        <a href="{% url 'delete_teacher_course' course.pk %}" class="btn btn-sm btn-danger">Delete</a>
-                                    </div>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <div class="alert alert-info" role="alert">
-                            You haven't added any courses yet. Click "Add New Course" to get started!
-                        </div>
+            <div class="profile-status">
+                <strong>Application Status:</strong>
+                {% if teacher_profile.is_teacher_application_pending %}
+                    <span class="badge bg-warning text-dark">Pending Review</span>
+                {% elif teacher_profile.is_teacher_approved %}
+                    <span class="badge bg-success">Approved</span>
+                    {% if teacher_profile.approved_by %}
+                        <small class="d-block mt-1">Approved by: {{ teacher_profile.approved_by.username }} on {{ teacher_profile.approval_date|date:"M d, Y" }}</small>
                     {% endif %}
-                </div>
+                {% elif teacher_profile.rejected_by %}
+                    <span class="badge bg-danger">Rejected</span>
+                    <small class="d-block mt-1">Reason: {{ teacher_profile.rejection_reason|default:"No specific reason provided." }}</small>
+                    <small class="d-block">Rejected by: {{ teacher_profile.rejected_by.username }} on {{ teacher_profile.rejection_date|date:"M d, Y" }}</small>
+                {% else %}
+                    <span class="badge bg-secondary">Status Not Set</span>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {# Your Courses Section #}
+    <div class="dashboard-card">
+        <div class="dashboard-card-header">
+            Your Courses
+            <a href="{% url 'add_teacher_course' %}" class="btn btn-success">Add New Course</a>
+        </div>
+        <div class="card-body">
+            {% if teacher_courses %}
+                <div class="teacher-courses-grid">
+                    {% for course in teacher_courses %}
+                        <div class="teacher-course-card">
+                            {% if course.course_picture %}
+                                <img src="{{ course.course_picture.url }}" alt="{{ course.title }} Course Image">
+                            {% else %}
+                                {# Ensure you have a default_course.png in your static/images/ directory #}
+                                <img src="{% static 'images/default_course.png' %}" alt="Default Course Image">
+                            {% endif %}
+                            <h5>{{ course.title }}</h5>
+                            <p>{{ course.description|truncatechars:100 }}</p>
+                            <p class="course-price">${{ course.price }}</p>
+                            <div class="course-details">
+                                <span>Language: {{ course.get_language_display }}</span>
+                                <span>Level: {{ course.level.name }}</span>
+                                <span>
+                                    <strong>Categories:</strong>
+                                    {% for category in course.categories.all %}
+                                        {{ category.name }}{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        N/A
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            <p class="course-status">
+                                Status:
+                                {% if course.is_published %}
+                                    <span class="badge bg-success">Published</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Draft</span>
+                                {% endif %}
+                            </p>
+                            <div class="course-actions">
+                                {# Uncomment these when you have the corresponding URLs and views implemented #}
+                                {# <a href="{% url 'edit_teacher_course' course.pk %}" class="btn btn-info btn-sm">Edit</a> #}
+                                {# <a href="{% url 'delete_teacher_course' course.pk %}" class="btn btn-danger btn-sm">Delete</a> #}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    You haven't added any courses yet. Click "Add New Course" to get started!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
 {% endblock %}

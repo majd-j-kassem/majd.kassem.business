@@ -4,17 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Courses</title> {# Update with your name or site title #}
+    <title>{{ page_title|default:"Available Courses" }}</title> {# Use page_title from context, fallback to "Available Courses" #}
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- General Body Styles --- */
+        /* --- ALL COMBINED CSS FOR YOUR SITE AND COURSE PAGE --- */
+
+        /* --- General Body Styles (FROM YOUR INDEX.HTML) --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #764ba2, #764ba2);
+            background: linear-gradient(135deg, #764ba2, #764ba2); /* Your site's background */
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: white;
+            color: white; /* Default text color for the body */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -23,7 +26,7 @@
             line-height: 1.6; /* Improved readability */
         }
 
-        /* --- Header/Navigation Styles --- */
+        /* --- Header/Navigation Styles (FROM YOUR INDEX.HTML) --- */
         .main-header {
             background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
             backdrop-filter: blur(8px);
@@ -77,7 +80,7 @@
             color: #007bff;
         }
 
-        /* --- Footer Styles --- */
+        /* --- Footer Styles (FROM YOUR INDEX.HTML) --- */
         .main-footer {
             background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
             backdrop-filter: blur(8px);
@@ -155,11 +158,13 @@
             font-size: 0.85em;
         }
 
-        /* --- Page Content Specific Styling (for Courses) --- */
+        /* --- Page Content Specific Styling (for Home/Index) --- */
+        /* This .page-content style is for the index.html's main content area.
+           The courses-page-container below is for the courses page's content area. */
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
-            max-width: 900px; /* Adjust as needed */
+            max-width: 800px; /* Adjust as needed */
             width: 100%;
             margin: 30px auto;
             background: rgba(255, 255, 255, 0.1);
@@ -167,290 +172,158 @@
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
-            text-align: left; /* Align content left */
+            text-align: center; /* Center content in the box */
             color: white;
         }
         .page-content h1 {
             color: white;
-            font-size: 2.2em;
-            margin-bottom: 30px; /* More space below heading */
-            text-align: center;
-            font-weight: 600;
+            font-size: 2.8em; /* Larger heading */
+            margin-bottom: 20px;
+            font-weight: 700; /* Bolder heading */
         }
-
-        .course-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .course-item {
-            background: rgba(255, 255, 255, 0.15); /* Slightly lighter background for items */
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px; /* Space between course items */
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-align: left;
-            display: flex; /* Use Flexbox for vertical layout */
-            flex-direction: column; /* Stack content vertically */
-        }
-
-        .course-item:hover {
-            transform: translateY(-5px); /* Slight lift effect on hover */
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-
-        /* Container for the course image */
-        .course-image-container {
-            width: 100%; /* Image container takes full width */
-            height: 200px; /* Fixed height for the image container */
-            overflow: hidden; /* Hide overflowing parts of the image */
-            border-radius: 8px; /* Rounded corners for the image container */
-            margin-bottom: 15px; /* Space below the image */
-            background-color: rgba(0,0,0,0.1); /* Placeholder background */
-            display: flex; /* Use flexbox to center image if needed */
-            justify-content: center;
-            align-items: center;
-        }
-
-        .course-image-container img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* Crop image to cover the container */
-        }
-
-
-        .course-item h3 {
-            color: white;
-            font-size: 1.4em;
-            margin-top: 0;
-            margin-bottom: 5px;
-            font-weight: 600;
-        }
-
-        .course-item p {
+         .page-content h2 {
             color: rgba(255, 255, 255, 0.9);
-            font-size: 1em;
-            line-height: 1.6;
-            margin-bottom: 10px;
-            flex-grow: 1; /* Allow description to take available space */
-        }
-
-         .course-details {
-            font-size: 0.95em;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 15px;
-         }
-
-         .course-price-hours {
-             font-size: 1em;
-             color: rgba(255, 255, 255, 0.95);
-             font-weight: 500;
-             margin-top: 10px;
-         }
-
-        /* Container for the buttons */
-        .course-buttons {
-            margin-top: auto; /* Push buttons to the bottom */
-            text-align: center; /* Center buttons within the container */
-            display: flex; /* Use Flexbox to align buttons next to each other */
-            justify-content: center; /* Center buttons horizontally */
-            gap: 15px; /* Space between buttons */
-            padding-top: 15px; /* Add some space above the buttons */
-        }
-
-        .course-link, .register-button {
-            display: inline-block;
-            padding: 8px 18px;
-            border-radius: 6px;
-            text-decoration: none;
+            font-size: 1.8em;
+            margin-bottom: 30px;
             font-weight: 500;
-            transition: background 0.3s ease, transform 0.2s ease;
-            cursor: pointer; /* Indicate it's clickable */
-            border: none; /* Remove default button border */
-            font-family: 'Poppins', sans-serif; /* Use consistent font */
-            font-size: 1em; /* Consistent font size */
         }
-
-        .course-link {
-            background: linear-gradient(90deg, #4facfe, #00f2fe);
-            color: white;
+        .page-content p {
+            line-height: 1.7;
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 25px;
         }
-
-        .course-link:hover {
-             background: linear-gradient(90deg, #00f2fe, #4facfe);
-             transform: translateY(-2px); /* Slight hover effect */
-        }
-
-        .register-button {
+        .cta-button {
+            display: inline-block;
             background: linear-gradient(90deg, #ff416c, #ff4b2b);
             color: white;
-        }
-
-         .register-button:hover {
-            background: linear-gradient(90deg, #ff4b2b, #ff416c);
-            transform: translateY(-2px); /* Slight hover effect */
-         }
-
-        /* --- Payment Modal Styles --- */
-        .payment-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000; /* Ensure it's above other content */
-            visibility: hidden; /* Hidden by default */
-            opacity: 0;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .payment-modal-overlay.visible {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .payment-modal-content {
-            background: linear-gradient(135deg, #6a11cb, #2575fc); /* Gradient background for modal */
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            max-width: 500px; /* Max width for the modal */
-            width: 90%; /* Responsive width */
-            color: white;
-            position: relative; /* Needed for close button positioning */
-            /* Added max-height and overflow for scrolling */
-            max-height: 90vh; /* Set maximum height relative to viewport height */
-            overflow-y: auto; /* Add vertical scroll if content exceeds max-height */
-            box-sizing: border-box; /* Include padding in the element's total width and height */
-        }
-
-        .payment-modal-content h2 {
-            text-align: center;
-            color: white;
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.8em;
-        }
-
-        .payment-form-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .payment-form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .payment-form-group input[type="text"],
-        .payment-form-group input[type="email"],
-        .payment-form-group input[type="number"],
-        .payment-form-group input[type="tel"],
-        .payment-form-group select {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 1em;
-            box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            outline: none;
-        }
-
-         .payment-form-group input[type="text"]:focus,
-         .payment-form-group input[type="email"]:focus,
-         .payment-form-group input[type="number"]:focus,
-         .payment-form-group input[type="tel"]:focus,
-         .payment-form-group select:focus {
-             box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
-         }
-
-
-        .payment-channels {
-            margin-top: 15px; /* Space above the payment channels */
-            margin-bottom: 20px; /* Space below the payment channels */
-            text-align: left; /* Align label left */
-        }
-
-        .payment-channels label {
-            display: block; /* Keep the main label on its own line */
-            margin-bottom: 10px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        /* Style for the container holding radio buttons and their labels */
-        .payment-channel-options {
-            display: flex; /* Use Flexbox to align items horizontally */
-            flex-wrap: wrap; /* Allow items to wrap to the next line */
-            gap: 15px; /* Space between payment options */
-            justify-content: center; /* Center options horizontally */
-        }
-
-        .payment-channel-options div {
-            display: flex; /* Use Flexbox for radio button and label alignment */
-            align-items: center; /* Vertically align radio button and label */
-        }
-
-        .payment-channel-options input[type="radio"] {
-            margin-right: 5px; /* Space between radio button and label */
-            margin-bottom: 0; /* Remove bottom margin */
-        }
-
-        .payment-channel-options label {
-            margin-bottom: 0; /* Remove bottom margin from individual labels */
-            font-weight: 400; /* Slightly lighter font weight for individual labels */
-            color: rgba(255, 255, 255, 0.9); /* Slightly lighter color */
-        }
-
-
-        .payment-submit-button {
-            background: linear-gradient(90deg, #20bd57, #a2f7b7); /* Green gradient */
-            color: white;
-            padding: 12px 20px;
-            border: none;
+            padding: 15px 30px;
             border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.1em;
+            text-decoration: none;
+            font-size: 1.2em;
             font-weight: 600;
-            transition: background 0.3s ease, transform 0.2s ease;
-            width: 100%;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
             margin-top: 20px;
         }
-
-        .payment-submit-button:hover {
-            background: linear-gradient(90deg, #a2f7b7, #20bd57);
-            transform: translateY(-2px);
+        .cta-button:hover {
+            background: linear-gradient(90deg, #ff4b2b, #ff416c);
+            transform: scale(1.05);
+            box-shadow: 8px 20px rgba(255, 65, 108, 0.4);
         }
 
-        .close-modal {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 1.5em;
+        /* --- Course Page Specific Styles (NEW!) --- */
+        /* This content wrapper will be similar to .page-content but for the courses page */
+        .courses-page-container {
+            flex-grow: 1;
+            padding: 40px 20px;
+            max-width: 1200px; /* Wider for 3 columns */
+            width: 100%;
+            margin: 30px auto;
+            background: rgba(255, 255, 255, 0.1); /* Consistent translucent background */
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            text-align: center; /* Center the heading */
+            color: white; /* Default text color for this container */
+        }
+
+        .courses-page-container h1 {
+            color: white; /* Consistent heading color */
+            font-size: 2.5em; /* Slightly adjusted size for course page */
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .courses-grid {
+            display: flex;
+            flex-wrap: wrap; /* Allows items to wrap to the next line */
+            justify-content: center; /* Centers items horizontally */
+            gap: 25px; /* Space between course cards, slightly adjusted for consistency */
+            padding: 0; /* Remove default padding */
+        }
+
+        .course-card {
+            background: rgba(255, 255, 255, 0.08); /* Slightly less opaque card background */
+            backdrop-filter: blur(8px); /* Consistent blur effect */
+            border-radius: 12px; /* Slightly less rounded than main containers */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06); /* Consistent shadow */
+            width: calc(33.333% - 25px); /* 3 items per row, accounting for gap */
+            box-sizing: border-box; /* Include padding and border in the width */
+            padding: 25px; /* Increased padding slightly */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-align: left; /* Align text left within cards for readability */
+            min-height: 400px; /* Adjusted min-height for better consistency with images/details */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .course-card img {
+            max-width: 100%;
+            height: 180px; /* Fixed height for course image */
+            object-fit: cover;
+            border-radius: 8px; /* Slightly rounded corners for images */
+            margin-bottom: 15px;
+            align-self: center; /* Center image */
+        }
+
+        .course-card h2 { /* Targeting h2 for course titles as per your original structure */
+            color: white; /* White heading for cards */
+            margin-top: 0;
+            font-size: 1.35em; /* Slightly adjusted font size */
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .course-card p {
+            font-size: 0.95em; /* Slightly adjusted font size */
+            line-height: 1.6;
+            flex-grow: 1; /* Allows description to take available space */
+            color: rgba(255, 255, 255, 0.85); /* Lighter text for description */
+            margin-bottom: 15px;
+        }
+        .course-card .teacher-name { /* Existing class for teacher name */
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.7); /* Lighter text for teacher name */
+            margin-top: auto; /* Pushes teacher name to the bottom */
+            font-size: 0.8em;
+            margin-bottom: 10px; /* Space before details */
+        }
+
+        /* NEW: Styles for Price and Details within cards */
+        .course-card .price {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #28a745; /* Green for price */
+            margin-bottom: 10px;
+        }
+        .course-card .details {
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px; /* Space between detail spans */
+        }
+        .course-card .details span {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 4px 10px;
+            white-space: nowrap; /* Prevent breaking on smaller screens */
+        }
+        .course-card .details strong { /* For "Categories:" label */
             color: white;
-            cursor: pointer;
-            transition: color 0.3s ease;
         }
 
-        .close-modal:hover {
-            color: #ff416c; /* Highlight color on hover */
-        }
+        .no-courses { text-align: center; color: #999; margin-top: 50px; font-size: 1.2em; }
 
-
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            body { padding-top: 60px; }
+        /* Responsive Adjustments (FROM YOUR INDEX.HTML & NEW COURSE STYLES) */
+        @media (max-width: 992px) {
             .main-header { padding: 10px 0; }
             .main-header .header-content {
                 flex-direction: column;
@@ -477,35 +350,40 @@
                 gap: 10px;
             }
             .social-links ul li { margin: 0 8px; }
-            .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
-             .page-content h1 { font-size: 2em; }
-             .course-item { padding: 15px; }
-             .course-item h3 { font-size: 1.2em; }
-             .course-item p, .course-details, .course-price-hours { font-size: 0.95em; }
-             .course-link, .register-button { padding: 6px 15px; font-size: 0.9em; }
-             .course-buttons {
-                 flex-direction: column; /* Stack buttons on small screens */
-                 gap: 10px; /* Adjust gap for stacked buttons */
-             }
-             .payment-modal-content {
-                 padding: 20px;
-                 max-height: 85vh; /* Adjust max-height for smaller screens */
-             }
-             .payment-modal-content h2 { font-size: 1.6em; }
-             .payment-channel-options {
-                 flex-direction: column; /* Stack payment options on small screens */
-                 gap: 8px; /* Adjust gap for stacked options */
-             }
+
+            /* Page Content specific responsive */
+            .page-content, .courses-page-container { /* Applies to both content wrappers */
+                margin: 20px; padding: 25px; border-radius: 15px;
+            }
+            .page-content h1, .courses-page-container h1 { font-size: 2em; }
+            .page-content h2 { font-size: 1.4em; }
+            .page-content p { font-size: 1em; }
+            .cta-button { padding: 12px 25px; font-size: 1.1em; }
+
+            /* Course Card responsive */
+            .course-card {
+                width: calc(50% - 20px); /* 2 items per row on medium screens, adjusted gap */
+                min-height: 380px; /* Adjust min-height for two columns */
+            }
+        }
+
+        @media (max-width: 768px) {
+            body { padding-top: 60px; } /* Adjust for smaller header height */
+            .course-card {
+                width: calc(100% - 20px); /* 1 item per row on small screens, adjusted gap */
+                min-height: 350px; /* Adjust min-height for single column */
+            }
+            .courses-grid { gap: 15px; } /* Smaller gap on mobile */
         }
     </style>
 </head>
 <body>
-    {# --- Header / Navigation Bar --- #}
+    {# --- Header / Navigation Bar (Copied directly from your index.html) --- #}
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                {# Link to the homepage using the 'index' URL name #}
-                <a href="{% if user.is_authenticated %}{% url 'courses' %}{% else %}{% url 'index' %}{% endif %}">
+                {# Updated link: goes to courses when logged in, index when logged out #}
+                <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
                         {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
                     {% else %}
@@ -516,110 +394,79 @@
             <nav class="main-nav">
                 <ul>
                     {# Link to the homepage using the 'index' URL name #}
-                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
+                    <li><a href="{% url 'index' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
+                    {# Link to the Courses page - always shown #}
+                    <li><a href="{% url 'courses' %}">Courses</a></li>
+
                     {% if user.is_authenticated %}
-                        {# Link to the Courses page - shown when logged in #}
-                        <li><a href="{% url 'courses' %}">Courses</a></li>
-                        {# Link to the logout view #}
+                        {# Conditional links for logged-in users #}
+                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'profile' %}">Profile</a></li> {# Link to the profile view #}
+                        {% if user.user_type == 'teacher' and user.profile.is_teacher_approved %}
+                            <li><a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a></li>
+                        {% endif %}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
-                        {# Link to the profile edit view #}
-                        <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     {% else %}
                         {# Link to the login view - shown when logged out #}
                         <li><a href="{% url 'login' %}">Login</a></li>
+                        <li><a href="{% url 'signup' %}">Sign Up</a></li>
                     {% endif %}
                 </ul>
             </nav>
         </div>
     </header>
 
-    {# --- Main Courses Content --- #}
-    <div class="page-content">
-        <h1>{{ page_title|default:"My Courses Offered" }}</h1> {# Use context variable if provided, otherwise default #}
+    {# --- Main Courses Page Content --- #}
+    <div class="courses-page-container">
+        <h1>{{ page_title }}</h1> {# This will display "Our Courses & Learning" from your view #}
 
-        <ul class="course-list">
-            {# --- Example Course Item 1 --- #}
-            <li class="course-item">
-                {# Image container #}
-                <div class="course-image-container">
-                    {# Replace with the URL to your course image #}
-                    <img src="{% static 'images/placeholder-course1.jpg' %}" alt="Course 1 Image"> {# Example static image #}
-                </div>
-                <h3>Course Title 1: Introduction to Programming</h3> {# Example Course Title #}
-                <p>Learn the fundamentals of programming with Python. Covers variables, data types, control flow, and functions.</p> {# Example Course Description #}
-                 <div class="course-details">
-                    Category: Programming | Level: Beginner
-                 </div> {# Example Course Details #}
-                 <div class="course-price-hours">
-                     Hours: 40 | Price: $200
-                 </div> {# Hours and Price #}
-                 {# Button container #}
-                <div class="course-buttons">
-                    <a href="#" class="course-link">Learn More</a> {# Example Course Link #}
-                    {# Add data attribute to store course ID for payment #}
-                    <button type="button" class="register-button" data-course-id="1" data-course-title="Introduction to Programming" data-course-price="200">Register</button> {# Register Button #}
-                </div>
-            </li>
-
-            {# --- Example Course Item 2 --- #}
-            <li class="course-item">
-                {# Image container #}
-                <div class="course-image-container">
-                     {# Replace with the URL to your course image #}
-                    <img src="{% static 'images/placeholder-course2.jpg' %}" alt="Course 2 Image"> {# Example static image #}
-                </div>
-                <h3>Course Title 2: Advanced Django Development</h3> {# Example Course Title #}
-                <p>Dive deeper into Django with topics like custom user models, REST APIs, and deployment strategies.</p> {# Example Course Description #}
-                 <div class="course-details">
-                    Category: Web Development | Level: Advanced
-                 </div> {# Example Course Details #}
-                 <div class="course-price-hours">
-                     Hours: 60 | Price: $350
-                 </div> {# Hours and Price #}
-                 {# Button container #}
-                <div class="course-buttons">
-                    <a href="#" class="course-link">Learn More</a> {# Example Course Link #}
-                     {# Add data attribute to store course ID for payment #}
-                    <button type="button" class="register-button" data-course-id="2" data-course-title="Advanced Django Development" data-course-price="350">Register</button> {# Register Button #}
-                </div>
-            </li>
-
-             {# --- Example Course Item 3 --- #}
-            <li class="course-item">
-                {# Image container #}
-                <div class="course-image-container">
-                     {# Replace with the URL to your course image #}
-                    <img src="{% static 'images/placeholder-course3.jpg' %}" alt="Course 3 Image"> {# Example static image #}
-                </div>
-                <h3>Course Title 3: Data Analysis with Pandas</h3> {# Example Course Title #}
-                <p>Master data manipulation and analysis using the Pandas library in Python. Use Pandas for data cleaning, transformation, and analysis.</p> {# Example Course Description #}
-                 <div class="course-details">
-                    Category: Data Science | Level: Intermediate
-                 </div> {# Example Course Details #}
-                 <div class="course-price-hours">
-                     Hours: 30 | Price: $180
-                 </div> {# Hours and Price #}
-                 {# Button container #}
-                <div class="course-buttons">
-                    <a href="#" class="course-link">Learn More</a> {# Example Course Link #}
-                     {# Add data attribute to store course ID for payment #}
-                    <button type="button" class="register-button" data-course-id="3" data-course-title="Data Analysis with Pandas" data-course-price="180">Register</button> {# Register Button #}
-                </div>
-            </li>
-
-            {# Add more course items as needed by copying and pasting the .course-item div #}
-
-        </ul>
+        {# --- DYNAMICALLY RENDERED COURSES --- #}
+        {% if courses %}
+            <div class="courses-grid">
+                {% for course in courses %}
+                    <div class="course-card">
+                        {% if course.course_picture %}
+                            <img src="{{ course.course_picture.url }}" alt="{{ course.title }} Course Image">
+                        {% else %}
+                            {# Ensure you have a default_course.png in your static/images/ directory #}
+                            <img src="{% static 'images/default_course.png' %}" alt="Default Course Image">
+                        {% endif %}
+                        <h2>{{ course.title }}</h2> {# Using h2 as per your original style #}
+                        <p>{{ course.description|truncatechars:150 }}</p> {# Truncate description #}
+                        <p class="price">${{ course.price }}</p>
+                        <p class="teacher-name">Taught by: {{ course.teacher_profile.user.username }}</p> {# Using teacher-name as per your original style #}
+                        
+                        <div class="details">
+                            <span>Language: {{ course.get_language_display }}</span>
+                            <span>Level: {{ course.level.name }}</span>
+                            <span>
+                                <strong>Categories:</strong>
+                                {% for category in course.categories.all %}
+                                    {{ category.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    N/A
+                                {% endfor %}
+                            </span>
+                        </div>
+                        {# Optional: Add a link to a course detail page if you create one later #}
+                        {# <a href="{% url 'course_detail' course.id %}" class="btn-details">View Details</a> #}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-courses">No published courses available at the moment. Please check back later!</p>
+        {% endif %}
+        {# --- END DYNAMICALLY RENDERED COURSES --- #}
 
     </div>
 
-    {# --- Footer --- #}
+    {# --- Footer (Copied directly from your index.html) --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
@@ -629,11 +476,11 @@
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
                 <ul>
-                    {# Ensure these links use valid URL names #}
-                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to homepage #}
+                    <li><a href="{% url 'index' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
                 </ul>
             </div>
             <div class="footer-section footer-contact">
@@ -656,188 +503,5 @@
             &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
         </div>
     </footer>
-
-    {# --- Payment Modal Overlay (Hidden by default) --- #}
-    <div class="payment-modal-overlay" id="paymentModalOverlay">
-        <div class="payment-modal-content">
-            <span class="close-modal" id="closeModal">&times;</span>
-            <h2>Register for Course</h2>
-
-            {# Payment Form (Example Structure) #}
-            <form id="paymentForm">
-                {% csrf_token %} {# Include CSRF token for Django forms #}
-
-                <div class="payment-form-group">
-                    <label for="courseTitle">Course:</label>
-                    <input type="text" id="courseTitle" value="" readonly> {# Display selected course title #}
-                    <input type="hidden" id="courseId" value=""> {# Store course ID #}
-                </div>
-
-                 <div class="payment-form-group">
-                    <label for="coursePrice">Price:</label>
-                    <input type="text" id="coursePrice" value="" readonly> {# Display selected course price #}
-                </div>
-
-                <div class="payment-form-group">
-                    <label for="fullName">Full Name:</label>
-                    <input type="text" id="fullName" name="fullName" required placeholder="Enter your full name">
-                </div>
-
-                 <div class="payment-form-group">
-                    <label for="paymentEmail">Email:</label>
-                    <input type="email" id="paymentEmail" name="paymentEmail" required placeholder="Enter your email">
-                </div>
-
-                 <div class="payment-form-group">
-                    <label for="cardNumber">Card Number:</label>
-                    <input type="text" id="cardNumber" name="cardNumber" placeholder="Enter card number">
-                </div>
-
-                 <div class="payment-form-group">
-                    <label for="expiryDate">Expiry Date (MM/YY):</label>
-                    <input type="text" id="expiryDate" name="expiryDate" placeholder="MM/YY">
-                </div>
-
-                <div class="payment-form-group">
-                    <label for="cvv">CVV:</label>
-                    <input type="text" id="cvv" name="cvv" placeholder="CVV">
-                </div>
-
-                <div class="payment-channels">
-                    <label>Choose Payment Channel:</label>
-                    {# Container for the radio button options #}
-                    <div class="payment-channel-options">
-                        <div>
-                            <input type="radio" id="paypal" name="paymentChannel" value="paypal">
-                            <label for="paypal">PayPal</label>
-                        </div>
-                        <div>
-                            <input type="radio" id="stripe" name="paymentChannel" value="stripe">
-                            <label for="stripe">Stripe</label>
-                        </div>
-                         <div>
-                            <input type="radio" id="banktransfer" name="paymentChannel" value="banktransfer">
-                            <label for="banktransfer">Bank Transfer</label>
-                        </div>
-                        {# Add more payment channels as needed #}
-                    </div>
-                </div>
-
-
-                <button type="submit" class="payment-submit-button">Complete Registration</button>
-            </form>
-
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const registerButtons = document.querySelectorAll('.register-button');
-            const paymentModalOverlay = document.getElementById('paymentModalOverlay');
-            const closeModalButton = document.getElementById('closeModal');
-            const courseTitleInput = document.getElementById('courseTitle');
-            const courseIdInput = document.getElementById('courseId');
-            const coursePriceInput = document.getElementById('coursePrice');
-            const paymentForm = document.getElementById('paymentForm');
-
-            // Function to show the modal
-            function showPaymentModal(courseId, courseTitle, coursePrice) {
-                courseIdInput.value = courseId;
-                courseTitleInput.value = courseTitle;
-                coursePriceInput.value = `$${coursePrice}`; // Display price with dollar sign
-                paymentModalOverlay.classList.add('visible');
-            }
-
-            // Function to hide the modal
-            function hidePaymentModal() {
-                paymentModalOverlay.classList.remove('visible');
-                // Optionally reset form fields here
-                paymentForm.reset();
-            }
-
-            // Add click event listeners to all register buttons
-            registerButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const courseId = this.getAttribute('data-course-id');
-                    const courseTitle = this.getAttribute('data-course-title');
-                    const coursePrice = this.getAttribute('data-course-price');
-                    showPaymentModal(courseId, courseTitle, coursePrice);
-                });
-            });
-
-            // Add click event listener to the close button
-            closeModalButton.addEventListener('click', hidePaymentModal);
-
-            // Add click event listener to the overlay to close the modal
-            paymentModalOverlay.addEventListener('click', function(event) {
-                // Check if the click occurred directly on the overlay, not inside the modal content
-                if (event.target === paymentModalOverlay) {
-                    hidePaymentModal();
-                }
-            });
-
-            // Prevent clicks inside the modal content from closing the modal
-            const paymentModalContent = document.querySelector('.payment-modal-content');
-            paymentModalContent.addEventListener('click', function(event) {
-                event.stopPropagation(); // Stop the click event from bubbling up to the overlay
-            });
-
-            // Example form submission handling (replace with actual backend logic)
-            paymentForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent default form submission
-
-                // Here you would collect form data and send it to your Django backend
-                const formData = new FormData(paymentForm);
-                const courseId = formData.get('courseId');
-                const fullName = formData.get('fullName');
-                const paymentEmail = formData.get('paymentEmail');
-                const paymentChannel = formData.get('paymentChannel');
-                // You would also get card details if applicable
-
-                console.log('Payment form submitted!');
-                console.log('Course ID:', courseId);
-                console.log('Full Name:', fullName);
-                console.log('Email:', paymentEmail);
-                console.log('Payment Channel:', paymentChannel);
-
-                // --- Placeholder for sending data to backend ---
-                // You would use fetch or XMLHttpRequest to send this data
-                // Example:
-                /*
-                fetch('/register-course/', { // Replace with your actual backend URL
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken') // Get CSRF token from the form
-                    }
-                    // Add headers like 'X-Requested-With': 'XMLHttpRequest' if needed
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        // Handle HTTP errors
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json(); // Or response.text() depending on backend response
-                })
-                .then(data => {
-                    console.log('Backend response:', data);
-                    // Handle success response from the backend
-                    // e.g., display a success message, redirect, etc.
-                    hidePaymentModal(); // Hide modal on success
-                    alert('Registration successful!'); // Example success feedback
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // Handle errors, e.g., display an error message to the user
-                    alert('Registration failed. Please try again.'); // Example error feedback
-                });
-                */
-
-                // For now, just hide the modal and show a basic alert
-                alert('Registration submitted (backend processing needed)!');
-                hidePaymentModal();
-            });
-        });
-    </script>
 </body>
 </html>

@@ -4,17 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Your Name - Home</title> {# Update with your name #}
+    <title>Available Courses</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- General Body Styles --- */
+        /* ******************************************************************
+           IMPORTANT:
+           PASTE ALL THE COMBINED CSS HERE!
+           (From your index.html's <style> block, PLUS the new course-specific CSS)
+           ******************************************************************
+        */
+
+        /* --- General Body Styles (FROM YOUR INDEX.HTML) --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
-            background: linear-gradient(135deg, #764ba2, #764ba2);
+            background: linear-gradient(135deg, #764ba2, #764ba2); /* Your site's background */
             margin: 0;
             padding-top: 70px; /* Space for the fixed header */
-            color: white;
+            color: white; /* Default text color for the body */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -23,7 +31,7 @@
             line-height: 1.6; /* Improved readability */
         }
 
-        /* --- Header/Navigation Styles --- */
+        /* --- Header/Navigation Styles (FROM YOUR INDEX.HTML) --- */
         .main-header {
             background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
             backdrop-filter: blur(8px);
@@ -77,7 +85,7 @@
             color: #007bff;
         }
 
-        /* --- Footer Styles --- */
+        /* --- Footer Styles (FROM YOUR INDEX.HTML) --- */
         .main-footer {
             background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
             backdrop-filter: blur(8px);
@@ -156,6 +164,8 @@
         }
 
         /* --- Page Content Specific Styling (for Home/Index) --- */
+        /* This .page-content style is for the index.html's main content area.
+           The courses-page-container below is for the courses page's content area. */
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
@@ -206,10 +216,82 @@
             box-shadow: 8px 20px rgba(255, 65, 108, 0.4);
         }
 
+        /* --- Course Page Specific Styles (NEW!) --- */
+        /* This content wrapper will be similar to .page-content but for the courses page */
+        .courses-page-container {
+            flex-grow: 1;
+            padding: 40px 20px;
+            max-width: 1200px; /* Wider for 3 columns */
+            width: 100%;
+            margin: 30px auto;
+            background: rgba(255, 255, 255, 0.1); /* Consistent translucent background */
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+            text-align: center; /* Center the heading */
+            color: white; /* Default text color for this container */
+        }
 
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            body { padding-top: 60px; }
+        .courses-page-container h1 {
+            color: white; /* Consistent heading color */
+            font-size: 2.5em; /* Slightly adjusted size for course page */
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+
+        .courses-grid {
+            display: flex;
+            flex-wrap: wrap; /* Allows items to wrap to the next line */
+            justify-content: center; /* Centers items horizontally */
+            gap: 25px; /* Space between course cards, slightly adjusted for consistency */
+            padding: 0; /* Remove default padding */
+        }
+
+        .course-card {
+            background: rgba(255, 255, 255, 0.08); /* Slightly less opaque card background */
+            backdrop-filter: blur(8px); /* Consistent blur effect */
+            border-radius: 12px; /* Slightly less rounded than main containers */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06); /* Consistent shadow */
+            width: calc(33.333% - 25px); /* 3 items per row, accounting for gap */
+            box-sizing: border-box; /* Include padding and border in the width */
+            padding: 25px; /* Increased padding slightly */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            text-align: left; /* Align text left within cards for readability */
+            min-height: 280px; /* Ensures cards have a similar minimum height */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .course-card h2 {
+            color: white; /* White heading for cards */
+            margin-top: 0;
+            font-size: 1.35em; /* Slightly adjusted font size */
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .course-card p {
+            font-size: 0.95em; /* Slightly adjusted font size */
+            line-height: 1.6;
+            flex-grow: 1; /* Allows description to take available space */
+            color: rgba(255, 255, 255, 0.85); /* Lighter text for description */
+            margin-bottom: 15px;
+        }
+        .course-card .teacher-name {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.7); /* Lighter text for teacher name */
+            margin-top: auto; /* Pushes teacher name to the bottom */
+            font-size: 0.8em;
+        }
+
+        /* Responsive Adjustments (FROM YOUR INDEX.HTML & NEW COURSE STYLES) */
+        @media (max-width: 992px) {
             .main-header { padding: 10px 0; }
             .main-header .header-content {
                 flex-direction: column;
@@ -236,16 +318,35 @@
                 gap: 10px;
             }
             .social-links ul li { margin: 0 8px; }
-            .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
-             .page-content h1 { font-size: 2em; }
-             .page-content h2 { font-size: 1.4em; }
-             .page-content p { font-size: 1em; }
-             .cta-button { padding: 12px 25px; font-size: 1.1em; }
+
+            /* Page Content specific responsive */
+            .page-content, .courses-page-container { /* Applies to both content wrappers */
+                margin: 20px; padding: 25px; border-radius: 15px;
+            }
+            .page-content h1, .courses-page-container h1 { font-size: 2em; }
+            .page-content h2 { font-size: 1.4em; }
+            .page-content p { font-size: 1em; }
+            .cta-button { padding: 12px 25px; font-size: 1.1em; }
+
+            /* Course Card responsive */
+            .course-card {
+                width: calc(50% - 20px); /* 2 items per row on medium screens, adjusted gap */
+                min-height: 250px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body { padding-top: 60px; } /* Adjust for smaller header height */
+            .course-card {
+                width: calc(100% - 20px); /* 1 item per row on small screens, adjusted gap */
+                min-height: 200px;
+            }
+            .courses-grid { gap: 15px; } /* Smaller gap on mobile */
         }
     </style>
 </head>
 <body>
-    {# --- Header / Navigation Bar --- #}
+    {# --- Header / Navigation Bar (Copied directly from your index.html) --- #}
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
@@ -284,16 +385,50 @@
         </div>
     </header>
 
-    {# --- Main Homepage Content --- #}
-    <div class="page-content">
-        <h1>Welcome to My Portfolio</h1> {# Update with your main heading #}
-        <h2>A brief tagline or introduction</h2> {# Update with your tagline #}
-        <p>This is the main content area for your homepage. You can introduce yourself, your skills, or your passion here.</p> {# Replace with your introductory text #}
-        {# Example Call to Action Button #}
-        <a href="{% url 'portfolio_page' %}" class="cta-button">View My Work</a> {# Link to your main portfolio page #}
+    {# --- Main Courses Page Content --- #}
+    <div class="courses-page-container"> {# This is the new container for your courses #}
+        <h1>Available Courses</h1>
+
+        <div class="courses-grid">
+            <div class="course-card">
+                <h2>Introduction to Web Development</h2>
+                <p>Learn the basics of HTML, CSS, and JavaScript to build your first websites. This course covers fundamental concepts and practical exercises.</p>
+                <p class="teacher-name">Taught by: Jane Doe</p>
+            </div>
+
+            <div class="course-card">
+                <h2>Advanced Python Programming</h2>
+                <p>Dive deeper into Python with advanced topics like data structures, algorithms, and web frameworks. Perfect for intermediate programmers.</p>
+                <p class="teacher-name">Taught by: John Smith</p>
+            </div>
+
+            <div class="course-card">
+                <h2>Digital Marketing Fundamentals</h2>
+                <p>Understand the core principles of digital marketing, SEO, social media marketing, and content strategy to grow your online presence.</p>
+                <p class="teacher-name">Taught by: Emily White</p>
+            </div>
+
+            <div class="course-card">
+                <h2>Data Science with R</h2>
+                <p>Explore data analysis, visualization, and machine learning techniques using the R programming language. Hands-on projects included.</p>
+                <p class="teacher-name">Taught by: David Green</p>
+            </div>
+
+            <div class="course-card">
+                <h2>UI/UX Design Principles</h2>
+                <p>Learn how to create intuitive and user-friendly interfaces. This course covers user research, wireframing, prototyping, and usability testing.</p>
+                <p class="teacher-name">Taught by: Sarah Blue</p>
+            </div>
+
+             <div class="course-card">
+                <h2>Creative Writing Workshop</h2>
+                <p>Unleash your creativity and improve your writing skills across various genres. Focus on storytelling, character development, and narrative structure.</p>
+                <p class="teacher-name">Taught by: Michael Brown</p>
+            </div>
+        </div>
     </div>
 
-    {# --- Footer --- #}
+    {# --- Footer (Copied directly from your index.html) --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">

@@ -2,49 +2,35 @@
 
 import secrets
 import string
-from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, authenticate, logout, get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
 from django.contrib.messages.storage import default_storage
 from django.core.mail import send_mail
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.shortcuts import render, redirect, get_object_or_404 # <--- ENSURE get_object_or_404 IS HERE
+from django.utils import timezone # Ensure this is imported for timezone.now()
 
+# --- Consolidated Model Imports ---
 from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel
+
+# --- Consolidated Form Imports ---
 from .forms import (
     SignupForm, CustomUserChangeForm, ProfileForm, ContactForm,
     TeacherPersonalInfoForm, TeacherProfessionalDetailsForm,
-    TeacherCourseForm, # <--- ENSURE TeacherCourseForm IS HERE
+    TeacherCourseForm, # Make sure TeacherCourseForm is here if used by add_teacher_course
     PasswordSettingForm
 )
 
-User = get_user_model() # Get your CustomUser model instance
+User = get_user_model() # Get your CustomUser model instance (keep this line once)
 
-
-# Import ALL your forms here, consolidated
-from .forms import (
-    SignupForm, CustomUserChangeForm, ProfileForm, ContactForm,
-    TeacherPersonalInfoForm, TeacherProfessionalDetailsForm # Removed TeacherCourseOfferingForm
-)
-
-# Import ALL your models here, consolidated
-from .models import (
-    CustomUser, Profile, CourseCategory, CourseLevel, TeacherCourse
-)
-from .forms import (
-    SignupForm, CustomUserChangeForm, ProfileForm, ContactForm,
-    TeacherPersonalInfoForm, TeacherProfessionalDetailsForm,
-    TeacherCourseOfferingForm, # Keep this if you're using it for add_teacher_course
-    PasswordSettingForm # <<< NEW IMPORT
-)
 
 def generate_random_password(length=12):
     """Generate a secure random password."""
     characters = string.ascii_letters + string.digits + string.punctuation
     return ''.join(secrets.choice(characters) for i in range(length))
+
 # --- Core Homepage View ---
 def index_view(request):
     print("\n--- Index View Accessed (Homepage) ---")
@@ -72,11 +58,18 @@ def certificates_view(request):
     context = {}
     return render(request, 'certificates.html', context)
 
-# --- Course Page View ---
+# --- Course Page View (UPDATED TO FETCH COURSES FROM DB) ---
 def course_view(request):
-    print("\n--- Course View Accessed ---")
+    print("\n--- Course View Accessed (Fetching Published Courses) ---")
+    
+    # Fetch all TeacherCourse objects that have a 'published' status
+    # .select_related() is an optimization to fetch related Profile and CustomUser data
+    # .order_by('-created_at') ensures newer courses appear first.
+    courses = TeacherCourse.objects.filter(status='published').select_related('teacher_profile__user').order_by('-created_at')
+
     context = {
-        'page_title': 'My Courses & Learning'
+        'page_title': 'Our Courses & Learning', # You can adjust this title
+        'courses': courses # This is the crucial part: pass the fetched courses to the template
     }
     return render(request, 'courses.html', context)
 
@@ -262,7 +255,6 @@ def dashboard(request):
     return render(request, 'dashboard.html', context)
 
 
-# --- Profile Edit View ---
 # --- Profile View ---
 @login_required
 def profile_view(request):
@@ -288,8 +280,7 @@ def profile_view(request):
     }
     return render(request, 'accounts/profile.html', context)
 
-# --- Your other views (teacher_dashboard, login_view, etc.) ---
-# ...
+# --- Profile Edit View ---
 @login_required
 def profile_edit(request):
     print(f"\n--- Profile Edit View Accessed (Method: {request.method}) ---")
@@ -448,15 +439,6 @@ def teacher_register_stage2(request):
 
 
 # --- Teacher Registration Stage 3 (formerly Stage 4: Review and Submit) ---
-# This view now processes the teacher data from stages 1 and 2, and handles the final submission
-# It NO LONGER expects course information from a previous stage
-# ... (your existing imports)
-from django.contrib import messages # Already there
-from django.contrib.auth.models import User # Make sure User is imported if not already
-from .models import Profile # Make sure Profile is imported
-
-# In your accounts/views.py
-
 def teacher_register_confirm(request): # Renamed from teacher_register_stage4
     """
     Handles the review stage of teacher registration.
@@ -471,12 +453,7 @@ def teacher_register_confirm(request): # Renamed from teacher_register_stage4
 
     if request.method == 'POST':
         print("\n--- POST Request Received at teacher_register_confirm (Confirm) ---")
-        # Just confirm and proceed to the next stage (password setting)
-        # REMOVE ALL USER/PROFILE CREATION/UPDATE LOGIC FROM HERE.
-        # It has been moved to teacher_register_password_setting.
-
         messages.info(request, 'Review confirmed. Now set your password.')
-        # >>> THIS IS THE ONLY LINE YOU NEED HERE FOR POST:
         return redirect('teacher_register_password_setting') # <<< Redirect to new password setting stage
 
     else: # GET request for Review
@@ -484,18 +461,17 @@ def teacher_register_confirm(request): # Renamed from teacher_register_stage4
 
         context = {
             'teacher_data': displayed_teacher_data,
-            'page_title': 'Review Your Application' # It's good to pass a title
+            'page_title': 'Review Your Application'
         }
-        # Keep rendering the existing template for review
-        # Assuming you've renamed teacher_register_stage4.html to teacher_register_confirm.html
-        # If not, keep 'accounts/teacher_register_stage4.html' for now, but rename is cleaner.
-        return render(request, 'accounts/teacher_register_confirm.html', context) # Or 'accounts/teacher_register_confirm.html' if renamed
+        return render(request, 'accounts/teacher_register_confirm.html', context)
+
 
 # --- New View for Application Success Page (ensure this is in your urls.py) ---
 def application_success_view(request):
     """Simple view for displaying application success message."""
     return render(request, 'accounts/application_success.html', {'page_title': 'Application Submitted'})
-# --- Helper Functions (like is_approved_teacher, should be defined here, BEFORE views) ---
+
+# --- Helper Function: Check if user is an approved teacher ---
 def is_approved_teacher(user):
     """
     Test to check if the user is a teacher and their application is approved.
@@ -504,8 +480,6 @@ def is_approved_teacher(user):
     return user.is_authenticated and user.user_type == 'teacher' and \
            hasattr(user, 'profile') and user.profile.is_teacher_approved
 
-
-# ... (Your other views like index_view, login_view, dashboard, etc.) ...
 
 # --- NEW: Add Course View (for Approved Teachers) ---
 @login_required
@@ -550,7 +524,7 @@ def add_teacher_course(request):
     }
     return render(request, 'accounts/add_teacher_course.html', context)
 
-# ... (Your other views like teacher_dashboard, edit_teacher_course, delete_teacher_course etc.) ...
+# --- Teacher Password Setting View ---
 def teacher_register_password_setting(request):
     """
     Handles setting the password for new teacher accounts and finalizes submission.
@@ -563,14 +537,8 @@ def teacher_register_password_setting(request):
         return redirect('teacher_register_stage1')
 
     # For authenticated users (existing users applying as teacher), they don't set a password here.
-    # They should manage their password via profile edit.
-    # We will assume this stage is primarily for NEW users.
     is_authenticated = teacher_data.get('is_authenticated_at_stage1')
     if is_authenticated and request.user.is_authenticated:
-        # If an authenticated user reaches here, it means they are trying to apply as a teacher.
-        # They should not be prompted to set a password.
-        # Instead, we should just finalize their application (update profile) directly.
-        # Re-use the user/profile update logic from below.
         user = request.user
         profile, created_profile = Profile.objects.get_or_create(user=user)
         if created_profile:
@@ -578,7 +546,7 @@ def teacher_register_password_setting(request):
         else:
             messages.info(request, "Updating existing profile.")
 
-        # Update all profile fields from session data (these are already defined from teacher_data)
+        # Update all profile fields from session data
         profile.full_name_en = teacher_data.get('full_name_en', profile.full_name_en)
         profile.full_name_ar = teacher_data.get('full_name_ar', profile.full_name_ar)
         profile.phone_number = teacher_data.get('phone_number', profile.phone_number)
@@ -633,19 +601,15 @@ def teacher_register_password_setting(request):
             major = teacher_data.get('major')
             bio = teacher_data.get('bio')
 
-            user = None # Initialize user to None for this path
+            user = None
 
             try:
-                # This logic is for NEW users only at this stage
                 try:
                     user = CustomUser.objects.get(email=email)
                     messages.warning(request, "An account with this email already exists. Please log in to update your profile.")
                     print(f"Account with email '{email}' already exists. Redirecting to login.")
-                    # This scenario should ideally be caught earlier (e.g., in stage1 or stage4)
-                    # but as a fallback, ensure we don't try to create a duplicate user.
                     return redirect('login')
                 except CustomUser.DoesNotExist:
-                    # Create a new user with the chosen password
                     username_base = email.split('@')[0]
                     username = username_base
                     i = 1
@@ -656,22 +620,19 @@ def teacher_register_password_setting(request):
                     user = CustomUser.objects.create_user(
                         username=username,
                         email=email,
-                        password=password, # <<< Use the user-set password here!
+                        password=password,
                         user_type='teacher',
                         is_active=True,
                     )
                     messages.success(request, f"New account created for '{user.username}'.")
                     print(f"NEW User created: {user.username}, Password Set by User.")
 
-                # Now, get or create the profile for the user
                 profile, created_profile = Profile.objects.get_or_create(user=user)
                 if created_profile:
                     print(f"Profile {profile.pk} was newly created (by get_or_create).")
                 else:
                     print(f"Existing profile {profile.pk} fetched.")
 
-
-                # Update all profile fields from session data
                 profile.full_name_en = full_name_en
                 profile.full_name_ar = full_name_ar
                 profile.phone_number = phone_number
@@ -681,7 +642,6 @@ def teacher_register_password_setting(request):
                 profile.major = major
                 profile.bio = bio
 
-                # Set application status
                 profile.is_teacher_application_pending = True
                 profile.is_teacher_approved = False
                 profile.approved_by = None
@@ -693,28 +653,27 @@ def teacher_register_password_setting(request):
                 profile.save()
                 print(f"\n--- Profile SUCCESSFULLY SAVED! ID: {profile.pk} ---")
 
-                # Clear session data after successful submission
                 if 'teacher_data' in request.session:
                     del request.session['teacher_data']
                     request.session.modified = True
                     print("Teacher data cleared from session.")
 
                 messages.success(request, 'Your teacher application has been submitted successfully and is awaiting approval! You can now log in.')
-                return redirect('application_success') # Redirect to success page
+                return redirect('application_success')
 
             except Exception as e:
                 messages.error(request, f"An error occurred during account creation/submission: {e}")
                 print(f"\n!!! ERROR DURING FINAL SUBMISSION: {e} !!!")
                 import traceback
                 traceback.print_exc()
-                return redirect('teacher_register_stage1') # Send back to stage 1 on critical error
+                return redirect('teacher_register_stage1')
 
-        else: # Form is NOT valid
+        else:
             messages.error(request, 'Please correct the password errors below.')
-            print("PasswordSettingForm errors:", form.errors) # Debug password form errors
+            print("PasswordSettingForm errors:", form.errors)
 
-    else: # GET request
-        form = PasswordSettingForm() # Instantiate empty form for GET
+    else:
+        form = PasswordSettingForm()
 
     context = {
         'form': form,
@@ -725,17 +684,12 @@ def teacher_register_password_setting(request):
 @login_required
 @user_passes_test(lambda user: user.user_type == 'teacher' and user.profile.is_teacher_approved)
 def teacher_dashboard(request):
-    # This is a placeholder for the teacher's dashboard content
-    # You can fetch courses taught by the teacher, pending requests, etc.
     teacher_profile = request.user.profile
     teacher_courses = TeacherCourse.objects.filter(teacher_profile=teacher_profile)
 
     context = {
         'teacher_profile': teacher_profile,
         'teacher_courses': teacher_courses,
-        'title': 'Teacher Dashboard',
+        'page_title': 'Teacher Dashboard'
     }
-    return render(request, 'teacher_dashboard.html', context)
-
-# --- Your other views (login_view, logout_view, signup_view, profile_view, etc.) ---
-# ...
+    return render(request, 'accounts/teacher_dashboard.html', context)
