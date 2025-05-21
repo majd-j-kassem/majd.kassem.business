@@ -1,4 +1,4 @@
-{% extends 'base.html' %} {# Make sure 'base.html' is correctly configured and accessible #}
+{% extends 'base.html' %}
 
 {% block title %}{{ page_title }}{% endblock %}
 
@@ -6,63 +6,105 @@
 <div class="container mt-5">
     <h2>{{ teacher_profile.full_name_en }}'s Teacher Dashboard</h2>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Your Courses
+    {# Main layout container for the 20/80 split #}
+    <div class="d-flex flex-column" style="min-height: 80vh;"> {# Added min-height to ensure flex works as expected #}
+
+        {# Upper Row (20% for Profile Data) #}
+        <div class="mb-4" style="flex-basis: 20%; flex-grow: 0; flex-shrink: 0;"> {# Sets height and prevents shrinking/growing #}
+            <div class="card h-100"> {# h-100 makes the card fill its parent's height #}
+                <div class="card-header">
+                    Teacher Profile
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3 text-center">
+                            {% if teacher_profile.profile_picture %}
+                                <img src="{{ teacher_profile.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                            {% else %}
+                                <img src="/static/images/profiles/default.jpg" alt="Default Profile Picture" class="img-fluid rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                            {% endif %}
+                            <h5 class="mt-2 mb-0">{{ teacher_profile.full_name_en }}</h5>
+                            {% if teacher_profile.full_name_ar %}
+                                <p class="text-muted small">({{ teacher_profile.full_name_ar }})</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-9">
+                            <p><strong>Email:</strong> {{ teacher_profile.user.email }}</p>
+                            <p><strong>Phone:</strong> {{ teacher_profile.phone_number|default:"N/A" }}</p>
+                            <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
+                            {% if teacher_profile.user.user_type == 'teacher' %}
+                                <hr>
+                                <p><strong>Experience:</strong> {{ teacher_profile.experience_years|default:"0" }} years</p>
+                                <p><strong>University:</strong> {{ teacher_profile.university|default:"N/A" }}</p>
+                                <p><strong>Major:</strong> {{ teacher_profile.major|default:"N/A" }}</p>
+                                <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr>
+                    {# Application Status moved here, inside the profile section #}
+                    <div>
+                        <strong>Application Status:</strong>
+                        {% if teacher_profile.is_teacher_application_pending %}
+                            <span class="badge bg-warning text-dark">Pending Review</span>
+                        {% elif teacher_profile.is_teacher_approved %}
+                            <span class="badge bg-success">Approved</span>
+                            {% if teacher_profile.approved_by %}
+                                <small class="d-block">Approved by: {{ teacher_profile.approved_by.username }} on {{ teacher_profile.approval_date|date:"M d, Y" }}</small>
+                            {% endif %}
+                        {% elif teacher_profile.rejected_by %}
+                            <span class="badge bg-danger">Rejected</span>
+                            <small class="d-block">Reason: {{ teacher_profile.rejection_reason|default:"No specific reason provided." }}</small>
+                            <small class="d-block">Rejected by: {{ teacher_profile.rejected_by.username }} on {{ teacher_profile.rejection_date|date:"M d, Y" }}</small>
+                        {% else %}
+                            <span class="badge bg-secondary">Status Not Set</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            {% if teacher_courses %}
-                <ul class="list-group">
-                    {% for course in teacher_courses %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5>{{ course.title }}</h5>
-                                <p class="mb-1 text-muted">
-                                    Category:
-                                    {# Display categories if it's a ManyToMany relationship #}
-                                    {% for category in course.categories.all %}
-                                        {{ category.name }}{% if not forloop.last %}, {% endif %}
-                                    {% empty %}
-                                        N/A
-                                    {% endfor %}
-                                    | Level: {{ course.level.name }}
-                                </p>
-                                <p class="mb-0">{{ course.description|truncatechars:100 }}</p>
-                            </div>
-                            <span class="badge bg-primary rounded-pill">{{ course.get_status_display }}</span>
-                            {# Example: <a href="{% url 'edit_course' course.pk %}" class="btn btn-sm btn-info ms-2">Edit</a> #}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>You haven't added any courses yet.</p>
-            {% endif %}
-            <hr>
-            <a href="{% url 'add_teacher_course' %}" class="btn btn-success">Add New Course</a>
+
+        {# Lower Row (80% for Courses) #}
+        <div style="flex-basis: 80%; flex-grow: 1;"> {# flex-grow: 1 makes this div take up remaining space #}
+            <div class="card h-100"> {# h-100 makes the card fill its parent's height #}
+                <div class="card-header">
+                    Your Courses
+                    <a href="{% url 'add_teacher_course' %}" class="btn btn-success btn-sm float-end">Add New Course</a>
+                </div>
+                <div class="card-body overflow-auto"> {# Added overflow-auto for scrollable content if many courses #}
+                    {% if teacher_courses %}
+                        <ul class="list-group">
+                            {% for course in teacher_courses %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <h5>{{ course.title }}</h5>
+                                        <p class="mb-1 text-muted">
+                                            Category:
+                                            {% for category in course.categories.all %}
+                                                {{ category.name }}{% if not forloop.last %}, {% endif %}
+                                            {% empty %}
+                                                N/A
+                                            {% endfor %}
+                                            | Level: {{ course.level.name }}
+                                        </p>
+                                        <p class="mb-0">{{ course.description|truncatechars:150 }}</p>
+                                    </div>
+                                    {# Add actions like Edit/Delete here if needed #}
+                                    <div class="ms-auto"> {# Pushes buttons to the right #}
+                                        <a href="{% url 'edit_teacher_course' course.pk %}" class="btn btn-sm btn-info me-2">Edit</a>
+                                        <a href="{% url 'delete_teacher_course' course.pk %}" class="btn btn-sm btn-danger">Delete</a>
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="alert alert-info" role="alert">
+                            You haven't added any courses yet. Click "Add New Course" to get started!
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="card mt-4">
-        <div class="card-header">
-            Application Status
-        </div>
-        <div class="card-body">
-            {% if teacher_profile.is_teacher_application_pending %}
-                <p class="text-warning">Your teacher application is currently pending admin review.</p>
-            {% elif teacher_profile.is_teacher_approved %}
-                <p class="text-success">Congratulations! Your teacher application has been approved.</p>
-                {% if teacher_profile.approved_by %}
-                    <small>Approved by: {{ teacher_profile.approved_by.username }} on {{ teacher_profile.approval_date|date:"M d, Y" }}</small>
-                {% endif %}
-            {% elif teacher_profile.rejected_by %}
-                <p class="text-danger">Your teacher application was rejected.</p>
-                <p class="text-danger">Reason: {{ teacher_profile.rejection_reason|default:"No specific reason provided." }}</p>
-                <small>Rejected by: {{ teacher_profile.rejected_by.username }} on {{ teacher_profile.rejection_date|date:"M d, Y" }}</small>
-            {% else %}
-                <p>No teacher application found or status is not yet set.</p>
-            {% endif %}
-        </div>
-    </div>
-
 </div>
 {% endblock %}

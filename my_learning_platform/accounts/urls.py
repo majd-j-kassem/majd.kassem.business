@@ -31,7 +31,8 @@ urlpatterns = [
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
     path('teacher/courses/add/', views.add_teacher_course, name='add_teacher_course'),
     path('profile/', views.profile_view, name='profile'),
-    # Optional: If 'courses' was just an alias for 'certificates', you can remove it.
-    # If you still want it, keep it here:
-    # path('courses/', views.certificates_view, name='courses'),
+    # Teacher Dashboard
+    path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/courses/add/', views.add_teacher_course, name='add_teacher_course'),
+
 ]

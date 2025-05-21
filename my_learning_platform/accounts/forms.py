@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from .models import Profile # Import the new Profile model
 from .models import Profile, CourseCategory, CourseLevel # <-- THIS LINE IS CRUCIAL
 
+from .models import TeacherCourse, CourseCategory, CourseLevel
 
 # Get the currently active User model (handles custom user models if you ever use one)
 User = get_user_model()
@@ -242,3 +243,67 @@ class PasswordSettingForm(forms.Form):
                     ("Your password must be at least 8 characters long.")
                 )
         return cleaned_data
+class TeacherCourseForm(forms.ModelForm):
+    # For ManyToMany fields like 'categories', it's often better to use ModelMultipleChoiceField
+    # with a CheckboxSelectMultiple widget for a multi-select checkbox UI.
+    categories = forms.ModelMultipleChoiceField(
+        queryset=CourseCategory.objects.all().order_by('name'), # Order for consistent display
+        widget=forms.CheckboxSelectMultiple,
+        required=True,
+        help_text="Select one or more categories for your course."
+    )
+
+    # For ForeignKey fields like 'level', ModelChoiceField is used by default with a Select widget.
+    level = forms.ModelChoiceField(
+        queryset=CourseLevel.objects.all().order_by('name'), # Order for consistent display
+        required=True,
+        empty_label="Select a level",
+        help_text="Choose the appropriate level for your course."
+    )
+
+    class Meta:
+        model = TeacherCourse
+        fields = [
+            'title',
+            'description',
+            'price',
+            'language',
+            'categories',
+            'level',
+            'course_picture',
+            'video_trailer_url',
+            # 'status' is managed by the system, not directly by the teacher in this form
+            # 'created_at', 'updated_at' are auto-managed
+        ]
+        widgets = {
+            'description': forms.Textarea(attrs={'rows': 4}),
+            'price': forms.NumberInput(attrs={'step': '0.01', 'min': '0.00'}),
+            'language': forms.TextInput(attrs={'placeholder': 'e.g., English, Arabic'}),
+            'video_trailer_url': forms.URLInput(attrs={'placeholder': 'e.g., https://www.youtube.com/watch?v=xxxxxxxx'}),
+        }
+        labels = {
+            'title': 'Course Title',
+            'description': 'Course Description',
+            'price': 'Price ($)',
+            'language': 'Language of Instruction',
+            'categories': 'Course Categories',
+            'level': 'Course Level',
+            'course_picture': 'Course Thumbnail/Cover Image',
+            'video_trailer_url': 'Video Trailer URL (Optional)',
+        }
+        help_texts = {
+            'title': 'A clear and engaging title for your course.',
+            'description': 'Provide a comprehensive description of what your course covers.',
+            'course_picture': 'Upload a clear image to represent your course.',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add Bootstrap form-control class to most fields for consistent styling
+        for field_name, field in self.fields.items():
+            if isinstance(field.widget, (forms.TextInput, forms.Textarea, forms.NumberInput, forms.URLInput, forms.Select, forms.FileInput)):
+                field.widget.attrs['class'] = 'form-control'
+            # CheckboxSelectMultiple is handled differently in the template for better styling
+            # If you want default styling for each checkbox, you might add:
+            # elif isinstance(field.widget, forms.CheckboxInput):
+            #     field.widget.attrs['class'] = 'form-check-input'

@@ -11,7 +11,15 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import render, redirect, get_object_or_404 # <--- ENSURE get_object_or_404 IS HERE
 
+from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel
+from .forms import (
+    SignupForm, CustomUserChangeForm, ProfileForm, ContactForm,
+    TeacherPersonalInfoForm, TeacherProfessionalDetailsForm,
+    TeacherCourseForm, # <--- ENSURE TeacherCourseForm IS HERE
+    PasswordSettingForm
+)
 
 User = get_user_model() # Get your CustomUser model instance
 
@@ -487,41 +495,62 @@ def teacher_register_confirm(request): # Renamed from teacher_register_stage4
 def application_success_view(request):
     """Simple view for displaying application success message."""
     return render(request, 'accounts/application_success.html', {'page_title': 'Application Submitted'})
+# --- Helper Functions (like is_approved_teacher, should be defined here, BEFORE views) ---
+def is_approved_teacher(user):
+    """
+    Test to check if the user is a teacher and their application is approved.
+    Also checks if the profile exists to prevent AttributeError.
+    """
+    return user.is_authenticated and user.user_type == 'teacher' and \
+           hasattr(user, 'profile') and user.profile.is_teacher_approved
+
+
+# ... (Your other views like index_view, login_view, dashboard, etc.) ...
 
 # --- NEW: Add Course View (for Approved Teachers) ---
 @login_required
+@user_passes_test(is_approved_teacher, login_url='/login/')
 def add_teacher_course(request):
-    # Ensure user is a teacher and is approved
-    if not hasattr(request.user, 'profile') or request.user.user_type != 'teacher' or not request.user.profile.is_teacher_approved:
-        messages.error(request, "You must be an approved teacher to add a course.")
-        return redirect('dashboard') # Or a page indicating denial
+    """
+    Allows an approved teacher to add a new course.
+    """
+    # Get the teacher's profile. If not found, it's a critical error for an approved teacher.
+    teacher_profile = get_object_or_404(Profile, user=request.user)
 
     if request.method == 'POST':
-        form = TeacherCourseOfferingForm(request.POST)
+        # When handling forms with files (ImageField), you MUST pass request.FILES
+        form = TeacherCourseForm(request.POST, request.FILES)
         if form.is_valid():
-            new_course = form.save(commit=False)
-            new_course.teacher_profile = request.user.profile # Assign the current teacher's profile
-            new_course.save()
-            form.save_m2m() # Save ManyToMany relationships (categories)
+            try:
+                # Save the course instance, but don't commit to the database yet.
+                # We need to set the teacher_profile before saving.
+                course = form.save(commit=False)
+                course.teacher_profile = teacher_profile # Assign the logged-in teacher's profile
+                course.status = 'pending' # Default to pending review upon creation
+                course.save() # Now save the instance to the database
 
-            messages.success(request, "Your course has been added successfully!")
-            return redirect('dashboard') # Redirect to teacher's dashboard or course list
+                # For ManyToMany relationships (like 'categories'), save them after the instance is saved.
+                form.save_m2m()
+
+                messages.success(request, 'Your course has been submitted for review successfully!')
+                return redirect('teacher_dashboard') # Redirect to the teacher's dashboard
+            except Exception as e:
+                messages.error(request, f'An unexpected error occurred while saving the course: {e}')
+                # Log the full traceback for debugging purposes
+                import traceback
+                traceback.print_exc()
         else:
-            messages.error(request, "Please correct the errors in the form.")
-    else:
-        form = TeacherCourseOfferingForm()
+            messages.error(request, 'Please correct the errors below.')
+    else: # GET request, display an empty form
+        form = TeacherCourseForm()
 
     context = {
         'form': form,
-        'page_title': 'Add New Course'
+        'page_title': 'Add New Course',
     }
     return render(request, 'accounts/add_teacher_course.html', context)
 
-# accounts/views.py
-
-# ... (your existing code after teacher_register_confirm) ...
-
-# --- NEW Teacher Registration Stage 4 (Password Setting & Final Submission) ---
+# ... (Your other views like teacher_dashboard, edit_teacher_course, delete_teacher_course etc.) ...
 def teacher_register_password_setting(request):
     """
     Handles setting the password for new teacher accounts and finalizes submission.

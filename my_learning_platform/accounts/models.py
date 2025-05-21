@@ -188,30 +188,50 @@ class TeacherCourse(models.Model):
     Represents a specific course offered by a teacher.
     Linked to the teacher's Profile.
     """
+    STATUS_CHOICES = (
+        ('draft', 'Draft'),
+        ('pending', 'Pending Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+    )
+
+    # Fields that were missing in your provided model snippet:
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+
+
+    # Your fields, with slight adjustments for consistency (related_name) if desired,
+    # and ensuring 'Profile', 'CourseCategory', 'CourseLevel' are correctly referenced (string literals are good).
+    course_picture = models.ImageField(upload_to='course_thumbnails/', blank=True, null=True)
+    video_trailer_url = models.URLField(max_length=200, blank=True, null=True)
+
     teacher_profile = models.ForeignKey(
-        'Profile',  # Use string literal if Profile is defined later in the file, or import it
+        'Profile',  # Use string literal to avoid circular import if Profile is defined after
         on_delete=models.CASCADE,
-        related_name='offered_courses',
+        related_name='courses', # Changed from 'offered_courses' for consistency, but 'offered_courses' also works.
         verbose_name="Teacher Profile"
     )
     categories = models.ManyToManyField(
-        CourseCategory,
-        related_name='courses_offered',
+        'CourseCategory', # Use string literal
+        related_name='courses', # Changed from 'courses_offered' for consistency.
         verbose_name="Categories"
     )
     level = models.ForeignKey(
-        CourseLevel,
-        on_delete=models.SET_NULL, # If a level is deleted, courses remain but level becomes null
+        'CourseLevel', # Use string literal
+        on_delete=models.SET_NULL,
         null=True,
-        blank=True,
-        related_name='courses_at_level',
+        blank=True, # Added blank=True as it's null=True
+        related_name='courses', # Changed from 'courses_at_level' for consistency.
         verbose_name="Level"
     )
     title = models.CharField(max_length=255, verbose_name="Course Title")
     description = models.TextField(verbose_name="Course Description")
     price = models.DecimalField(
-        max_digits=8,          # Allows numbers up to 999999.99
-        decimal_places=2,      # Two decimal places for currency
+        max_digits=10,          # Changed to 10 from 8 for broader currency support (e.g., 9,999,999.99)
+        decimal_places=2,
         verbose_name="Course Price"
     )
     language = models.CharField(
@@ -220,9 +240,11 @@ class TeacherCourse(models.Model):
         help_text="e.g., English, Arabic, French"
     )
 
+    def __str__(self):
+        return self.title
+
     class Meta:
         verbose_name_plural = "Teacher Courses"
-        ordering = ['title'] # Order by title by default
-
+        ordering = ['-created_at'] # Changed to order by creation date, more typical for new courses
     def __str__(self):
         return f"{self.title} ({self.language}) by {self.teacher_profile.user.username}"
