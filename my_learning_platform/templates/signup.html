@@ -37,7 +37,7 @@
         form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 5px;
         }
 
         /* Style for form fields (inputs, select, textarea, file) */
@@ -149,18 +149,20 @@
             {% endif %}
 
             {# Added First Name and Last Name fields (assuming you added them to your form Meta fields) #}
-            <label for="{{ form.first_name.id_for_label }}">First Name</label>
-            {{ form.first_name }}
-             {% if form.first_name.errors %}
-                <ul class="errorlist">{% for error in form.first_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+
+            {# --- NEW: Full Name (English) Field --- #}
+            <label for="{{ form.full_name_en.id_for_label }}">{{ form.full_name_en.label }}</label>
+            {{ form.full_name_en }}
+            {% if form.full_name_en.errors %}
+                <ul class="errorlist">{% for error in form.full_name_en.errors %}<li>{{ error }}</li>{% endfor %}</ul>
             {% endif %}
 
-            <label for="{{ form.last_name.id_for_label }}">Last Name</label>
-            {{ form.last_name }}
-             {% if form.last_name.errors %}
-                <ul class="errorlist">{% for error in form.last_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {# --- NEW: Full Name (Arabic) Field --- #}
+            <label for="{{ form.full_name_ar.id_for_label }}">{{ form.full_name_ar.label }}</label>
+            {{ form.full_name_ar }}
+            {% if form.full_name_ar.errors %}
+                <ul class="errorlist">{% for error in form.full_name_ar.errors %}<li>{{ error }}</li>{% endfor %}</ul>
             {% endif %}
-
 
             <label for="{{ form.password1.id_for_label }}">Password</label>
             {{ form.password1 }}

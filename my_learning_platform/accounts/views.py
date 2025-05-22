@@ -55,10 +55,11 @@ def is_approved_teacher(user):
 
 # --- Core Homepage View ---
 def index_view(request):
-    published_courses = TeacherCourse.objects.filter(status='published').select_related('teacher_profile__user').order_by('-created_at')
+    published_courses = TeacherCourse.objects.filter(featured=True, status='published').select_related('teacher_profile__user').order_by('-created_at')
     context = {
         'page_title': 'Welcome to My Portfolio',
         'published_courses': published_courses,
+        'featured_courses': published_courses,
     }
     return render(request, 'index.html', context)
 
@@ -85,7 +86,7 @@ def course_list_view(request):
         'page_title': 'Our Courses & Learning',
         'courses': courses
     }
-    return render(request, 'accounts/course_list.html', context) # Corrected template path
+    return render(request, 'courses.html', context) # Corrected template path
 
 # --- Individual Course Detail View ---
 def course_detail(request, course_id):

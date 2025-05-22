@@ -67,13 +67,16 @@ class SignupForm(UserCreationForm):
     # We will handle saving this field manually in the form's save method.
     profile_picture = forms.ImageField(required=False, label="Profile Picture")
     bio = forms.CharField(max_length=500, required=False, label="Bio", widget=forms.Textarea)
+    # Add the new fields for full names
+    full_name_en = forms.CharField(max_length=255, required=False, label="Full Name (Eng)")
+    full_name_ar = forms.CharField(max_length=255, required=False, label="Full Name (Ar)")
 
 
     class Meta(UserCreationForm.Meta):
         model = User
         # Include fields from the User model here.
         # 'profile_picture' and 'bio' are NOT User model fields, so they are not listed here.
-        fields = UserCreationForm.Meta.fields + ('email', 'first_name', 'last_name') # Added first/last name for signup
+        fields = UserCreationForm.Meta.fields + ('email',) # Added first/last name for signup
         # Example of adding other User model fields if needed:
         # fields = ('username', 'first_name', 'last_name', 'email') + UserCreationForm.Meta.fields
 
@@ -107,13 +110,15 @@ class SignupForm(UserCreationForm):
             # Save the bio if it was provided in the form
             if 'bio' in self.cleaned_data and self.cleaned_data['bio']:
                  profile.bio = self.cleaned_data['bio']
+            # Save the full names
+            profile.full_name_en = self.cleaned_data['full_name_en']
+            profile.full_name_ar = self.cleaned_data['full_name_ar']
 
             profile.save() # Save the updated profile instance
 
         return user
 
 
-# --- User Profile Change Form (Keep this as is) ---
 class CustomUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = User

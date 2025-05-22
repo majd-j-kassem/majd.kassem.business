@@ -1,5 +1,3 @@
-# auth_system/accounts/admin.py
-
 from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.urls import reverse
@@ -46,17 +44,45 @@ class ProfileInline(admin.StackedInline):
 # --- Custom Admin for CustomUser ---
 @admin.register(CustomUser) # Using decorator for CustomUser as well for consistency
 class CustomUserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'user_type', 'is_staff', 'is_active', 'date_joined')
+    # Modified list_display to use custom methods for full names
+    list_display = (
+        'username',
+        'email',
+        'user_type',
+        'is_staff',
+        'is_active',
+        'get_full_name_en', # Added custom method
+        'get_full_name_ar', # Added custom method
+        'date_joined'
+    )
     list_filter = ('user_type', 'is_staff', 'is_active')
-    search_fields = ('username', 'email', 'first_name', 'last_name')
+    # Modified search_fields to target profile's full name fields
+    search_fields = (
+        'username',
+        'email',
+        'profile__full_name_en', # Use profile__field_name for related model fields
+        'profile__full_name_ar'  # Use profile__field_name for related model fields
+    )
     ordering = ('-date_joined',)
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'user_type')}),
+        # Removed 'first_name' and 'last_name' from 'Personal info'
+        ('Personal info', {'fields': ('email', 'user_type')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     inlines = [ProfileInline] # Link ProfileInline here to show Profile fields when editing a User
+
+    # Custom methods to display full names from the related Profile model
+    def get_full_name_en(self, obj):
+        # Access the related profile object and return its full_name_en
+        return obj.profile.full_name_en if hasattr(obj, 'profile') else ''
+    get_full_name_en.short_description = 'Full Name (English)' # Column header in admin list
+
+    def get_full_name_ar(self, obj):
+        # Access the related profile object and return its full_name_ar
+        return obj.profile.full_name_ar if hasattr(obj, 'profile') else ''
+    get_full_name_ar.short_description = 'Full Name (Arabic)' # Column header in admin list
 
 
 # --- Custom Admin for Profile with Approve/Reject Actions ---
@@ -72,6 +98,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'rejected_by',
         'rejection_date',
         'full_name_en',
+        'full_name_ar', # Ensure full_name_ar is in list_display for ProfileAdmin
         'phone_number',
     )
     list_filter = (
@@ -192,6 +219,7 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         'level',
         'price',
         'language',
+        'featured',
         'status',
         'created_at',
         'updated_at',
@@ -199,6 +227,7 @@ class TeacherCourseAdmin(admin.ModelAdmin):
     )
     list_filter = (
         'status',
+        'featured',
         'categories',
         'level',
         'language',
@@ -218,7 +247,7 @@ class TeacherCourseAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('teacher_profile', 'title', 'description', 'price', 'language')
+            'fields': ('teacher_profile', 'title', 'description', 'price', 'language', 'featured')
         }),
         ('Categorization', {
             'fields': ('categories', 'level'),
@@ -281,7 +310,25 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         else:
             self.message_user(request, "No eligible courses selected for publishing (must be Approved or Pending).", level='warning')
     mark_as_published.short_description = "Mark selected as Published (Available to Customers)"
-    
+
+@admin.register(EnrolledCourse)
+class EnrolledCourseAdmin(admin.ModelAdmin):
+    list_display = ('student_username', 'course_title', 'enrolled_at')
+    list_filter = ('enrolled_at', 'course__level', 'course__categories')
+    search_fields = ('student__user__username', 'course__title')
+    raw_id_fields = ('student', 'course') # Useful for ForeignKey lookups
+
+    def student_username(self, obj):
+        return obj.student.user.username
+    student_username.short_description = 'Student Username'
+    student_username.admin_order_field = 'student__user__username'
+
+    def course_title(self, obj):
+        return obj.course.title
+    course_title.short_description = 'Course Title'
+    course_title.admin_order_field = 'course__title'
+
+
 @admin.register(AllowedCard)
 class AllowedCardAdmin(admin.ModelAdmin):
     list_display = ('card_number', 'expiry_month', 'expiry_year', 'added_at')

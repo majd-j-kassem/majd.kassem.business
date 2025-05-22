@@ -375,6 +375,30 @@
             }
             .courses-grid { gap: 15px; } /* Smaller gap on mobile */
         }
+        
+
+.container img {
+    max-width: 75%; /* Ensures the image never exceeds the width of its parent */
+    height: 70%;    /* Automatically calculates height to maintain aspect ratio */
+    display: block;  /* Removes extra space below the image, especially if it's the only content in its line */
+    /* Optional: for centering block images within a text-align: center parent */
+    margin: 0 auto;
+}
+.featured-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #FFA500; /* Vibrant Orange */
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 10;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
     </style>
 </head>
 <body>
@@ -431,12 +455,20 @@
             <div class="courses-grid">
                 {% for course in courses %}
                     <div class="course-card">
+                        {# --- INSERT THIS BLOCK HERE --- #}
+                        {% if course.featured %}
+                            <span class="featured-label">Featured</span>
+                        {% endif %}
+                        {# --- END INSERTION --- #}
+                        <div class="container">
+
                         {% if course.course_picture %}
                             <img src="{{ course.course_picture.url }}" alt="{{ course.title }} Course Image">
                         {% else %}
                             {# Ensure you have a default_course.png in your static/images/ directory #}
                             <img src="{% static 'images/default_course.png' %}" alt="Default Course Image">
                         {% endif %}
+                        </div>
                         <h2>{{ course.title }}</h2> {# Using h2 as per your original style #}
                         <p>{{ course.description|truncatechars:150 }}</p> {# Truncate description #}
                         <p class="price">${{ course.price }}</p>

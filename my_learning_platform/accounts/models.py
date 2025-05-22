@@ -210,6 +210,18 @@ class TeacherCourse(models.Model):
         decimal_places=2,
         verbose_name="Course Price"
     )
+    # Add the new 'featured' attribute
+    featured = models.BooleanField(default=False,
+                                   help_text="Check to mark this course as featured on the homepage.")
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Course"
+        verbose_name_plural = "Courses"
+        # Add any other Meta options you have, like ordering
+        ordering = ['title']
     language = models.CharField(
         max_length=100,
         verbose_name="Instruction Language",

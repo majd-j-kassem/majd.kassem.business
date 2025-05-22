@@ -4,18 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title|default:"My Portfolio" }}</title> {# Use page_title from context, with default #}
+    <title>{{ page_title|default:"My Portfolio" }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ******************************************************************
-           IMPORTANT:
-           PASTE ALL THE COMBINED CSS HERE!
-           (From your index.html's <style> block, PLUS the new course-specific CSS)
-           ******************************************************************
-        */
-
-        /* --- General Body Styles (FROM YOUR INDEX.HTML) --- */
+        /* --- General Body Styles --- */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
@@ -31,7 +24,7 @@
             line-height: 1.6; /* Improved readability */
         }
 
-        /* --- Header/Navigation Styles (FROM YOUR INDEX.HTML) --- */
+        /* --- Header/Navigation Styles --- */
         .main-header {
             background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
             backdrop-filter: blur(8px);
@@ -85,12 +78,12 @@
             color: #007bff;
         }
 
-        /* --- Footer Styles (FROM YOUR INDEX.HTML) --- */
+        /* --- Footer Styles --- */
         .main-footer {
             background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
             backdrop-filter: blur(8px);
             color: #ccc;
-            padding: 25px 20px; /* Reduced overall padding */
+            padding: 25px 20px;
             width: 100%;
             margin-top: auto;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
@@ -108,13 +101,13 @@
         .footer-section {
             flex: 1;
             min-width: 250px;
-            margin-bottom: 15px; /* Reduced space between sections */
+            margin-bottom: 15px;
             padding-right: 20px;
         }
 
         .footer-section h3 {
             color: white;
-            margin-bottom: 10px; /* Reduced space below headings */
+            margin-bottom: 10px;
             font-size: 1.2em;
         }
 
@@ -136,7 +129,7 @@
         }
 
         .footer-nav ul li, .social-links ul li {
-            margin-bottom: 5px; /* Reduced space between list items */
+            margin-bottom: 5px;
         }
 
         .social-links ul li {
@@ -156,18 +149,18 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: 15px; /* Reduced padding above copyright */
+            padding-top: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            margin-top: 15px; /* Reduced margin above copyright */
+            margin-top: 15px;
             color: #aaa;
             font-size: 0.85em;
         }
 
-        /* --- Page Content Specific Styling (for Home/Index) --- */
+        /* --- Page Content Specific Styling (for Hero/Main Index content) --- */
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
-            max-width: 800px; /* Adjust as needed */
+            max-width: 800px;
             width: 100%;
             margin: 30px auto;
             background: rgba(255, 255, 255, 0.1);
@@ -175,14 +168,14 @@
             border-radius: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
             box-sizing: border-box;
-            text-align: center; /* Center content in the box */
+            text-align: center;
             color: white;
         }
         .page-content h1 {
             color: white;
-            font-size: 2.8em; /* Larger heading */
+            font-size: 2.8em;
             margin-bottom: 20px;
-            font-weight: 700; /* Bolder heading */
+            font-weight: 700;
         }
          .page-content h2 {
             color: rgba(255, 255, 255, 0.9);
@@ -214,8 +207,7 @@
             box-shadow: 8px 20px rgba(255, 65, 108, 0.4);
         }
 
-        /* --- Course Listing Section Styles for Homepage (NEWLY ADDED/MODIFIED) --- */
-        /* This applies to the section where published courses are displayed on the homepage */
+        /* --- Featured Courses Section Styles for Homepage --- */
         .featured-courses-section {
             padding: 50px 20px;
             max-width: 1200px;
@@ -237,7 +229,7 @@
             font-weight: 700;
         }
 
-        .courses-grid { /* Reused from your existing CSS for layout */
+        .courses-grid {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
@@ -245,6 +237,7 @@
             padding: 0;
         }
 
+        /* --- Course Card Styles --- */
         .course-card {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(8px);
@@ -260,6 +253,9 @@
             min-height: 280px; /* Adjust as needed */
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden; /* Ensures image corners are rounded */
+
+            /* --- FIX: ADDED POSITION: RELATIVE HERE --- */
+            position: relative; /* CRITICAL for absolute positioning of .featured-label */
         }
 
         .course-card:hover {
@@ -275,15 +271,15 @@
             margin-bottom: 15px;
         }
 
-        .course-card h3 { /* Changed from h2 to h3 for card titles */
+        .course-card h3 {
             color: white;
             margin-top: 0;
             font-size: 1.35em;
-            margin-bottom: 10px; /* Reduced for better spacing */
+            margin-bottom: 10px;
             font-weight: 600;
         }
         .course-card p {
-            font-size: 0.9em; /* Slightly smaller for card text */
+            font-size: 0.9em;
             line-height: 1.6;
             flex-grow: 1;
             color: rgba(255, 255, 255, 0.8);
@@ -294,24 +290,24 @@
             color: rgba(255, 255, 255, 0.7);
             margin-top: auto;
             font-size: 0.85em;
-            margin-bottom: 10px; /* Add margin to separate from price/button */
+            margin-bottom: 10px;
         }
         .course-card .price {
             font-weight: 700;
             font-size: 1.2em;
-            color: #4CAF50; /* A nice green for price */
+            color: #4CAF50;
             margin-bottom: 15px;
         }
         .course-card .course-action {
             display: block;
-            background: linear-gradient(90deg, #007bff, #0056b3); /* Blue gradient for action button */
+            background: linear-gradient(90deg, #007bff, #0056b3);
             color: white;
             padding: 10px 15px;
             border-radius: 5px;
             text-decoration: none;
             font-weight: 500;
             transition: background 0.3s ease, transform 0.2s ease;
-            margin-top: 10px; /* Space above button */
+            margin-top: 10px;
         }
         .course-card .course-action:hover {
             background: linear-gradient(90deg, #0056b3, #007bff);
@@ -329,8 +325,23 @@
             text-transform: uppercase;
         }
 
+        /* --- Featured Label Styles (Orange Style) --- */
+        .featured-label {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: #FFA500; /* Vibrant Orange */
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            z-index: 10;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
 
-        /* Responsive Adjustments (FROM YOUR INDEX.HTML & NEW COURSE STYLES) */
+        /* --- Responsive Adjustments --- */
         @media (max-width: 992px) {
             .main-header { padding: 10px 0; }
             .main-header .header-content {
@@ -359,8 +370,7 @@
             }
             .social-links ul li { margin: 0 8px; }
 
-            /* Page Content specific responsive */
-            .page-content, .featured-courses-section { /* Applies to both content wrappers */
+            .page-content, .featured-courses-section {
                 margin: 20px; padding: 25px; border-radius: 15px;
             }
             .page-content h1, .featured-courses-section h2 { font-size: 2em; }
@@ -368,7 +378,6 @@
             .page-content p { font-size: 1em; }
             .cta-button { padding: 12px 25px; font-size: 1.1em; }
 
-            /* Course Card responsive */
             .course-card {
                 width: calc(50% - 20px); /* 2 items per row on medium screens, adjusted gap */
                 min-height: 250px;
@@ -376,25 +385,24 @@
         }
 
         @media (max-width: 768px) {
-            body { padding-top: 60px; } /* Adjust for smaller header height */
+            body { padding-top: 60px; }
             .course-card {
                 width: calc(100% - 20px); /* 1 item per row on small screens, adjusted gap */
-                min-height: auto; /* Allow height to adjust on mobile */
+                min-height: auto;
             }
-            .courses-grid { gap: 15px; } /* Smaller gap on mobile */
-            .course-card img { height: 120px; } /* Smaller image on mobile */
+            .courses-grid { gap: 15px; }
+            .course-card img { height: 120px; }
         }
     </style>
 </head>
 <body>
-    {# --- Header / Navigation Bar (Copied directly from your index.html) --- #}
+    {# --- Header / Navigation Bar --- #}
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                {# Updated link: goes to courses when logged in, index when logged out #}
                 <a href="{% if user.is_authenticated %}{% url 'courses' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
-                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                        {{ user.username }}
                     {% else %}
                         Your Name {# Replace with your actual name #}
                     {% endif %}
@@ -402,8 +410,7 @@
             </div>
             <nav class="main-nav">
                 <ul>
-                    {# Link to the homepage using the 'index' URL name #}
-                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to this page (using 'index') #}
+                    <li><a href="{% url 'index' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
@@ -411,14 +418,10 @@
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
-                        {# Link to the Courses page - shown when logged in #}
-                        <li><a href="{% url 'course_view' %}">Courses</a></li> {# Corrected URL name to 'course_view' #}
-                        {# Link to the logout view #}
+                        <li><a href="{% url 'courses' %}">Courses</a></li> {# Link to the full courses list #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
-                        {# Link to the profile edit view #}
                         <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     {% else %}
-                        {# Link to the login view - shown when logged out #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -427,7 +430,7 @@
     </header>
 
     {# --- Main Page Content (Hero Section) --- #}
-    <div class="page-content"> {# This is for your main homepage content #}
+    <div class="page-content">
         <h1>Welcome to Our Learning Platform!</h1>
         <h2>Explore a world of knowledge and skill development.</h2>
         <p>
@@ -436,23 +439,28 @@
             or simply learn something new, we have something for everyone.
             Join our community and embark on your learning journey today!
         </p>
-        <a href="{% url 'course_view' %}" class="cta-button">Explore All Courses</a> {# Link to your full courses page #}
+        <a href="{% url 'courses' %}" class="cta-button">Explore All Courses</a> {# Link to your full courses page #}
     </div>
 
     {# --- Featured Courses Section (Dynamically rendered from DB) --- #}
+    {# THIS IS THE BLOCK THAT MUST BE PRESENT #}
     <div class="featured-courses-section">
-        <h2>Our Latest Published Courses</h2>
+        <h2>Our Featured Courses</h2>
         <div class="courses-grid">
-            {% if published_courses %}
-                {% for course in published_courses %}
+            {% if featured_courses %} {# This variable comes from your index_view #}
+                {% for course in featured_courses %}
                 <div class="course-card">
+                    {# --- FEATURED LABEL INSERTION HERE --- #}
+                    {% if course.featured %}
+                        <span class="featured-label">Featured</span>
+                    {% endif %}
+
                     {% if course.course_picture %}
                         <img src="{{ course.course_picture.url }}" alt="{{ course.title }}">
                     {% else %}
-                        {# Ensure you have a default_course_picture.png in your static/images/ directory #}
                         <img src="{% static 'images/default_course_picture.png' %}" alt="Default Course Image">
                     {% endif %}
-                    {# Changed h2 to h3 for semantic structure within a card #}
+
                     <h3>{{ course.title }}</h3>
                     <div class="badges">
                         {% if course.level %}<span class="level-badge">{{ course.level }}</span>{% endif %}
@@ -460,31 +468,30 @@
                             <span class="category-badge">{{ category.name }}</span>
                         {% endfor %}
                     </div>
-                    <p>{{ course.description|truncatechars:120 }}</p> {# Truncate description #}
+                    <p>{{ course.description|truncatechars:120 }}</p>
                     <p class="teacher-name">Taught by: {{ course.teacher_profile.user.get_full_name|default:course.teacher_profile.user.username }}</p>
                     <div class="price">${{ course.price }}</div>
-                    {# Assuming you will have a 'course_detail' URL pattern for single course view #}
                     <a href="{% url 'course_detail' course.id %}" class="course-action">View Course</a>
                 </div>
                 {% endfor %}
             {% else %}
-                <p>No published courses available yet. Check back soon!</p>
+                <p>No featured courses available yet. Check back soon!</p>
             {% endif %}
         </div>
         {# Link to the full courses page if there are many courses #}
-        {% if published_courses|length > 3 %} {# Show "View All" if more than 3 courses are displayed #}
+        {% if featured_courses|length > 3 %}
             <div style="margin-top: 30px;">
-                <a href="{% url 'course_view' %}" class="cta-button">View All Courses</a>
+                <a href="{% url 'courses_list' %}" class="cta-button">View All Courses</a>
             </div>
         {% endif %}
     </div>
 
-    {# --- Footer (Copied directly from your index.html) --- #}
+    {# --- Footer --- #}
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3> {# Replace with your name #}
-                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
+                <h3>Your Name</h3>
+                <p>A brief description about you or your project. You can add more text here.</p>
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
@@ -497,24 +504,23 @@
 
                 </ul>
             </div>
-            <div class="footer-section footer-contact"> {# Corrected class name #}
+            <div class="footer-section footer-contact">
                 <h3>Contact</h3>
-                <p>Email: your.email@example.com</p> {# Replace with your email #}
-                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
-                <p>Location: Your City, Country</p> {# Replace with your location #}
+                <p>Email: your.email@example.com</p>
+                <p>Phone: +123 456 7890</p>
+                <p>Location: Your City, Country</p>
             </div>
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have these icons in your static/images/ directory #}
-                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
-                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
-                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
+            &copy; 2026 Your Name. All rights reserved.
         </div>
     </footer>
 </body>

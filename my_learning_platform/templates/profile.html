@@ -337,7 +337,7 @@
                 {# Link to the homepage using the 'index' URL name #}
                 <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
-                        {{ user.username }} {# Or {{ user.first_name }} if you collect first names #}
+                        {{ user.username }} {# Or {{ user.full_name_en }} if you collect full names #}
                     {% else %}
                         Your Name {# Replace with your actual name #}
                     {% endif %}
