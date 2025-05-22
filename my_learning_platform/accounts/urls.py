@@ -20,14 +20,13 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('signup/', views.signup_view, name='signup'),
     path('dashboard/', views.dashboard, name='dashboard'), # Student/General User Dashboard
-    path('profile/', views.profile_view, name='profile'), # User Profile View (e.g., /profile/)
     path('profile/edit/', views.profile_edit, name='profile_edit'), # User Profile Edit
     path('register/<int:course_id>/', views.register_for_course, name='register_for_course'),
      # Add course-related URLs here:
     path('courses/', views.course_list_view, name='course_view'), # For your "Back to All Courses" link
     path('courses/<int:course_id>/', views.course_detail, name='course_detail'),
     path('courses/register/<int:course_id>/', views.register_for_course, name='register_for_course'),
-
+    path('student-dashboard/', views.student_dashboard_view, name='student_dashboard'),
     # Teacher Registration Wizard URLs
     path('teacher/register/', views.teacher_register_wizard, name='teacher_register_stage1'),
     path('teacher/register/stage2/', views.teacher_register_stage2, name='teacher_register_stage2'),

@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Your Profile</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- Consistent Styles from other templates (Header/Footer/Body/Page-Content) --- */
+        /* Your existing CSS (kept as is for consistency with your provided code) */
         body {
             font-family: 'Poppins', sans-serif;
             text-align: center;
@@ -25,9 +25,8 @@
             line-height: 1.6; /* Improved readability */
         }
 
-        /* --- Header/Navigation Styles --- */
         .main-header {
-            background-color: rgba(40, 0, 70, 0.8); /* Dark translucent purple */
+            background-color: rgba(40, 0, 70, 0.8);
             backdrop-filter: blur(8px);
             color: white;
             padding: 15px 0;
@@ -79,12 +78,11 @@
             color: #007bff;
         }
 
-        /* --- Footer Styles --- */
         .main-footer {
-            background-color: rgba(20, 0, 50, 0.9); /* Even darker translucent purple */
+            background-color: rgba(20, 0, 50, 0.9);
             backdrop-filter: blur(8px);
             color: #ccc;
-            padding: 25px 20px; /* Reduced overall padding */
+            padding: 25px 20px;
             width: 100%;
             margin-top: auto;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
@@ -102,13 +100,13 @@
         .footer-section {
             flex: 1;
             min-width: 250px;
-            margin-bottom: 15px; /* Reduced space between sections */
+            margin-bottom: 15px;
             padding-right: 20px;
         }
 
         .footer-section h3 {
             color: white;
-            margin-bottom: 10px; /* Reduced space below headings */
+            margin-bottom: 10px;
             font-size: 1.2em;
         }
 
@@ -130,7 +128,7 @@
         }
 
         .footer-nav ul li, .social-links ul li {
-            margin-bottom: 5px; /* Reduced space between list items */
+            margin-bottom: 5px;
         }
 
         .social-links ul li {
@@ -150,19 +148,18 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: px; /* Reduced padding above copyright */
+            padding-top: 10px; /* Corrected 'px' */
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            margin-top: 10px; /* Reduced margin above copyright */
+            margin-top: 10px;
             color: #aaa;
             font-size: 0.85em;
         }
 
-        /* --- Profile Page Specific Styling (Adopted from login/signup/contact pages) --- */
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
-            max-width: 25%%; /* Adjusted for a profile form */
-            width: 75%;
+            max-width: 750px; /* Adjusted from 25%% */
+            width: 90%; /* Adjusted from 75% */
             margin: 30px auto;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -177,62 +174,59 @@
             font-size: 2.2em;
             margin-bottom: 25px;
             text-align: center;
-            font-weight: 600; /* Make heading a bit bolder */
+            font-weight: 600;
         }
-        .profile-form-container { /* Wrapper for the forms */
-            max-width: 100%%;
+        .profile-form-container {
+            max-width: 100%; /* Adjusted from 100%% */
             margin: 0 auto;
         }
-        .profile-form-group { /* Style for each form field row */
-            margin-bottom: 20px; /* Increased space between form groups */
+        .profile-form-group {
+            margin-bottom: 20px;
         }
         .profile-form-group label {
             display: block;
             text-align: left;
-            margin-bottom: 8px; /* Increased space below labels */
-            font-weight: 500; /* Make labels slightly bolder */
-            color: rgba(255, 255, 255, 0.95); /* Slightly brighter label color */
-            font-size: 1.05em; /* Slightly larger label font size */
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.05em;
         }
-        /* Combined styling for text inputs, email, file input, and textarea */
         .profile-form-group input[type="text"],
         .profile-form-group input[type="email"],
         .profile-form-group input[type="file"],
-        .profile-form-group textarea {
+        .profile-form-group textarea,
+        .profile-form-group select { /* Added select */
             width: 100%;
-            padding: 12px 15px; /* Consistent padding */
-            border: 1px solid rgba(255, 255, 255, 0.3); /* Added subtle border */
+            padding: 12px 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
             font-family: 'Poppins', sans-serif;
             font-size: 1em;
-            box-sizing: border-box; /* Include padding and border in element's total width */
+            box-sizing: border-box;
             outline: none;
             background: rgba(249, 242, 242, 0.93);
             color: #333;
             transition: background-color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
-         /* Style for file input specifically - adjust padding slightly if needed for visual alignment */
         .profile-form-group input[type="file"] {
-             /* You might slightly adjust padding here if needed for perfect visual alignment */
-             /* padding: 12px 15px; */ /* Keeping consistent with others */
              background-color: rgba(249, 242, 242, 0.8);
              cursor: pointer;
         }
-        /* Style for textarea specifically */
         .profile-form-group textarea {
-            width: 100%; /* Explicitly set width */
-            box-sizing: border-box; /* Explicitly set box-sizing */
-            resize: vertical; /* Allow vertical resizing but prevent horizontal */
-            min-height: 100px; /* Give it a default height */
+            width: 100%;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 100px;
         }
 
         .profile-form-group input[type="text"]:focus,
         .profile-form-group input[type="email"]:focus,
         .profile-form-group input[type="file"]:focus,
-        .profile-form-group textarea:focus {
+        .profile-form-group textarea:focus,
+        .profile-form-group select:focus { /* Added select */
             background-color: white;
             box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
-            border-color: #007bff; /* Highlight border on focus */
+            border-color: #007bff;
             outline: none;
         }
 
@@ -255,38 +249,34 @@
             box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
         }
 
-        .message-success {
-            color: #d4edda;
-            background-color: rgba(40, 167, 69, 0.8); /* Semi-transparent green */
-            border-radius: 5px;
-            padding: 10px 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-            border: 1px solid rgba(40, 167, 69, 0.4);
+        /* Message styles (adjusted to use Bootstrap alert classes more directly) */
+        .messages .alert { /* Target Bootstrap alerts specifically */
+            margin-bottom: 15px; /* Spacing between messages */
+            text-align: left; /* Align text within alerts */
         }
-
-        .message-error {
+        .alert-success { /* Custom style for success based on Bootstrap alert-success */
+            color: #d4edda; /* Text color */
+            background-color: rgba(40, 167, 69, 0.8); /* Background color */
+            border-color: rgba(33, 136, 56, 0.4); /* Border color */
+        }
+        .alert-danger { /* Custom style for error based on Bootstrap alert-danger */
             color: #f8d7da;
-            background-color: rgba(220, 53, 69, 0.8); /* Semi-transparent red */
-            border-radius: 5px;
-            padding: 10px 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-            border: 1px solid rgba(220, 53, 69, 0.4);
+            background-color: rgba(220, 53, 69, 0.8);
+            border-color: rgba(185, 30, 43, 0.4);
         }
+        /* Default info/warning messages will use standard Bootstrap styles if not custom-defined */
+
 
         .profile-image-container {
             text-align: center;
             margin-bottom: 20px;
         }
         .profile-image {
-            width: 150px; /* Size of the profile image */
+            width: 150px;
             height: 150px;
-            border-radius: 50%; /* Make it round */
-            object-fit: cover; /* Crop image to fit the circle */
-            border: 4px solid rgba(255, 255, 255, 0.5); /* White border */
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             margin-bottom: 10px;
         }
@@ -294,7 +284,20 @@
             font-size: 0.9em;
             color: rgba(255, 255, 255, 0.8);
         }
-
+        .helptext {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: block;
+        }
+        .errorlist {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            color: #ffcccc;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
 
         /* Responsive Adjustments */
         @media (max-width: 768px) {
@@ -336,32 +339,33 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                {# Link to the homepage using the 'index' URL name #}
-                <a href="{% if user.is_authenticated %}{% url 'profile_edit' %}{% else %}{% url 'index' %}{% endif %}">
+                {# Link to the dashboard or profile_edit based on authentication #}
+                <a href="{% if user.is_authenticated %}{% url 'student_dashboard' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
-                        {{ user.username }} {# Or {{ user.full_name_en }} if you collect full names #}
+                        {{ user.username }}
                     {% else %}
-                        Your Name {# Replace with your actual name #}
+                        Your Name
                     {% endif %}
                 </a>
             </div>
             <nav class="main-nav">
                 <ul>
-                    {# Link to the homepage using the 'index' URL name #}
-                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
+                    <li><a href="{% url 'index' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li> {# This link might point to a different portfolio page if needed #}
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
-                        {# Link to the logout view #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
-                        {# Link to the profile edit view #}
                         <li><a href="{% url 'profile_edit' %}">Profile</a></li>
+                        {% if user.user_type == 'student' %}
+                            <li><a href="{% url 'student_dashboard' %}">My Courses</a></li>
+                        {% elif user.user_type == 'teacher' %}
+                            <li><a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a></li>
+                        {% endif %}
                     {% else %}
-                        {# Link to the login view #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                 </ul>
@@ -374,13 +378,15 @@
         <h1>Edit Your Profile</h1>
 
         {# Display messages (success, error, info) #}
-        {# Note: Django messages framework automatically adds 'success', 'error', 'info' tags #}
         {% if messages %}
             <div class="messages">
                 {% for message in messages %}
-                    {# Use the message tags directly as CSS class #}
-                    <div class="{{ message.tags }}">
+                    {# Use Bootstrap alert classes directly #}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                         {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                 {% endfor %}
             </div>
@@ -388,38 +394,119 @@
 
         {# IMPORTANT: enctype="multipart/form-data" is required for file uploads #}
         <form method="post" enctype="multipart/form-data" class="profile-form-container">
-                       {% csrf_token %}
+            {% csrf_token %}
 
-            {# --- Layout for Profile Form Fields --- #}
-            <div class="row"> {# Start a Bootstrap row for these three fields #}
-                <div class="form-group col-md-4 mb-3"> {# First field in the row #}
-                    <label for="{{ profile_form.full_name_en.id_for_label }}" class="form-label">{{ profile_form.full_name_en.label }}</label>
+            {# --- Profile Image Display and Input --- #}
+            <div class="profile-image-container">
+                {% if profile_form.instance.profile_picture %}
+                    <img src="{{ profile_form.instance.profile_picture.url }}" alt="Current Profile Picture" class="profile-image">
+                {% else %}
+                    <img src="{% static 'images/profiles/default.jpg' %}" alt="Default Profile Picture" class="profile-image">
+                {% endif %}
+                <p class="small text-muted">Current Profile Picture</p>
+            </div>
+
+            {# --- User Form Fields (Username, Email if applicable) --- #}
+            {# Iterate through user_form fields manually for more control and consistent styling #}
+            {% for field in user_form %}
+                <div class="profile-form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="helptext">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+            {# --- Profile Form Fields --- #}
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="{{ profile_form.full_name_en.id_for_label }}">{{ profile_form.full_name_en.label }}</label>
                     {{ profile_form.full_name_en }}
-                    </div>
-                <div class="form-group col-md-4 mb-3"> {# Second field #}
-                    <label for="{{ profile_form.full_name_ar.id_for_label }}" class="form-label">{{ profile_form.full_name_ar.label }}</label>
+                    {% for error in profile_form.full_name_en.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    <label for="{{ profile_form.full_name_ar.id_for_label }}">{{ profile_form.full_name_ar.label }}</label>
                     {{ profile_form.full_name_ar }}
-                    </div>
-                <div class="form-group col-md-4 mb-3"> {# Third field #}
-                    <label for="{{ profile_form.phone_number.id_for_label }}" class="form-label">{{ profile_form.phone_number.label }}</label>
-                    {{ profile_form.phone_number }}
-                    </div>
-            </div> {# End of this row #}
+                    {% for error in profile_form.full_name_ar.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
 
-            <div class="row"> {# Start a new Bootstrap row for the next set of fields #}
+            <div class="row">
+                <div class="form-group col-md-6 mb-3">
+                    <label for="{{ profile_form.phone_number.id_for_label }}">{{ profile_form.phone_number.label }}</label>
+                    {{ profile_form.phone_number }}
+                    {% for error in profile_form.phone_number.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <div class="form-group col-md-6 mb-3">
+                    {# This is the file input for profile picture #}
+                    <label for="{{ profile_form.profile_picture.id_for_label }}">{{ profile_form.profile_picture.label }}</label>
+                    {{ profile_form.profile_picture }}
+                    {% if profile_form.profile_picture.help_text %}
+                        <small class="helptext">{{ profile_form.profile_picture.help_text }}</small>
+                    {% endif %}
+                    {% for error in profile_form.profile_picture.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="profile-form-group">
+                <label for="{{ profile_form.bio.id_for_label }}">{{ profile_form.bio.label }}</label>
+                {{ profile_form.bio }}
+                {% for error in profile_form.bio.errors %}
+                    <p class="errorlist">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="row">
                 <div class="form-group col-md-4 mb-3">
                     <label for="{{ profile_form.experience_years.id_for_label }}" class="form-label">{{ profile_form.experience_years.label }}</label>
                     {{ profile_form.experience_years }}
-                    </div>
+                    {% for error in profile_form.experience_years.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
                 <div class="form-group col-md-4 mb-3">
                     <label for="{{ profile_form.university.id_for_label }}" class="form-label">{{ profile_form.university.label }}</label>
                     {{ profile_form.university }}
-                    </div>
+                    {% for error in profile_form.university.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
                 <div class="form-group col-md-4 mb-3">
                     <label for="{{ profile_form.graduation_year.id_for_label }}" class="form-label">{{ profile_form.graduation_year.label }}</label>
                     {{ profile_form.graduation_year }}
-                    </div>
-            </div> {# End of this row #}
+                    {% for error in profile_form.graduation_year.errors %}
+                        <p class="errorlist">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {# Non-field errors for the forms #}
+            {% if user_form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in user_form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if profile_form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in profile_form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
             <button type="submit" class="profile-button">Save Changes</button>
         </form>
@@ -429,14 +516,13 @@
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3> {# Replace with your name #}
-                <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
+                <h3>Your Name</h3>
+                <p>A brief description about you or your project. You can add more text here.</p>
             </div>
             <div class="footer-section footer-nav">
                 <h3>Quick Links</h3>
                 <ul>
-                    {# Ensure these links use valid URL names #}
-                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to homepage #}
+                    <li><a href="{% url 'index' %}">Home</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
@@ -444,23 +530,26 @@
             </div>
             <div class="footer-section footer-contact">
                 <h3>Contact</h3>
-                <p>Email: your.email@example.com</p> {# Replace with your email #}
-                <p>Phone: +123 456 7890</p> {# Replace with your phone #}
-                <p>Location: Your City, Country</p> {# Replace with your location #}
+                <p>Email: your.email@example.com</p>
+                <p>Phone: +123 456 7890</p>
+                <p>Location: Your City, Country</p>
             </div>
             <div class="footer-section footer-social">
                 <h3>Follow Me</h3>
                 <ul class="social-links">
-                    {# Ensure you have these icons in your static/images/ directory #}
-                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li> {# Replace with your LinkedIn URL #}
-                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li> {# Replace with your GitHub URL #}
-                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li> {# Replace with your Twitter URL #}
+                    <li><a href="https://linkedin.com/yourprofile" target="_blank"><img src="{% static 'images/linkedin-icon.png' %}" alt="LinkedIn"></a></li>
+                    <li><a href="https://github.com/yourprofile" target="_blank"><img src="{% static 'images/github-icon.png' %}" alt="GitHub"></a></li>
+                    <li><a href="https://twitter.com/yourprofile" target="_blank"><img src="{% static 'images/twitter-icon.png' %}" alt="Twitter"></a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            &copy; 2026 Your Name. All rights reserved. {# Update year and name #}
+            &copy; 2026 Your Name. All rights reserved.
         </div>
     </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

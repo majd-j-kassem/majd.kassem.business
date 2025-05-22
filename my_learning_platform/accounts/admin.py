@@ -4,6 +4,7 @@ from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils import timezone
+from .models import ContactMessage # Import your new model
 
 # Import all your models
 from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse, AllowedCard
@@ -334,3 +335,11 @@ class AllowedCardAdmin(admin.ModelAdmin):
     # AllowedCard doesn't explicitly need a form=... if it's simple enough
     # and not relying on complex form customizations.
     # fields = ('card_number', 'expiry_month', 'expiry_year') # Or use fieldsets/inlines
+    
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'phone_number', 'submitted_at')
+    search_fields = ('name', 'email', 'message')
+    list_filter = ('submitted_at',)
+    readonly_fields = ('name', 'email', 'phone_number', 'message', 'submitted_at') # Make fields read-only in admin
+    date_hierarchy = 'submitted_at' # Add a date hierarchy for navigation

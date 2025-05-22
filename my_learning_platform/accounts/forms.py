@@ -8,6 +8,9 @@ from datetime import datetime
 # Make sure these imports correctly point to your models
 from .models import Profile, CourseCategory, CourseLevel, TeacherCourse 
 
+from .models import ContactMessage # Import the new model
+
+
 # Get the currently active User model
 User = get_user_model()
 
@@ -367,3 +370,36 @@ class UserRegistrationForm(forms.ModelForm):
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError('This email is already registered.')
         return email
+    
+class ContactForm(forms.ModelForm): # Change from forms.Form to forms.ModelForm
+    class Meta:
+        model = ContactMessage # Specify the model
+        fields = ['name', 'email', 'phone_number', 'message'] # Specify the fields to include
+        widgets = {
+            'name': forms.TextInput(attrs={'placeholder': 'Enter your name'}),
+            'email': forms.EmailInput(attrs={'placeholder': 'Enter your email address'}),
+            'phone_number': forms.TextInput(attrs={'placeholder': 'Enter your phone number (optional)'}),
+            'message': forms.Textarea(attrs={'placeholder': 'Enter your message', 'rows': 5}), # Use rows for better textarea size
+        }
+
+    # You can keep the clean methods if you have specific validation rules,
+    # but ModelForm handles basic validation based on your model field definitions.
+    # def clean_name(self):
+    #     name = self.cleaned_data['name']
+    #     # Add any custom validation for name here
+    #     return name
+
+    # def clean_email(self):
+    #     email = self.cleaned_data['email']
+    #     # Add any custom validation for email here
+    #     return email
+
+    # def clean_phone_number(self):
+    #     phone_number = self.cleaned_data['phone_number']
+    #     # Add any custom validation for phone number here
+    #     return phone_number
+
+    # def clean_message(self):
+    #     message = self.cleaned_data['message']
+    #     # Add any custom validation for message here
+    #     return message

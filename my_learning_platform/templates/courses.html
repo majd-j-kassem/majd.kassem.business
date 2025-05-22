@@ -431,7 +431,7 @@
                     {% if user.is_authenticated %}
                         {# Conditional links for logged-in users #}
                         <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                        <li><a href="{% url 'profile' %}">Profile</a></li> {# Link to the profile view #}
+                        <li><a href="{% url 'profile_edit' %}">Profile</a></li> {# Link to the profile view #}
                         {% if user.user_type == 'teacher' and user.profile.is_teacher_approved %}
                             <li><a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a></li>
                         {% endif %}
@@ -512,7 +512,10 @@
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
-                    <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
+                     {% if not user.is_authenticated %}
+                     <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
+
+                    {% endif %}
                 </ul>
             </div>
             <div class="footer-section footer-contact">

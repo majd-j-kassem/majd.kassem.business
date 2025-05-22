@@ -1,0 +1,134 @@
+{# auth_system/accounts/templates/accounts/student_dashboard.html #}
+{% extends 'base.html' %}
+{% load static %} {# Ensure static files can be loaded #}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+{# Ensure your static/css/styles.css includes the necessary Bootstrap (or custom) classes #}
+{# for .dashboard-container, .dashboard-card, .profile-card, .course-item, etc. #}
+
+<div class="dashboard-container container-fluid py-4">
+    <h2 class="text-center mb-4 dashboard-title">
+        <i class="fas fa-graduation-cap me-2"></i> {{ student_profile.full_name_en|default:student.username }}'s Learning Dashboard
+    </h2>
+
+    {# Messages from Django's messages framework will appear here (ensure base.html renders them) #}
+    {% if messages %}
+        <div class="messages-container row justify-content-center mb-4">
+            <div class="col-lg-8 col-md-10 col-sm-12">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row justify-content-center g-4"> {# Use Bootstrap grid for overall layout #}
+
+        {# Student Profile Section - Make it a standard card #}
+        <div class="col-lg-10 col-md-12 col-sm-12"> {# Wider on larger screens, full width on smaller #}
+            <div class="dashboard-card profile-card shadow-sm">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    My Profile
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-user-edit me-1"></i> Edit Profile
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center"> {# Align profile picture and info horizontally #}
+                        <div class="col-md-3 text-center mb-3 mb-md-0">
+                            <div class="profile-picture-container">
+                                {% if student_profile.profile_picture %}
+                                    <img src="{{ student_profile.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle border border-primary p-1" style="width: 120px; height: 120px; object-fit: cover;">
+                                {% else %}
+                                    <img src="{% static 'images/profiles/default.jpg' %}" alt="Default Profile Picture" class="img-fluid rounded-circle border border-secondary p-1" style="width: 120px; height: 120px; object-fit: cover;">
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-9 text-md-start text-center">
+                            <h5 class="mb-1">{{ student_profile.full_name_en|default:student.username }}</h5>
+                            {% if student_profile.full_name_ar %}
+                                <p class="text-muted small mb-2">({{ student_profile.full_name_ar }})</p>
+                            {% endif %}
+                            <p class="mb-1"><i class="fas fa-envelope me-2 text-primary"></i><strong>Email:</strong> {{ student.email }}</p>
+                            <p class="mb-1"><i class="fas fa-user-tag me-2 text-primary"></i><strong>User Type:</strong> {{ student.get_user_type_display }}</p>
+                            <p class="mb-0 mt-3"><strong>Bio:</strong></p>
+                            <p class="text-muted small">{{ student_profile.bio|default:"No bio provided yet. Click 'Edit Profile' to add one!" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Enrolled Courses Section - Now the main focus #}
+        <div class="col-lg-10 col-md-12 col-sm-12"> {# Takes most of the width, full width on smaller screens #}
+            <div class="dashboard-card shadow-sm">
+                <div class="dashboard-card-header d-flex justify-content-between align-items-center">
+                    My Enrolled Courses
+                    <a href="{% url 'courses' %}" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus-circle me-1"></i> Browse More Courses
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if enrolled_courses %}
+                        <div class="list-group"> {# Using Bootstrap list-group for a cleaner list #}
+                            {% for course in enrolled_courses %}
+                                <div class="list-group-item d-flex align-items-center flex-wrap my-2 p-3 border rounded shadow-sm-hover course-item"> {# Custom class for hover effect #}
+                                    <div class="me-3 mb-2 mb-md-0">
+                                        {% if course.course_picture %}
+                                            <img src="{{ course.course_picture.url }}" alt="{{ course.title }} Course Image" class="img-fluid rounded course-thumbnail-sm" style="width: 100px; height: 75px; object-fit: cover;">
+                                        {% else %}
+                                            <img src="{% static 'images/default_course.png' %}" alt="Default Course Image" class="img-fluid rounded course-thumbnail-sm" style="width: 100px; height: 75px; object-fit: cover;">
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-1">{{ course.title }}</h5>
+                                        <p class="text-muted small mb-2">{{ course.description|truncatechars:100 }}</p>
+                                        <div class="d-flex flex-wrap gap-2 mb-2">
+                                            {% if course.level %}<span class="badge bg-info"><i class="fas fa-chart-bar me-1"></i>{{ course.level.name|default:"N/A" }}</span>{% endif %}
+                                            <span class="badge bg-secondary"><i class="fas fa-globe me-1"></i>{{ course.get_language_display|default:"N/A" }}</span>
+                                            {% for category in course.categories.all %}
+                                                <span class="badge bg-primary">{{ category.name }}</span>
+                                            {% empty %}
+                                                <span class="badge bg-light text-muted">No Categories</span>
+                                            {% endfor %}
+                                        </div>
+
+                                        {# Conceptual Progress Bar (requires backend logic) #}
+                                        <div class="progress mb-2" role="progressbar" aria-label="Course Progress" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="height: 8px;">
+                                            {# Replace 25 with course.progress_percentage if you add it to EnrolledCourse #}
+                                            <div class="progress-bar bg-success" style="width: 25%"></div>
+                                        </div>
+                                        <p class="card-text small text-end text-muted">25% Complete</p> {# Replace with actual progress #}
+                                    </div>
+                                    <div class="ms-md-auto text-end mt-3 mt-md-0 d-flex flex-column align-items-end">
+                                        <span class="fw-bold text-success mb-2">${{ course.price }}</span>
+                                        <a href="{% url 'course_detail' course.pk %}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-play-circle me-1"></i> Continue Learning
+                                        </a>
+                                        </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state text-center py-5">
+                            <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+                            <p class="lead">You haven't enrolled in any courses yet!</p>
+                            <p class="text-muted">Start your learning journey by exploring our diverse course catalog.</p>
+                            <a href="{% url 'courses' %}" class="btn btn-primary btn-lg mt-3">
+                                <i class="fas fa-search me-2"></i> Find Your First Course
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>{# End row #}
+
+</div>{# End dashboard-container #}
+{% endblock %}

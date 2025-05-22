@@ -117,7 +117,7 @@ STATICFILES_DIRS = [
 STATIC_ROOT = BASE_DIR / 'staticfiles' # UNCOMMENTED and using Path object
 
 # Media files
-MEDIA_ROOT = BASE_DIR / 'media' # Also update this for consistency
+MMEDIA_ROOT = os.path.join(BASE_DIR, 'media') # Also update this for consistency
 MEDIA_URL = '/media/'
 # REST Framework
 REST_FRAMEWORK = {

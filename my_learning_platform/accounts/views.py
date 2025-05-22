@@ -12,7 +12,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.db import IntegrityError # Ensure this is imported for enrollment
-
+from django.views.decorators.http import require_POST
 # --- Consolidated Model Imports ---
 # Assuming TeacherCourse is your main course model now.
 from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse,AllowedCard
@@ -113,36 +113,21 @@ def contact_view(request):
     if request.method == 'POST':
         form = ContactForm(request.POST)
         if form.is_valid():
-            name = form.cleaned_data['name']
-            email = form.cleaned_data['email']
-            phone = form.cleaned_data['phone']
-            message_content = form.cleaned_data['message']
+            contact_message = form.save() # Saves the message to the database
 
-            try:
-                subject = f'New Contact from Portfolio Site: {name}'
-                body = f'Name: {name}\nEmail: {email}\n'
-                if phone:
-                    body += f'Phone: {phone}\n'
-                body += f'\nMessage:\n{message_content}'
+            # ... (email sending logic) ...
 
-                from_email = settings.DEFAULT_FROM_EMAIL
-                to_email = [settings.CONTACT_EMAIL]
+            messages.success(request, 'Your message has been sent successfully!') # Adds a success message
+            return redirect('contact') # Redirects to the GET version of the same page
 
-                # In a real app, uncomment send_mail
-                # send_mail(subject, body, from_email, to_email, fail_silently=False)
-                messages.success(request, 'Your message has been sent successfully!')
-                return redirect('contact')
-
-            except Exception as e:
-                logging.error(f"Error sending contact email: {e}", exc_info=True)
-                messages.error(request, 'There was an error sending your message. Please try again later.')
         else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = ContactForm()
+            messages.error(request, 'Please correct the errors below.') # Adds an error message
+    else: # GET request
+        form = ContactForm() # Creates a fresh, empty form
 
     context = {
         'form': form,
+        'page_title': 'Contact Us'
     }
     return render(request, 'contact.html', context)
 
@@ -274,7 +259,7 @@ def profile_edit(request):
             user_form.save()
             profile_form.save()
             messages.success(request, 'Your profile was successfully updated!')
-            return redirect('profile_view')
+            return redirect('profile_edit')
         else:
             messages.error(request, 'Please correct the errors below.')
     else: # GET request
@@ -638,3 +623,47 @@ def register_for_course(request, course_id):
         form = PaymentForm()
 
     return render(request, 'payment_form.html', {'course': course, 'form': form})
+
+# --- Student Dashboard View ---
+@login_required
+def student_dashboard_view(request):
+    user = request.user
+
+    # Ensure the user has a profile; create if it doesn't exist
+    profile, created = Profile.objects.get_or_create(user=user)
+
+    # Fetch courses the student is enrolled in through the EnrolledCourse model
+    # We use .select_related() to optimize queries for course and teacher details
+    enrolled_courses_objects = EnrolledCourse.objects.filter(student=profile).select_related('course__teacher_profile__user').order_by('-enrolled_at') # <--- FIXED HERE
+
+    # Extract the actual course objects from EnrolledCourse instances
+    enrolled_courses = [enrolled_course.course for enrolled_course in enrolled_courses_objects]
+
+    context = {
+        'page_title': 'My Learning Dashboard',
+        'student': user, # Pass the user object
+        'student_profile': profile, # Pass the user's profile object
+        'enrolled_courses': enrolled_courses,
+    }
+    return render(request, 'student_dashboard.html', context) # Render to a new student_dashboard.html
+@login_required
+@require_POST
+def unenroll_from_course_view(request, course_id):
+    user = request.user
+    profile = get_object_or_404(Profile, user=user)
+    course = get_object_or_404(TeacherCourse, id=course_id)
+
+    try:
+        enrolled_course = EnrolledCourse.objects.get(student=profile, course=course)
+        enrolled_course.delete()
+        messages.success(request, f"You have successfully unenrolled from '{course.title}'.")
+        # Add the specific refund message here:
+        messages.info(request, "Please note: Refunds are processed manually. Our team will contact you within 3-5 business days regarding your refund.")
+
+    except EnrolledCourse.DoesNotExist:
+        messages.error(request, "You are not enrolled in this course.")
+    except Exception as e:
+        messages.error(request, f"An error occurred while unenrolling: {e}")
+
+    # Redirect back to the student dashboard or a relevant page
+    return redirect('student_dashboard')

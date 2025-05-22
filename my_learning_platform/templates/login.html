@@ -423,7 +423,7 @@
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3> {# Replace with your name #}
+                <h3>Learning Platform</h3> {# Replace with your name #}
                 <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
             </div>
             <div class="footer-section footer-nav">
@@ -434,6 +434,10 @@
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                     {% if not user.is_authenticated %}
+                     <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
+
+                    {% endif %}
                 </ul>
             </div>
             <div class="footer-section footer-contact">
