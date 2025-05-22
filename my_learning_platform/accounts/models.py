@@ -4,6 +4,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import datetime
 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = (
@@ -11,6 +13,8 @@ class CustomUser(AbstractUser):
         ('teacher', 'Teacher'),
          ('admin', 'Admin'),
     )
+    # This line seems duplicated, but I will keep it as provided.
+    # If you intend to have only one `user_type` field, remove the first one.
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='student')
     user_type = models.CharField(
         max_length=10,
@@ -232,3 +236,44 @@ class EnrolledCourse(models.Model):
 
     def __str__(self):
         return f"{self.student.user.username} enrolled in {self.course.title}"
+    
+class AllowedCard(models.Model):
+    """
+    Model to store card details that are considered 'valid' for payment.
+    For a real system, card numbers would be encrypted and never stored directly.
+    Expiry month and year are stored as integers.
+    """
+    # Changed max_length to 255 and removed specific 16-digit help_text
+    card_number = models.CharField(max_length=255, unique=True, help_text="The card number.")
+    expiry_month = models.IntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        help_text="Expiry month (1-12)"
+    )
+    expiry_year = models.IntegerField(
+        validators=[MinValueValidator(datetime.now().year)],
+        help_text="Expiry year (e.g., 2025)"
+    )
+    # You might want to add a field to link it to an admin user who added it,
+    # or a description field, but for now, this is sufficient.
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Allowed Card"
+        verbose_name_plural = "Allowed Cards"
+        # Add a unique constraint for card number + expiry date if multiple identical
+        # card numbers with different expiries are possible
+        unique_together = ('card_number', 'expiry_month', 'expiry_year')
+
+    def __str__(self):
+        # Mask the card number for display
+        return f"Card ending in {self.card_number[-4:]} (Exp: {self.expiry_month:02d}/{self.expiry_year})"
+
+# --- Your other existing models would follow here ---
+# class CustomUser(AbstractUser):
+#     user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='student')
+#     # ... other fields ...
+
+# class Profile(models.Model):
+#     # ... existing fields ...
+
+# etc.

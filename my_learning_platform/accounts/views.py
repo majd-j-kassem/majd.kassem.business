@@ -15,7 +15,7 @@ from django.db import IntegrityError # Ensure this is imported for enrollment
 
 # --- Consolidated Model Imports ---
 # Assuming TeacherCourse is your main course model now.
-from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse
+from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse,AllowedCard
 
 # --- Consolidated Form Imports ---
 from .forms import (
@@ -285,7 +285,7 @@ def profile_edit(request):
         'profile_form': profile_form,
         'page_title': 'Edit Profile'
     }
-    return render(request, 'accounts/profile_edit.html', context) # Assuming a dedicated edit template or rename profile.html to profile_edit.html
+    return render(request, 'profile.html', context) # Assuming a dedicated edit template or rename profile.html to profile_edit.html
 
 # --- Teacher Registration Stage 1 (Basic Info) ---
 def teacher_register_wizard(request):
@@ -597,7 +597,25 @@ def register_for_course(request, course_id):
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
-            payment_successful = True # Simulate payment success
+            # Extract cleaned data from the form
+            card_number = form.cleaned_data['card_number']
+            expiry_month = form.cleaned_data['expiry_month']
+            expiry_year = form.cleaned_data['expiry_year']
+
+            # Compare with AllowedCard model
+            # Note: The form fields are likely already returning them as appropriate types (integers for month/year).
+            is_card_allowed = AllowedCard.objects.filter(
+                card_number=card_number,
+                expiry_month=expiry_month,
+                expiry_year=expiry_year
+            ).exists()
+
+            payment_successful = False
+            if is_card_allowed:
+                payment_successful = True # Card matches an allowed entry
+            else:
+                messages.error(request, "Payment failed: Card details do not match any allowed method.")
+
 
             if payment_successful:
                 try:
@@ -608,11 +626,11 @@ def register_for_course(request, course_id):
                     messages.info(request, f"You are already enrolled in {course.title}.")
                     return redirect('course_detail', course_id=course.id)
                 except Exception as e:
-                    messages.error(request, f"Error completing enrollment after payment: {e}")
+                    messages.error(f"Error completing enrollment after payment: {e}")
                     logging.error(f"Error enrolling user {request.user.username} in course {course.id}: {e}", exc_info=True)
                     return redirect('register_for_course', course_id=course.id)
-            else:
-                messages.error(request, "Payment failed. Please check your details and try again.")
+            # The 'else' block for payment_successful is already handled by the message above
+            # messages.error(request, "Payment failed. Please check your details and try again.")
         else:
             messages.error(request, "Please correct the errors in the payment form.")
     else:

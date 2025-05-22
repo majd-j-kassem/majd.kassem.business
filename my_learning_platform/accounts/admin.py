@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 # Import all your models
-from .models import CustomUser, Profile, CourseCategory, CourseLevel, TeacherCourse
+from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse, AllowedCard
 
 
 # 1. Create an Inline Admin for the Profile model
@@ -281,3 +281,12 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         else:
             self.message_user(request, "No eligible courses selected for publishing (must be Approved or Pending).", level='warning')
     mark_as_published.short_description = "Mark selected as Published (Available to Customers)"
+    
+@admin.register(AllowedCard)
+class AllowedCardAdmin(admin.ModelAdmin):
+    list_display = ('card_number', 'expiry_month', 'expiry_year', 'added_at')
+    search_fields = ('card_number',)
+    list_filter = ('expiry_year',)
+    # You might want to make card_number read-only after creation for security,
+    # or limit who can add/change these.
+    # fields = ('card_number', 'expiry_month', 'expiry_year') # Or use fieldsets/inlines

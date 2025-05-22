@@ -460,8 +460,10 @@
                             </div>
                             <p class="course-status">
                                 Status:
-                                {% if course.is_published %}
+                                {% if course.status == 'published' %}
                                     <span class="badge bg-success">Published</span>
+                                {% elif course.status == 'pending' %}
+                                    <span class="badge bg-info text-dark">Pending Review</span>
                                 {% else %}
                                     <span class="badge bg-warning text-dark">Draft</span>
                                 {% endif %}

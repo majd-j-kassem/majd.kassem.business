@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
 from .models import Profile # Import the new Profile model
 from .models import Profile, CourseCategory, CourseLevel # <-- THIS LINE IS CRUCIAL
+from datetime import datetime # Import datetime for dynamic years
 
 from .models import TeacherCourse, CourseCategory, CourseLevel
 
@@ -308,14 +309,19 @@ class TeacherCourseForm(forms.ModelForm):
             # elif isinstance(field.widget, forms.CheckboxInput):
             #     field.widget.attrs['class'] = 'form-check-input'
 class PaymentForm(forms.Form):
-    card_number = forms.CharField(label='Card Number', max_length=16, min_length=16,
-                                  widget=forms.TextInput(attrs={'placeholder': '•••• •••• •••• ••••', 'pattern': '[0-9]{16}', 'title': '16-digit card number', 'inputmode': 'numeric'}))
-    cardholder_name = forms.CharField(label='Cardholder Name', max_length=100,
-                                      widget=forms.TextInput(attrs={'placeholder': 'Full Name'}))
+    card_number = forms.CharField(
+        label='Card Number',
+        max_length=255, # Increased max_length
+        # Removed min_length
+        widget=forms.TextInput(attrs={
+            'placeholder': '•••• •••• •••• •••• ••••', # More generic placeholder
+            'pattern': '[0-9]*', # Allow any number of digits, or remove for no pattern enforcement
+            'title': 'Card number (digits only)', # More general title
+            'inputmode': 'numeric'
+        })
+    )
     expiry_month = forms.ChoiceField(label='Expiry Month', choices=[(i, f'{i:02d}') for i in range(1, 13)])
-    expiry_year = forms.ChoiceField(label='Expiry Year', choices=[(i, str(i)) for i in range(2025, 2036)]) # Adjust years as needed
-    cvv = forms.CharField(label='CVV', max_length=3, min_length=3,
-                          widget=forms.TextInput(attrs={'placeholder': '•••', 'pattern': '[0-9]{3,4}', 'title': '3 or 4-digit CVV', 'inputmode': 'numeric'}))
+    expiry_year = forms.ChoiceField(label='Expiry Year', choices=[(i, str(i)) for i in range(datetime.now().year, datetime.now().year + 11)]) # Adjusted for dynamic current year + 10 years
 # --- Add these forms if they are missing or incomplete ---
 
 class UserLoginForm(forms.Form):
