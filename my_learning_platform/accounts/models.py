@@ -16,11 +16,7 @@ class CustomUser(AbstractUser):
     # This line seems duplicated, but I will keep it as provided.
     # If you intend to have only one `user_type` field, remove the first one.
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='student')
-    user_type = models.CharField(
-        max_length=10,
-        choices=USER_TYPE_CHOICES,
-        default='student',
-    )
+
     # The 'email' field is already inherited from AbstractUser
 
     def __str__(self):

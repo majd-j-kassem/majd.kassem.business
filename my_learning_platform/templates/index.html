@@ -495,10 +495,7 @@
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
-                    {# Hide this link if the user is logged in AND is a teacher #}
-                    {% if user.is_authenticated and user.user_type != 'teacher' %}
-    <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
-{% endif %}
+                   <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
                
 
                 </ul>

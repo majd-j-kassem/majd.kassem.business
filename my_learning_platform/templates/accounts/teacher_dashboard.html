@@ -70,7 +70,7 @@
 
     .profile-picture-container {
         flex-shrink: 0;
-        text-align: left; /* Align text within its container to the left */
+        text-align: center;/* Align text within its container to the left */
         padding-right: 15px; /* Add some spacing to the right of the image */
     }
 
@@ -197,24 +197,30 @@
         font-size: 0.8em;
     }
 
-    .teacher-course-card .course-details {
-        font-size: 0.85em;
-        color: rgba(255, 255, 255, 0.7);
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px; /* Space between detail spans */
-        margin-bottom: 15px;
-    }
-    .teacher-course-card .course-details span {
-        background-color: rgba(255, 255, 255, 0.15);
-        border-radius: 4px;
-        padding: 4px 10px;
-        white-space: nowrap;
-    }
-    .teacher-course-card .course-details strong {
-        color: white;
-    }
+   .teacher-course-card .course-details {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.7);
+    display: flex;
+    flex-wrap: wrap; /* Allows items (spans) to wrap to the next line */
+    gap: 8px; /* Space between detail spans */
+    margin-bottom: 15px;
+    overflow-wrap: break-word; /* Ensure long words break within the container */
+}
 
+.teacher-course-card .course-details span {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 4px 10px;
+    /* FIX: Change this to 'normal' to allow text to wrap within the span */
+    white-space: normal;
+    /* This is still useful if a single word inside the span is too long */
+    overflow-wrap: break-word;
+}
+
+.teacher-course-card .course-details strong {
+    color: white;
+    overflow-wrap: break-word; /* Ensure strong text also wraps if it's too long */
+}
 
     .teacher-course-card .course-actions {
         display: flex;
@@ -412,9 +418,9 @@
                 <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
             </div>
         </div>
-        <div class="col-md-4 col-12">
+        
                 <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
-            </div>
+            
         {# --- END New Layout for Profile Details --- #}
 
         {# ... (Any other content you have after the profile details, like application status, edit button) ... #}

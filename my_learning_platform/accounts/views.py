@@ -158,13 +158,13 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()
             messages.success(request, f'Account created successfully for {user.username}! You are now logged in.')
-            login(request, user)
+            #login(request, user)
             # Redirect logic after signup - simplified
             if hasattr(user, 'user_type') and user.user_type == 'teacher':
                 messages.info(request, "Your teacher application is pending approval.")
-                return redirect('index') # Or a specific pending page
+                return redirect('login') # Or a specific pending page
             else: # Default for students or unassigned user types
-                return redirect('index')
+                return redirect('login')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
