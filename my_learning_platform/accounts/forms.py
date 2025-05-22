@@ -1,42 +1,36 @@
-# auth_system/accounts/forms.py
+# my_learning_platform/accounts/forms.py (or auth_system/accounts/forms.py, depending on your setup)
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 from django.contrib.auth import get_user_model
-from .models import Profile # Import the new Profile model
-from .models import Profile, CourseCategory, CourseLevel # <-- THIS LINE IS CRUCIAL
-from datetime import datetime # Import datetime for dynamic years
+from datetime import datetime
 
-from .models import TeacherCourse, CourseCategory, CourseLevel
+# Make sure these imports correctly point to your models
+from .models import Profile, CourseCategory, CourseLevel, TeacherCourse 
 
-# Get the currently active User model (handles custom user models if you ever use one)
+# Get the currently active User model
 User = get_user_model()
 
 # --- Teacher Personal Information Form ---
 class TeacherPersonalInfoForm(forms.ModelForm):
-    # The 'email' field is on CustomUser, so we add it explicitly to this form
-    # It allows us to combine fields from different models in one form.
     email = forms.EmailField(label="Email", required=False)
     
-
     class Meta:
-        model = Profile # This form primarily manages Profile fields
+        model = Profile
         fields = ['full_name_en', 'full_name_ar', 'phone_number']
+        widgets = {
+            'full_name_en': forms.TextInput(attrs={'class': 'form-control'}),
+            'full_name_ar': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         self.profile_instance = kwargs.pop('profile_instance', None)
         super().__init__(*args, **kwargs)
+        # Add class to email field as it's not in Meta.widgets
+        self.fields['email'].widget.attrs.update({'class': 'form-control'})
 
-        # Explicitly make these fields required in the form.
-        # This overrides any `blank=True` or `null=True` settings on the model fields
-        # at the form validation level, forcing the user to provide a value.
-        '''
-        self.fields['full_name_en'].required = True
-        self.fields['full_name_ar'].required = True
-        self.fields['phone_number'].required = True
-        '''
-
-        # Pre-populate initial values if a user or profile instance is provided
         if self.user:
             self.fields['email'].initial = self.user.email
         if self.profile_instance:
@@ -44,77 +38,56 @@ class TeacherPersonalInfoForm(forms.ModelForm):
             self.fields['full_name_ar'].initial = self.profile_instance.full_name_ar
             self.fields['phone_number'].initial = self.profile_instance.phone_number
 
-
-    # Override save method to handle saving data to both CustomUser (for email) and Profile
     def save(self, commit=True):
-        # Save the Profile instance first
         profile = super().save(commit=False)
 
-        # Update the user's email if it has changed
         if self.user and self.cleaned_data['email'] != self.user.email:
             self.user.email = self.cleaned_data['email']
             self.user.save()
 
         if commit:
-            profile.save() # Save the profile instance to the database
+            profile.save()
         return profile
 
 
 # --- Signup Form (Updated to include profile_picture and bio) ---
 class SignupForm(UserCreationForm):
-    # Add the profile_picture field directly to the form
-    # This field is NOT part of the User model, so it's not in the Meta class fields.
-    # We will handle saving this field manually in the form's save method.
-    profile_picture = forms.ImageField(required=False, label="Profile Picture")
-    bio = forms.CharField(max_length=500, required=False, label="Bio", widget=forms.Textarea)
-    # Add the new fields for full names
-    full_name_en = forms.CharField(max_length=255, required=False, label="Full Name (Eng)")
-    full_name_ar = forms.CharField(max_length=255, required=False, label="Full Name (Ar)")
-
+    profile_picture = forms.ImageField(required=False, label="Profile Picture", widget=forms.ClearableFileInput(attrs={'class': 'form-control-file'}))
+    bio = forms.CharField(max_length=500, required=False, label="Bio", widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
+    full_name_en = forms.CharField(max_length=255, required=False, label="Full Name (Eng)", widget=forms.TextInput(attrs={'class': 'form-control'}))
+    full_name_ar = forms.CharField(max_length=255, required=False, label="Full Name (Ar)", widget=forms.TextInput(attrs={'class': 'form-control'}))
 
     class Meta(UserCreationForm.Meta):
         model = User
-        # Include fields from the User model here.
-        # 'profile_picture' and 'bio' are NOT User model fields, so they are not listed here.
-        fields = UserCreationForm.Meta.fields + ('email',) # Added first/last name for signup
-        # Example of adding other User model fields if needed:
-        # fields = ('username', 'first_name', 'last_name', 'email') + UserCreationForm.Meta.fields
-
-
-    # Optional: You can override the clean methods for custom validation
+        fields = UserCreationForm.Meta.fields + ('email',)
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}),
+        }
+        
     def clean_email(self):
         email = self.cleaned_data['email']
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("A user with that email already exists.")
         return email
 
-    # Custom save method to handle saving the profile picture and bio
-    # This method is called from the signup_view after form.is_valid()
     def save(self, commit=True):
-        # First, save the User instance using the parent class's save method
         user = super().save(commit=commit)
 
-        # If commit is True, the user is saved to the database.
-        # The post_save signal for User should then create the associated Profile.
-        # We can then get the profile and save the profile_picture and bio.
         if commit:
-            # Get the related profile instance (created by the signal)
-            # We use get_or_create just in case the signal didn't fire for some reason,
-            # though the signal should guarantee it exists here.
             profile, created = Profile.objects.get_or_create(user=user)
 
-            # Save the profile_picture if it was provided in the form
             if 'profile_picture' in self.cleaned_data and self.cleaned_data['profile_picture']:
                  profile.profile_picture = self.cleaned_data['profile_picture']
 
-            # Save the bio if it was provided in the form
             if 'bio' in self.cleaned_data and self.cleaned_data['bio']:
                  profile.bio = self.cleaned_data['bio']
-            # Save the full names
+            
             profile.full_name_en = self.cleaned_data['full_name_en']
             profile.full_name_ar = self.cleaned_data['full_name_ar']
 
-            profile.save() # Save the updated profile instance
+            profile.save()
 
         return user
 
@@ -122,56 +95,83 @@ class SignupForm(UserCreationForm):
 class CustomUserChangeForm(UserChangeForm):
     class Meta(UserChangeForm.Meta):
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email')
+        fields = ('username', 'email')
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields.pop('password', None)
 
 
-# --- Profile Form for Profile Model fields (Keep this as is) ---
+# --- Profile Form for Profile Model fields ---
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['profile_picture', 'bio']
-        
+        fields = [
+            'profile_picture',
+            'bio',
+            'full_name_en',
+            'full_name_ar',
+            'phone_number',
+            'experience_years',
+            'university',
+            'graduation_year',
+            'major',
+        ]
+        widgets = {
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'full_name_en': forms.TextInput(attrs={'class': 'form-control'}),
+            'full_name_ar': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'experience_years': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'university': forms.TextInput(attrs={'class': 'form-control'}),
+            'graduation_year': forms.NumberInput(attrs={'class': 'form-control', 'min': 1900, 'max': datetime.now().year}),
+            'major': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
 # --- Contact Form ---
 class ContactForm(forms.Form):
-    """
-    Form for users to submit contact messages.
-    """
     name = forms.CharField(
         label='Your Name',
         max_length=100,
-        widget=forms.TextInput(attrs={'placeholder': 'Enter your name'})
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your name', 'class': 'form-control'})
     )
     email = forms.EmailField(
         label='Your Email',
-        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email address'})
+        widget=forms.EmailInput(attrs={'placeholder': 'Enter your email address', 'class': 'form-control'})
     )
     phone = forms.CharField(
         label='Your Phone Number (Optional)',
         max_length=20,
-        required=False, # Make phone number optional
-        widget=forms.TextInput(attrs={'placeholder': 'Enter your phone number (optional)'})
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Enter your phone number (optional)', 'class': 'form-control'})
     )
     message = forms.CharField(
         label='Your Message',
-        widget=forms.Textarea(attrs={'placeholder': 'Enter your message', 'rows': 6})
+        widget=forms.Textarea(attrs={'placeholder': 'Enter your message', 'rows': 6, 'class': 'form-control'})
     )
 
 class TeacherProfessionalDetailsForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['experience_years', 'university', 'graduation_year', 'major', 'bio']
+        widgets = {
+            'experience_years': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+            'university': forms.TextInput(attrs={'class': 'form-control'}),
+            'graduation_year': forms.NumberInput(attrs={'class': 'form-control', 'min': 1900, 'max': datetime.now().year}),
+            'major': forms.TextInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
 
-    # You can add custom validation or initial data here if needed.
     def __init__(self, *args, **kwargs):
-        # We pass a profile instance to the form if we want to pre-populate it
         self.profile_instance = kwargs.pop('profile_instance', None)
         super().__init__(*args, **kwargs)
 
-        # Pre-populate fields if a profile instance is provided
         if self.profile_instance:
             self.fields['experience_years'].initial = self.profile_instance.experience_years
             self.fields['university'].initial = self.profile_instance.university
@@ -179,13 +179,10 @@ class TeacherProfessionalDetailsForm(forms.ModelForm):
             self.fields['major'].initial = self.profile_instance.major
             self.fields['bio'].initial = self.profile_instance.bio
 
-        # You can make fields required here if needed, e.g.:
-        # self.fields['university'].required = True
-# --- NEW Teacher Course Offering Form ---
-class TeacherCourseOfferingForm(forms.Form): # Not a ModelForm if it's for creation
+class TeacherCourseOfferingForm(forms.Form):
     categories = forms.ModelMultipleChoiceField(
         queryset=CourseCategory.objects.all(),
-        widget=forms.CheckboxSelectMultiple, # Or forms.SelectMultiple for a dropdown
+        widget=forms.CheckboxSelectMultiple,
         label="Course Categories",
         help_text="Select all categories that apply to your course."
     )
@@ -193,15 +190,17 @@ class TeacherCourseOfferingForm(forms.Form): # Not a ModelForm if it's for creat
         queryset=CourseLevel.objects.all(),
         empty_label="Select Level",
         label="Course Level",
-        help_text="Difficulty level of your course."
+        help_text="Difficulty level of your course.",
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
     title = forms.CharField(
         max_length=255,
         label="Course Title",
-        help_text="A descriptive title for your course."
+        help_text="A descriptive title for your course.",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 4}),
+        widget=forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
         label="Course Description",
         help_text="Provide a detailed description of what your course covers."
     )
@@ -210,20 +209,21 @@ class TeacherCourseOfferingForm(forms.Form): # Not a ModelForm if it's for creat
         decimal_places=2,
         label="Course Price ($)",
         min_value=0.01,
-        help_text="Price per student for your course."
+        help_text="Price per student for your course.",
+        widget=forms.NumberInput(attrs={'step': '0.01', 'min': '0.01', 'class': 'form-control'})
     )
     language = forms.CharField(
         max_length=100,
         label="Instruction Language",
-        help_text="The primary language of instruction for this course."
+        help_text="The primary language of instruction for this course.",
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
 
-    # You can add clean methods for validation here if needed
 class PasswordSettingForm(forms.Form):
     password = forms.CharField(
         label=("Password"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
-        strip=False, # Important for password fields
+        strip=False,
         help_text=("Your password must contain at least 8 characters.")
     )
     password_confirm = forms.CharField(
@@ -242,26 +242,22 @@ class PasswordSettingForm(forms.Form):
                 raise forms.ValidationError(
                     ("The two password fields didn't match.")
                 )
-            # You can add more password validation rules here (e.g., complexity)
-            # if they are not already handled by your CustomUser model validators.
             if len(password) < 8:
                 raise forms.ValidationError(
                     ("Your password must be at least 8 characters long.")
                 )
         return cleaned_data
+
 class TeacherCourseForm(forms.ModelForm):
-    # For ManyToMany fields like 'categories', it's often better to use ModelMultipleChoiceField
-    # with a CheckboxSelectMultiple widget for a multi-select checkbox UI.
     categories = forms.ModelMultipleChoiceField(
-        queryset=CourseCategory.objects.all().order_by('name'), # Order for consistent display
+        queryset=CourseCategory.objects.all().order_by('name'),
         widget=forms.CheckboxSelectMultiple,
         required=True,
         help_text="Select one or more categories for your course."
     )
 
-    # For ForeignKey fields like 'level', ModelChoiceField is used by default with a Select widget.
     level = forms.ModelChoiceField(
-        queryset=CourseLevel.objects.all().order_by('name'), # Order for consistent display
+        queryset=CourseLevel.objects.all().order_by('name'),
         required=True,
         empty_label="Select a level",
         help_text="Choose the appropriate level for your course."
@@ -278,14 +274,14 @@ class TeacherCourseForm(forms.ModelForm):
             'level',
             'course_picture',
             'video_trailer_url',
-            # 'status' is managed by the system, not directly by the teacher in this form
-            # 'created_at', 'updated_at' are auto-managed
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 4}),
-            'price': forms.NumberInput(attrs={'step': '0.01', 'min': '0.00'}),
-            'language': forms.TextInput(attrs={'placeholder': 'e.g., English, Arabic'}),
-            'video_trailer_url': forms.URLInput(attrs={'placeholder': 'e.g., https://www.youtube.com/watch?v=xxxxxxxx'}),
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
+            'price': forms.NumberInput(attrs={'step': '0.01', 'min': '0.00', 'class': 'form-control'}),
+            'language': forms.TextInput(attrs={'placeholder': 'e.g., English, Arabic', 'class': 'form-control'}),
+            'video_trailer_url': forms.URLInput(attrs={'placeholder': 'e.g., https://www.youtube.com/watch?v=xxxxxxxx', 'class': 'form-control'}),
+            'course_picture': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
         labels = {
             'title': 'Course Title',
@@ -305,53 +301,60 @@ class TeacherCourseForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Add Bootstrap form-control class to most fields for consistent styling
+        # For CheckboxSelectMultiple and Select, default styling might be slightly different.
+        # Ensure the 'form-control' class is applied for general inputs.
         for field_name, field in self.fields.items():
-            if isinstance(field.widget, (forms.TextInput, forms.Textarea, forms.NumberInput, forms.URLInput, forms.Select, forms.FileInput)):
-                field.widget.attrs['class'] = 'form-control'
-            # CheckboxSelectMultiple is handled differently in the template for better styling
-            # If you want default styling for each checkbox, you might add:
-            # elif isinstance(field.widget, forms.CheckboxInput):
-            #     field.widget.attrs['class'] = 'form-check-input'
+            if not isinstance(field.widget, (forms.CheckboxSelectMultiple, forms.RadioSelect)):
+                if 'class' not in field.widget.attrs:
+                    field.widget.attrs['class'] = 'form-control'
+                else:
+                    # Append 'form-control' if other classes exist
+                    field.widget.attrs['class'] += ' form-control'
+
+
 class PaymentForm(forms.Form):
     card_number = forms.CharField(
         label='Card Number',
-        max_length=255, # Increased max_length
-        # Removed min_length
+        max_length=255,
         widget=forms.TextInput(attrs={
-            'placeholder': '•••• •••• •••• •••• ••••', # More generic placeholder
-            'pattern': '[0-9]*', # Allow any number of digits, or remove for no pattern enforcement
-            'title': 'Card number (digits only)', # More general title
-            'inputmode': 'numeric'
+            'placeholder': '•••• •••• •••• •••• ••••',
+            'pattern': '[0-9]*',
+            'title': 'Card number (digits only)',
+            'inputmode': 'numeric',
+            'class': 'form-control'
         })
     )
-    expiry_month = forms.ChoiceField(label='Expiry Month', choices=[(i, f'{i:02d}') for i in range(1, 13)])
-    expiry_year = forms.ChoiceField(label='Expiry Year', choices=[(i, str(i)) for i in range(datetime.now().year, datetime.now().year + 11)]) # Adjusted for dynamic current year + 10 years
-# --- Add these forms if they are missing or incomplete ---
+    expiry_month = forms.ChoiceField(label='Expiry Month', choices=[(i, f'{i:02d}') for i in range(1, 13)], widget=forms.Select(attrs={'class': 'form-control'}))
+    expiry_year = forms.ChoiceField(label='Expiry Year', choices=[(i, str(i)) for i in range(datetime.now().year, datetime.now().year + 11)], widget=forms.Select(attrs={'class': 'form-control'}))
 
 class UserLoginForm(forms.Form):
     username = forms.CharField(
         label='Username',
-        widget=forms.TextInput(attrs={'placeholder': 'Your Username'})
+        widget=forms.TextInput(attrs={'placeholder': 'Your Username', 'class': 'form-control'})
     )
     password = forms.CharField(
         label='Password',
-        widget=forms.PasswordInput(attrs={'placeholder': 'Your Password'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Your Password', 'class': 'form-control'})
     )
 
 class UserRegistrationForm(forms.ModelForm):
     password = forms.CharField(
         label='Password',
-        widget=forms.PasswordInput(attrs={'placeholder': 'Enter Password'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Enter Password', 'class': 'form-control'})
     )
     password2 = forms.CharField(
         label='Repeat Password',
-        widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password'})
+        widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password', 'class': 'form-control'})
     )
 
     class Meta:
         model = User
         fields = ('username', 'email', 'password')
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
 
     def clean_password2(self):
         cd = self.cleaned_data

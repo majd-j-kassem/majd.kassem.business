@@ -84,17 +84,18 @@
             backdrop-filter: blur(8px);
             color: #ccc;
             padding: 25px 20px;
-            width: 100%;
+            width: 96%;
             margin-top: auto;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
             text-align: left;
+            border-radius: 18px;
         }
 
         .footer-content {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
-            max-width: 1200px;
+            max-width: 100%%;
             margin: 0 auto;
         }
 
@@ -160,8 +161,8 @@
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
-            max-width: 800px;
-            width: 100%;
+            max-width: 100%;
+            width: 90%;
             margin: 30px auto;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -173,13 +174,13 @@
         }
         .page-content h1 {
             color: white;
-            font-size: 2.8em;
+            font-size: 2.1em;
             margin-bottom: 20px;
             font-weight: 700;
         }
          .page-content h2 {
             color: rgba(255, 255, 255, 0.9);
-            font-size: 1.8em;
+            font-size: 1.2em;
             margin-bottom: 30px;
             font-weight: 500;
         }
@@ -193,13 +194,13 @@
             display: inline-block;
             background: linear-gradient(90deg, #ff416c, #ff4b2b);
             color: white;
-            padding: 15px 30px;
+            padding: 10px 20px;
             border-radius: 8px;
             text-decoration: none;
             font-size: 1.2em;
             font-weight: 600;
             transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-            margin-top: 20px;
+            margin-top: 5px;
         }
         .cta-button:hover {
             background: linear-gradient(90deg, #ff4b2b, #ff416c);
@@ -210,8 +211,8 @@
         /* --- Featured Courses Section Styles for Homepage --- */
         .featured-courses-section {
             padding: 50px 20px;
-            max-width: 1200px;
-            width: 100%;
+            max-width: 100%%;
+            width: 90%;
             margin: 30px auto; /* Center the section */
             background: rgba(255, 255, 255, 0.1); /* Consistent translucent background */
             backdrop-filter: blur(10px);
@@ -224,9 +225,9 @@
 
         .featured-courses-section h2 {
             color: white;
-            font-size: 2.2em;
-            margin-bottom: 40px;
-            font-weight: 700;
+            font-size: 2em;
+            margin-bottom: 10px;
+            font-weight: 200;
         }
 
         .courses-grid {
@@ -245,7 +246,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
             width: calc(33.333% - 25px); /* 3 items per row, accounting for gap */
             box-sizing: border-box;
-            padding: 25px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -371,7 +372,7 @@
             .social-links ul li { margin: 0 8px; }
 
             .page-content, .featured-courses-section {
-                margin: 20px; padding: 25px; border-radius: 15px;
+                margin: 10px; padding: 10px; border-radius: 15px;
             }
             .page-content h1, .featured-courses-section h2 { font-size: 2em; }
             .page-content h2 { font-size: 1.4em; }
@@ -432,13 +433,7 @@
     {# --- Main Page Content (Hero Section) --- #}
     <div class="page-content">
         <h1>Welcome to Our Learning Platform!</h1>
-        <h2>Explore a world of knowledge and skill development.</h2>
-        <p>
-            Dive into our diverse range of courses taught by expert instructors.
-            Whether you're looking to start a new career, enhance existing skills,
-            or simply learn something new, we have something for everyone.
-            Join our community and embark on your learning journey today!
-        </p>
+
         <a href="{% url 'courses' %}" class="cta-button">Explore All Courses</a> {# Link to your full courses page #}
     </div>
 
@@ -500,7 +495,11 @@
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
-                    <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
+                    {# Hide this link if the user is logged in AND is a teacher #}
+                    {% if user.is_authenticated and user.user_type != 'teacher' %}
+    <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
+{% endif %}
+               
 
                 </ul>
             </div>

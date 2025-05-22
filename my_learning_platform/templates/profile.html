@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Your Profile</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* --- Consistent Styles from other templates (Header/Footer/Body/Page-Content) --- */
@@ -148,9 +150,9 @@
 
         .footer-bottom {
             text-align: center;
-            padding-top: 15px; /* Reduced padding above copyright */
+            padding-top: px; /* Reduced padding above copyright */
             border-top: 1px solid rgba(255, 255, 255, 0.15);
-            margin-top: 15px; /* Reduced margin above copyright */
+            margin-top: 10px; /* Reduced margin above copyright */
             color: #aaa;
             font-size: 0.85em;
         }
@@ -159,8 +161,8 @@
         .page-content {
             flex-grow: 1;
             padding: 40px 20px;
-            max-width: 600px; /* Adjusted for a profile form */
-            width: 100%;
+            max-width: 25%%; /* Adjusted for a profile form */
+            width: 75%;
             margin: 30px auto;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
@@ -178,7 +180,7 @@
             font-weight: 600; /* Make heading a bit bolder */
         }
         .profile-form-container { /* Wrapper for the forms */
-            max-width: 500px;
+            max-width: 100%%;
             margin: 0 auto;
         }
         .profile-form-group { /* Style for each form field row */
@@ -386,55 +388,38 @@
 
         {# IMPORTANT: enctype="multipart/form-data" is required for file uploads #}
         <form method="post" enctype="multipart/form-data" class="profile-form-container">
-            {% csrf_token %}
+                       {% csrf_token %}
 
-            {# Display current profile image #}
-            <div class="profile-image-container">
-                {% if user.profile.profile_picture %}
-                    {# Use user.profile.profile_picture.url to get the URL of the image #}
-                    <img src="{{ user.profile.profile_picture.url }}" alt="{{ user.username }}'s Profile Picture" class="profile-image">
-                {% else %}
-                    {# Display a default placeholder if no image is uploaded #}
-                    {# Ensure you have a default.jpg in your media/profiles/ directory #}
-                    {# Use MEDIA_URL to construct the path to the default image #}
-                    <img src="{{ MEDIA_URL }}profiles/default.jpg" alt="Default Profile Picture" class="profile-image">
-                {% endif %}
-                <p>Current Profile Picture</p>
-            </div>
+            {# --- Layout for Profile Form Fields --- #}
+            <div class="row"> {# Start a Bootstrap row for these three fields #}
+                <div class="form-group col-md-4 mb-3"> {# First field in the row #}
+                    <label for="{{ profile_form.full_name_en.id_for_label }}" class="form-label">{{ profile_form.full_name_en.label }}</label>
+                    {{ profile_form.full_name_en }}
+                    </div>
+                <div class="form-group col-md-4 mb-3"> {# Second field #}
+                    <label for="{{ profile_form.full_name_ar.id_for_label }}" class="form-label">{{ profile_form.full_name_ar.label }}</label>
+                    {{ profile_form.full_name_ar }}
+                    </div>
+                <div class="form-group col-md-4 mb-3"> {# Third field #}
+                    <label for="{{ profile_form.phone_number.id_for_label }}" class="form-label">{{ profile_form.phone_number.label }}</label>
+                    {{ profile_form.phone_number }}
+                    </div>
+            </div> {# End of this row #}
 
-
-            {# Render User form fields (e.g., username, email) #}
-            {% for field in user_form %}
-                <div class="profile-form-group"> {# Add a div for each form group for spacing #}
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }} {# Render the input field itself #}
-                    {% if field.help_text %}
-                        <small style="color: rgba(255,255,255,0.7); margin-top: 5px; display: block;">{{ field.help_text }}</small>
-                    {% endif %}
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <p style="color: #ff9999; font-size: 0.9em; margin-top: 5px;">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-            {% endfor %}
-
-             {# Render Profile form fields (e.g., profile_picture, bio) #}
-            {% for field in profile_form %}
-                 <div class="profile-form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }} {# This will render the file input for profile_picture and the textarea for bio #}
-                     {% if field.help_text %}
-                        <small style="color: rgba(255,255,255,0.7); margin-top: 5px; display: block;">{{ field.help_text }}</small>
-                    {% endif %}
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <p style="color: #ff9999; font-size: 0.9em; margin-top: 5px;">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-            {% endfor %}
-
+            <div class="row"> {# Start a new Bootstrap row for the next set of fields #}
+                <div class="form-group col-md-4 mb-3">
+                    <label for="{{ profile_form.experience_years.id_for_label }}" class="form-label">{{ profile_form.experience_years.label }}</label>
+                    {{ profile_form.experience_years }}
+                    </div>
+                <div class="form-group col-md-4 mb-3">
+                    <label for="{{ profile_form.university.id_for_label }}" class="form-label">{{ profile_form.university.label }}</label>
+                    {{ profile_form.university }}
+                    </div>
+                <div class="form-group col-md-4 mb-3">
+                    <label for="{{ profile_form.graduation_year.id_for_label }}" class="form-label">{{ profile_form.graduation_year.label }}</label>
+                    {{ profile_form.graduation_year }}
+                    </div>
+            </div> {# End of this row #}
 
             <button type="submit" class="profile-button">Save Changes</button>
         </form>
