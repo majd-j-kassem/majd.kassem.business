@@ -40,7 +40,9 @@ urlpatterns = [
     path('teacher/dashboard/', views.teacher_dashboard, name='teacher_dashboard'), # Teacher's Dashboard
     path('teacher/courses/add/', views.add_teacher_course, name='add_teacher_course'), # Add New Course
     path('teacher-dashboard/', views.teacher_dashboard, name='teacher_dashboard'),
-
+     # NEW: Teacher Reporting URLs
+    path('teacher/reports/summary/', views.teacher_course_reports, name='teacher_course_reports'),
+    path('teacher/reports/course/<int:course_id>/', views.teacher_single_course_report, name='teacher_single_course_report'),
     # Note: Removed duplicate entries for 'teacher_dashboard' and 'add_teacher_course'.
     # Ensure all names ('name=...') are unique across all URLs if you plan to use reverse lookups.
     

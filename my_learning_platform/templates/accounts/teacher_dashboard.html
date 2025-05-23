@@ -52,13 +52,24 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        flex-wrap: wrap; /* Allow items to wrap on smaller screens */
     }
     .dashboard-card-header .btn {
         font-size: 0.8em;
         padding: 8px 15px;
         border-radius: 8px;
         transition: background-color 0.3s ease;
+        margin-left: 10px; /* Space between buttons */
+        margin-top: 5px; /* Adjust for wrap on small screens */
+        margin-bottom: 5px; /* Adjust for wrap on small screens */
     }
+    /* Group for buttons to keep them together */
+    .dashboard-card-header .button-group {
+        display: flex;
+        gap: 10px; /* Space between buttons within the group */
+        flex-wrap: wrap; /* Allow buttons to wrap */
+    }
+
 
     /* --- Teacher Profile Specific Styling --- */
     .profile-section {
@@ -327,8 +338,15 @@
             gap: 10px;
             font-size: 1.4em;
         }
-        .dashboard-card-header .btn {
-            width: 100%;
+        /* Ensure buttons stack well on small screens */
+        .dashboard-card-header .button-group {
+            flex-direction: column;
+            width: 100%; /* Take full width */
+            gap: 5px; /* Smaller gap when stacked */
+        }
+        .dashboard-card-header .button-group .btn {
+            margin-left: 0; /* Remove left margin when stacked */
+            width: 100%; /* Make buttons full width */
         }
     }
 </style>
@@ -374,61 +392,35 @@
                     {% endif %}
                 </div>
                 <div class="profile-info">
-    <div class="profile-details">
-        {# Existing profile picture/name section (assuming it's here or similar) #}
-        {% comment %}
-        If you have a section for profile picture and name like this:
-        <div class="row mb-4">
-            <div class="col-md-3 text-center">
-                {% if teacher_profile.profile_picture %}
-                    <img src="{{ teacher_profile.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                {% else %}
-                    <img src="{% static 'images/default_profile.png' %}" alt="Default Profile Picture" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-                {% endif %}
-                <h4>{{ teacher_profile.user.first_name }} {{ teacher_profile.user.last_name }}</h4>
-                <p>({{ teacher_profile.user.get_user_type_display }})</p>
-            </div>
-        </div>
-        {% endcomment %}
+                    <div class="profile-details">
+                        <div class="row mb-3">
+                            <div class="col-md-4 col-12">
+                                <p><strong>Email:</strong> {{ teacher_profile.user.email }}</p>
+                            </div>
+                            <div class="col-md-4 col-12">
+                                <p><strong>Phone:</strong> {{ teacher_profile.phone_number|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                        <hr>
 
-        {# --- START New Layout for Profile Details --- #}
-
-        <div class="row mb-3"> {# mb-3 adds margin-bottom for spacing between rows #}
-            <div class="col-md-4 col-12">
-                <p><strong>Email:</strong> {{ teacher_profile.user.email }}</p>
+                        <div class="row mb-3">
+                            <div class="col-md-3 col-12">
+                                <p><strong>Experience:</strong> {{ teacher_profile.experience_years|default:"0" }} years</p>
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <p><strong>University:</strong> {{ teacher_profile.university|default:"N/A" }}</p>
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <p><strong>Major:</strong> {{ teacher_profile.major|default:"N/A" }}</p>
+                            </div>
+                            <div class="col-md-3 col-12">
+                                <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                        <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-4 col-12">
-                <p><strong>Phone:</strong> {{ teacher_profile.phone_number|default:"N/A" }}</p>
-            </div>
-            
-        </div>
-        <hr> {# Keep the horizontal rule if you like the separation #}
-
-        <div class="row mb-3">
-            <div class="col-md-3 col-12">
-                <p><strong>Experience:</strong> {{ teacher_profile.experience_years|default:"0" }} years</p>
-            </div>
-            <div class="col-md-3 col-12">
-                <p><strong>University:</strong> {{ teacher_profile.university|default:"N/A" }}</p>
-            </div>
-            <div class="col-md-3 col-12">
-                <p><strong>Major:</strong> {{ teacher_profile.major|default:"N/A" }}</p>
-            </div>
-            <div class="col-md-3 col-12">
-                <p><strong>Graduation Year:</strong> {{ teacher_profile.graduation_year|default:"N/A" }}</p>
-            </div>
-        </div>
-        
-                <p><strong>Bio:</strong> {{ teacher_profile.bio|default:"No bio provided." }}</p>
-            
-        {# --- END New Layout for Profile Details --- #}
-
-        {# ... (Any other content you have after the profile details, like application status, edit button) ... #}
-
-    </div>
-</div>
-            </div>
-            
         </div>
     </div>
 
@@ -436,7 +428,10 @@
     <div class="dashboard-card">
         <div class="dashboard-card-header">
             Your Courses
-            <a href="{% url 'add_teacher_course' %}" class="btn btn-success">Add New Course</a>
+            <div class="button-group"> {# NEW: Group buttons #}
+                <a href="{% url 'teacher_course_reports' %}" class="btn btn-primary">View Reports</a> {# NEW: Report Button #}
+                <a href="{% url 'add_teacher_course' %}" class="btn btn-success">Add New Course</a>
+            </div>
         </div>
         <div class="card-body">
             {% if teacher_courses %}

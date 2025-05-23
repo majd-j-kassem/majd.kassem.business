@@ -262,7 +262,7 @@ class EnrolledCourse(models.Model):
     student = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='enrolled_courses')
     course = models.ForeignKey(TeacherCourse, on_delete=models.CASCADE, related_name='enrolled_students')
     enrolled_at = models.DateTimeField(auto_now_add=True)
-
+    fee_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00) #
     class Meta:
         unique_together = ('student', 'course') # Ensures a student can enroll in a course only once
         verbose_name = "Enrolled Course"
