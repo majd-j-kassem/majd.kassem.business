@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
+    'utils',
 ]
 AUTH_USER_MODEL = 'accounts.CustomUser'
 SITE_ID = 1
