@@ -105,17 +105,15 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = '/static/' # Keep only one of these lines
-
 STATICFILES_DIRS = [
-    BASE_DIR / 'static', # Updated to use Path object with / operator
+    BASE_DIR / 'static', # Using Path object for consistency
 ]
-
-# This is the ABSOLUTE path to the directory where collectstatic will collect all static files for deployment.
-STATIC_ROOT = BASE_DIR / 'staticfiles' # UNCOMMENTED and using Path object
-
-# Media files
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 MMEDIA_ROOT = os.path.join(BASE_DIR, 'media') # Also update this for consistency
 MEDIA_URL = '/media/'
+
+
+#############################################################
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [

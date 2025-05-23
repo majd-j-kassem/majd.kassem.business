@@ -4,7 +4,7 @@ import secrets
 import string
 import logging
 from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse # <--- Ensure reverse is imported for URL lookups
+from django.urls import reverse
 from django.contrib.auth import login, authenticate, logout, get_user_model
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib import messages
@@ -14,12 +14,13 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils import timezone
 from django.db import IntegrityError
 from django.views.decorators.http import require_POST
-from django.core.exceptions import PermissionDenied # <--- NEW: For authorization checks
-from django.db.models import Sum # <--- NEW: For calculating total fees
-
+from django.core.exceptions import PermissionDenied
+from django.db.models import Sum, Count, F
+from decimal import Decimal # Import Decimal from the decimal module
+from decimal import Decimal
 # --- Consolidated Model Imports ---
 from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse, AllowedCard
-from .models import ContactMessage # <--- Ensure ContactMessage is imported if used here
+from .models import ContactMessage
 
 # --- Consolidated Form Imports ---
 from .forms import (
@@ -43,13 +44,13 @@ def is_approved_teacher(user):
     Test to check if the user is a teacher and their application is approved.
     Also checks if the profile exists to prevent AttributeError.
     """
-    if not user.is_authenticated or user.user_type != 'teacher': # user_type is on CustomUser, so direct access is fine
+    if not user.is_authenticated or user.user_type != 'teacher':
         return False
-    
+
     if not hasattr(user, 'profile') or not user.profile:
         logging.warning(f"User {user.username} is a teacher but has no profile.")
         return False
-        
+
     return user.profile.is_teacher_approved
 
 
@@ -89,7 +90,7 @@ def course_list_view(request):
 
 # --- Individual Course Detail View ---
 def course_detail(request, course_id):
-    course = get_object_or_404(TeacherCourse, id=course_id, status__in=['published', 'approved']) # Allow 'approved' for teachers/admins to view before public 'published'
+    course = get_object_or_404(TeacherCourse, id=course_id, status__in=['published', 'approved'])
 
     is_enrolled = False
     if request.user.is_authenticated:
@@ -137,16 +138,14 @@ def signup_view(request):
         form = SignupForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            # Removed auto-login. Now just redirect to login page.
             messages.success(request, f'Account created successfully for {user.username}! Please log in to continue.')
-            
-            # Specific redirect logic after signup
+
             if hasattr(user, 'user_type') and user.user_type == 'teacher':
                 messages.info(request, "Your teacher application is pending approval. You will be redirected to the login page.")
-            else: # Default for students or unassigned user types
+            else:
                 messages.info(request, "Please log in with your new account.")
-            
-            return redirect('login') # Always redirect to login after signup
+
+            return redirect('login')
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
@@ -160,10 +159,9 @@ def signup_view(request):
 # --- Login View ---
 def login_view(request):
     if request.method == 'GET':
-        # Clear messages from previous requests upon GET to login page
         storage = messages.get_messages(request)
         storage.used = True
-        if '_messages' in request.session: # Clean up old messages if they persist
+        if '_messages' in request.session:
             del request.session['_messages']
 
     if request.method == 'POST':
@@ -179,7 +177,7 @@ def login_view(request):
                 if created:
                     logging.info(f"Profile created for new user {user.username} during login.")
 
-                if user.user_type == 'teacher': # Directly check user.user_type
+                if user.user_type == 'teacher':
                     if not profile.is_teacher_approved:
                         messages.error(request, "Your teacher application is pending approval. Please wait for an administrator to review it.")
                         return render(request, 'login.html', {'form': form, 'page_title': 'Login'})
@@ -435,7 +433,7 @@ def teacher_register_password_setting(request):
         profile.major = teacher_data.get('major', profile.major)
         profile.bio = teacher_data.get('bio', profile.bio)
 
-        if user.user_type != 'teacher': # Direct check on user_type
+        if user.user_type != 'teacher':
             user.user_type = 'teacher'
             user.save()
 
@@ -561,7 +559,7 @@ def teacher_dashboard(request):
 # --- Register for Course View ---
 @login_required
 def register_for_course(request, course_id):
-    course = get_object_or_404(TeacherCourse, id=course_id, status='published') # Ensure only published courses can be enrolled in
+    course = get_object_or_404(TeacherCourse, id=course_id, status='published')
 
     if not hasattr(request.user, 'profile') or not request.user.profile:
         messages.error(request, "Your user profile is incomplete. Please update your profile before registering.")
@@ -586,11 +584,10 @@ def register_for_course(request, course_id):
 
             if is_card_allowed:
                 try:
-                    # Capture the course price as the fee_paid
                     EnrolledCourse.objects.create(
                         student=request.user.profile,
                         course=course,
-                        fee_paid=course.price # <--- IMPORTANT: Capture the price here!
+                        fee_paid=course.price
                     )
                     messages.success(request, f"Payment successful! You are now enrolled in {course.title}.")
                     return redirect('course_detail', course_id=course.id)
@@ -598,7 +595,7 @@ def register_for_course(request, course_id):
                     messages.info(request, f"You are already enrolled in {course.title}.")
                     return redirect('course_detail', course_id=course.id)
                 except Exception as e:
-                    messages.error(request, f"Error completing enrollment after payment: {e}")
+                    messages.error(f"Error completing enrollment after payment: {e}")
                     logging.error(f"Error enrolling user {request.user.username} in course {course.id}: {e}", exc_info=True)
                     return redirect('register_for_course', course_id=course.id)
             else:
@@ -643,41 +640,54 @@ def unenroll_from_course_view(request, course_id):
     except EnrolledCourse.DoesNotExist:
         messages.error(request, "You are not enrolled in this course.")
     except Exception as e:
-        messages.error(request, f"An error occurred while unenrolling: {e}")
+        messages.error(f"An error occurred while unenrolling: {e}")
 
     return redirect('student_dashboard')
 
 
-# --- NEW: Teacher Reporting Views ---
+# --- UPDATED: Teacher Reporting Views ---
 
 @login_required
-@user_passes_test(is_approved_teacher, login_url='login') # Only approved teachers can access
+@user_passes_test(is_approved_teacher, login_url='login')
 def teacher_course_reports(request):
     """
     Displays a summary report for all courses taught by the logged-in teacher,
-    including total students and total fees collected per course.
+    including total students, total fees collected, commission, and profit per course.
+    Only shows courses with at least one enrolled student.
     """
     teacher_profile = request.user.profile
-    
-    # Get all courses taught by this specific teacher, ordered by title
-    # Efficiently prefetch all related EnrolledCourse and their student profiles
-    teacher_courses = TeacherCourse.objects.filter(teacher_profile=teacher_profile).order_by('title')
+
+    # Safely convert commission_percentage to Decimal
+    commission_rate_decimal = Decimal(str(teacher_profile.commission_percentage)) if teacher_profile.commission_percentage is not None else Decimal('0.00')
+    commission_rate_decimal = commission_rate_decimal / Decimal('100') # Divide by 100 here to get the rate (e.g., 5.00 -> 0.05)
+
+    # Filter courses to include only those with at least one enrollment
+    # Use annotation to count students directly on the queryset
+    teacher_courses_with_enrollments = TeacherCourse.objects.filter(teacher_profile=teacher_profile) \
+                                                    .annotate(num_students=Count('enrolled_students')) \
+                                                    .filter(num_students__gt=0) \
+                                                    .order_by('title')
 
     report_data = []
-    for course in teacher_courses:
-        # Get enrollments for the current course and calculate total fees
-        # Use .select_related() to optimize queries when accessing student data in the template
+    for course in teacher_courses_with_enrollments: # Iterate over filtered courses
+        # Since we've already counted num_students, we can use it directly if available,
+        # but for total_fees we still need Sum.
         enrollments = EnrolledCourse.objects.filter(course=course).select_related('student__user')
-        
-        # Calculate total fees for the current course using database aggregation
+
         total_fees_result = enrollments.aggregate(total_fees=Sum('fee_paid'))
-        total_fees_for_course = total_fees_result['total_fees'] if total_fees_result['total_fees'] is not None else 0
+        total_fees_for_course = total_fees_result['total_fees'] if total_fees_result['total_fees'] is not None else Decimal('0.00')
+
+        commission_value = total_fees_for_course * commission_rate_decimal
+        profit = total_fees_for_course - commission_value
 
         report_data.append({
             'course_id': course.id,
             'course_title': course.title,
-            'total_students': enrollments.count(),
+            'total_students': course.num_students, # Use the annotated count
             'total_fees_collected': total_fees_for_course,
+            'commission_rate': teacher_profile.commission_percentage,
+            'commission_value': commission_value,
+            'profit': profit,
         })
 
     context = {
@@ -687,41 +697,86 @@ def teacher_course_reports(request):
     }
     return render(request, 'accounts/teacher_reports_summary.html', context)
 
-
 @login_required
-@user_passes_test(is_approved_teacher, login_url='login') # Only approved teachers can access
+@user_passes_test(is_approved_teacher, login_url='login')
 def teacher_single_course_report(request, course_id):
     """
     Displays a detailed report for a single course, listing all enrolled students
     and their individual fees.
     """
-    teacher_profile = request.user.profile # Get profile for current user
-    
-    # Get the specific course. Ensure it belongs to the logged-in teacher's profile.
+    teacher_profile = request.user.profile
+
     course = get_object_or_404(TeacherCourse, id=course_id, teacher_profile=teacher_profile)
 
-    # Get all enrollments for this specific course
-    # Order by student username for a clear list
     enrollments = EnrolledCourse.objects.filter(course=course).select_related('student__user').order_by('student__user__username')
 
     students_in_course = []
-    total_fees_for_course = 0
+    total_fees_for_course = Decimal('0.00') # Initialize as Decimal
 
     for enrollment in enrollments:
         students_in_course.append({
             'username': enrollment.student.user.username,
-            # Use full_name_en, falling back to full_name_ar if English is empty
-            'full_name': enrollment.student.full_name_en or enrollment.student.full_name_ar, 
+            'full_name': enrollment.student.full_name_en or enrollment.student.full_name_ar,
             'fee_paid': enrollment.fee_paid,
             'enrolled_at': enrollment.enrolled_at,
         })
         total_fees_for_course += enrollment.fee_paid
+
+    # Safely convert commission_percentage to Decimal
+    commission_rate = teacher_profile.commission_percentage if teacher_profile.commission_percentage is not None else Decimal('0.00')
+    commission_rate_decimal = Decimal(str(commission_rate)) / Decimal('100') # Convert to Decimal rate
+
+    commission_value = total_fees_for_course * commission_rate_decimal
+    profit = total_fees_for_course - commission_value
+
 
     context = {
         'course': course,
         'students_in_course': students_in_course,
         'total_students': enrollments.count(),
         'total_fees_collected': total_fees_for_course,
+        'commission_rate': commission_rate,
+        'commission_value': commission_value,
+        'profit': profit,
         'page_title': f"Report for {course.title}",
     }
     return render(request, 'accounts/teacher_single_course_report.html', context)
+
+# --- NEW: Edit Course View (for Approved Teachers) ---
+@login_required
+@user_passes_test(is_approved_teacher, login_url='login')
+def edit_teacher_course(request, course_id):
+    teacher_profile = get_object_or_404(Profile, user=request.user)
+    
+    # Get the course instance, ensuring it belongs to the logged-in teacher
+    course = get_object_or_404(TeacherCourse, id=course_id, teacher_profile=teacher_profile)
+
+    if request.method == 'POST':
+        form = TeacherCourseForm(request.POST, request.FILES, instance=course)
+        if form.is_valid():
+            try:
+                # Set status to 'pending' if it was 'published' after an edit
+                # This ensures re-approval if changes are made to a published course
+                if course.status == 'published' and form.has_changed():
+                    course.status = 'pending'
+                    messages.info(request, "Course updated and set to 'Pending Review' due to changes in a published course.")
+                
+                form.save()
+                messages.success(request, f'Course "{course.title}" updated successfully!')
+                return redirect('teacher_dashboard')
+            except Exception as e:
+                messages.error(request, f'An unexpected error occurred while updating the course: {e}')
+                logging.error(f"Error updating course {course.id}: {e}", exc_info=True)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = TeacherCourseForm(instance=course) # Pre-populate form with existing course data
+
+    context = {
+        'form': form,
+        'course': course, # Pass the course object for context if needed in the template
+        'page_title': f'Edit Course: {course.title}',
+    }
+    # You can reuse add_teacher_course.html or create a new template if needed.
+    # For now, let's assume you'll use add_teacher_course.html with slight modifications if necessary.
+    return render(request, 'accounts/add_teacher_course.html', context) # Reusing the add template for simplicity

@@ -1,93 +1,229 @@
 {% extends 'base.html' %}
-{% load static %} {# If you use static files for images, etc. #}
+{% load static %}
 
 {% block title %}{{ page_title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="page-content" style="text-align: left;"> {# Adjust text-align if needed #}
-        <h2>Add New Course</h2>
-        <p>Fill in the details below to create your new course.</p>
+<style>
+    .form-container {
+        max-width: 700px;
+        margin: 50px auto;
+        padding: 40px;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        color: white;
+    }
 
-        {% if messages %}
-            <div class="mb-3">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                {% endfor %}
+    .form-container h2 {
+        text-align: center;
+        color: white;
+        font-size: 2.5em;
+        margin-bottom: 30px;
+        font-weight: 700;
+        text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+
+    .form-group label {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .form-control,
+    .form-select,
+    .form-control[type="file"] {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.25);
+        color: white; /* Keep text white on focus */
+    }
+
+    /* Style for file input placeholder text */
+    .form-control[type="file"]::file-selector-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        color: white;
+        margin-right: 15px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .form-control[type="file"]::file-selector-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Adjust placeholder color for better visibility */
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+        opacity: 1; /* Firefox fix */
+    }
+
+    .form-control:-ms-input-placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .form-control::-ms-input-placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .form-text {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.85em;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        padding: 12px 25px;
+        font-size: 1.1em;
+        border-radius: 10px;
+        transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+        width: 100%; /* Make button full width */
+        margin-top: 20px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    .alert {
+        margin-top: 20px;
+        border-radius: 10px;
+    }
+
+    /* Style for non-field errors */
+    .errorlist {
+        color: #dc3545; /* Red for errors */
+        list-style-type: none;
+        padding: 0;
+        margin-top: 5px;
+        font-size: 0.9em;
+    }
+    .errorlist li {
+        margin-bottom: 3px;
+    }
+
+    /* Specific styling for the Categories MultipleSelect widget */
+    .django-select2.select2-container--default .select2-selection--multiple {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white; /* Ensure text color is white inside the box */
+        padding: 5px 10px; /* Adjust padding as needed */
+    }
+
+    .django-select2.select2-container--default .select2-selection--multiple .select2-selection__choice {
+        background-color: #007bff; /* Background for selected items */
+        border: 1px solid #007bff;
+        color: white;
+        border-radius: 5px;
+        padding: 3px 8px;
+        margin: 3px; /* Space between chosen items */
+    }
+
+    .django-select2.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        color: white; /* Color for the 'x' button */
+        float: right; /* Position the 'x' button */
+        margin-left: 5px;
+    }
+    .django-select2.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+        color: #f8d7da; /* Lighter red on hover */
+    }
+
+    .django-select2.select2-container--default .select2-search--inline .select2-search__field {
+        color: white; /* Color of the search input text */
+    }
+    .django-select2.select2-container--default .select2-results__option {
+        color: black; /* Default text color for dropdown options */
+    }
+    .django-select2.select2-container--default .select2-results__option--highlighted {
+        background-color: #007bff !important; /* Highlight background */
+        color: white !important; /* Highlight text color */
+    }
+    .django-select2.select2-container--default .select2-results__option[aria-selected=true] {
+        background-color: rgba(0, 123, 255, 0.2); /* Background for already selected options in dropdown */
+        color: black; /* Text color for already selected options */
+    }
+    .django-select2.select2-container--default .select2-selection--single {
+        background-color: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white;
+    }
+    .django-select2.select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: white;
+    }
+    .django-select2.select2-container--default .select2-selection--single .select2-selection__arrow b {
+        border-color: white transparent transparent transparent !important; /* Arrow color */
+    }
+
+    /* Ensure text color for choices is readable when chosen */
+    .select2-container--default .select2-results__option[aria-selected=true] {
+        color: black; /* Change to black or suitable contrasting color */
+    }
+</style>
+
+<div class="form-container">
+    {# Dynamically set title based on whether 'course' object exists in context #}
+    <h2>{% if course %}Edit Course: {{ course.title }}{% else %}Add New Course{% endif %}</h2>
+
+    {# Display Django messages #}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {# Display non-field errors if any #}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
         {% endif %}
 
-        <form method="post" enctype="multipart/form-data"> {# IMPORTANT: enctype="multipart/form-data" for file uploads #}
-            {% csrf_token %}
-
+        {% for field in form %}
             <div class="mb-3">
-                <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
-                {{ form.title }}
-                {% if form.title.errors %}<div class="text-danger">{{ form.title.errors }}</div>{% endif %}
-                {% if form.title.help_text %}<div class="form-text text-muted">{{ form.title.help_text }}</div>{% endif %}
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div id="{{ field.id_for_label }}_help" class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% if field.errors %}
+                    <ul class="errorlist">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
+        {% endfor %}
 
-            <div class="mb-3">
-                <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
-                {{ form.description }}
-                {% if form.description.errors %}<div class="text-danger">{{ form.description.errors }}</div>{% endif %}
-                {% if form.description.help_text %}<div class="form-text text-muted">{{ form.description.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.price.id_for_label }}" class="form-label">{{ form.price.label }}</label>
-                    {{ form.price }}
-                    {% if form.price.errors %}<div class="text-danger">{{ form.price.errors }}</div>{% endif %}
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="{{ form.language.id_for_label }}" class="form-label">{{ form.language.label }}</label>
-                    {{ form.language }}
-                    {% if form.language.errors %}<div class="text-danger">{{ form.language.errors }}</div>{% endif %}
-                    {% if form.language.help_text %}<div class="form-text text-muted">{{ form.language.help_text }}</div>{% endif %}
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">{{ form.categories.label }}</label>
-                {% if form.categories.errors %}<div class="text-danger">{{ form.categories.errors }}</div>{% endif %}
-                {% for checkbox in form.categories %}
-                    <div class="form-check">
-                        {{ checkbox.tag }}
-                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">
-                            {{ checkbox.choice_label }}
-                        </label>
-                    </div>
-                {% endfor %}
-                {% if form.categories.help_text %}<div class="form-text text-muted">{{ form.categories.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.level.id_for_label }}" class="form-label">{{ form.level.label }}</label>
-                {{ form.level }}
-                {% if form.level.errors %}<div class="text-danger">{{ form.level.errors }}</div>{% endif %}
-                {% if form.level.help_text %}<div class="form-text text-muted">{{ form.level.help_text }}</div>{% endif %}
-            </div>
-
-            <div class="mb-3">
-                <label for="{{ form.course_picture.id_for_label }}" class="form-label">{{ form.course_picture.label }}</label>
-                {{ form.course_picture }}
-                {% if form.course_picture.errors %}<div class="text-danger">{{ form.course_picture.errors }}</div>{% endif %}
-            </div>
-
-            <div class="mb-4">
-                <label for="{{ form.video_trailer_url.id_for_label }}" class="form-label">{{ form.video_trailer_url.label }}</label>
-                {{ form.video_trailer_url }}
-                {% if form.video_trailer_url.errors %}<div class="text-danger">{{ form.video_trailer_url.errors }}</div>{% endif %}
-                {% if form.video_trailer_url.help_text %}<div class="form-text text-muted">{{ form.video_trailer_url.help_text }}</div>{% endif %}
-            </div>
-
-            <button type="submit" class="btn cta-button">Add Course</button>
-            <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary ms-2">Cancel</a>
-        </form>
-    </div>
+        {# Dynamically set button caption #}
+        <button type="submit" class="btn btn-primary">{% if course %}Save Course{% else %}Add Course{% endif %}</button>
+    </form>
 </div>
 {% endblock %}

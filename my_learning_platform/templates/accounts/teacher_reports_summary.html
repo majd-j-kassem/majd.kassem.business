@@ -15,6 +15,9 @@
                     <th scope="col">Course Title</th>
                     <th scope="col">Total Students</th>
                     <th scope="col">Total Fees Collected</th>
+                    <th scope="col">Commission Rate</th> {# New Column #}
+                    <th scope="col">Commission Value</th> {# New Column #}
+                    <th scope="col">Profit</th> {# New Column #}
                     <th scope="col">Actions</th>
                 </tr>
             </thead>
@@ -24,6 +27,9 @@
                     <td>{{ course_report.course_title }}</td>
                     <td>{{ course_report.total_students }}</td>
                     <td>${{ course_report.total_fees_collected|floatformat:2 }}</td>
+                    <td>{{ course_report.commission_rate|floatformat:2 }}%</td> {# Display Commission Rate #}
+                    <td>${{ course_report.commission_value|floatformat:2 }}</td> {# Display Commission Value #}
+                    <td>${{ course_report.profit|floatformat:2 }}</td> {# Display Profit #}
                     <td>
                         {% if course_report.total_students > 0 %}
                             <a href="{% url 'teacher_single_course_report' course_report.course_id %}" class="btn btn-info btn-sm">View Details</a>
@@ -36,9 +42,12 @@
             </tbody>
             <tfoot>
                 <tr>
-                    <th colspan="2">Total Courses: {{ report_data|length }}</th>
+                    <th colspan="2">Total Courses Enrollment: {{ report_data|length }}</th>
                     <th></th> {# Placeholder for total fees collected #}
-                    <th></th>
+                    <th></th> {# Placeholder for Commission Rate Total (not aggregated here, but you could add) #}
+                    <th></th> {# Placeholder for Commission Value Total (not aggregated here) #}
+                    <th></th> {# Placeholder for Profit Total (not aggregated here) #}
+                    <th></th> {# Placeholder for Actions column #}
                 </tr>
             </tfoot>
         </table>

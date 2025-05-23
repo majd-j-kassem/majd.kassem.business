@@ -1,0 +1,103 @@
+{# auth_system/accounts/templates/admin/accounts/profile_commission_popup.html #}
+{% extends "admin/base_site.html" %} {# CRITICAL for inheriting admin styles #}
+{% load i18n admin_urls static %} {# CRITICAL for loading static files #}
+
+{% block extrastyle %}
+    {# You can add extra styles specific to your popup here if needed #}
+    <style>
+        #commission-popup-content {
+            padding: 20px;
+            text-align: center;
+            background-color: #f8f8f8; /* Light background for the popup content */
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 30px auto; /* Center the content vertically and horizontally */
+        }
+        #commission-popup-content h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+        #commission-popup-content p {
+            color: #555;
+            margin-bottom: 25px;
+            font-size: 1.1em;
+        }
+        #commission-popup-content label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+            font-size: 1em;
+        }
+        #commission-popup-content input[type="number"] {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 180px;
+            text-align: center;
+            font-size: 1.2em;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        }
+        #commission-error {
+            color: #d9534f;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            display: none;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        .submit-row {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center; /* Center the buttons */
+            gap: 15px; /* Space between buttons */
+        }
+        .submit-row .button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .submit-row .button.default { /* "Approve" button */
+            background-color: #28a745; /* Green */
+            color: white;
+        }
+        .submit-row .button.default:hover {
+            background-color: #218838; /* Darker green */
+            transform: translateY(-1px);
+        }
+        .submit-row .button:not(.default) { /* "Cancel" button */
+            background-color: #6c757d; /* Gray */
+            color: white;
+        }
+        .submit-row .button:not(.default):hover {
+            background-color: #5a6268; /* Darker gray */
+            transform: translateY(-1px);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="commission-popup-content">
+    <h2>Set Commission for {{ profile.user.username }}</h2>
+    <p>Please enter the commission percentage (0-100) for this teacher.</p>
+    <div>
+        <label for="id_commission_percentage">Commission (%):</label>
+        <input type="number" id="id_commission_percentage" name="commission_percentage" min="0" max="100" step="0.01" value="{{ profile.commission_percentage|default:'0.00' }}">
+    </div>
+    <div id="commission-error"></div>
+    <div class="submit-row">
+        <button type="button" id="submit-commission" class="button default">Approve & Set Commission</button>
+        <button type="button" id="cancel-commission" class="button">Cancel</button>
+    </div>
+</div>
+
+{# The script for handling submit/cancel will be loaded via admin_commission_popup.js #}
+{# It's good practice to have the core logic in a separate JS file for reusability and maintainability. #}
+{# The Media class in admin.py handles injecting the JS onto this page. #}
+
+{% endblock %}
