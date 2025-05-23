@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ course.title }}{% endblock %}
+
+{% block extra_head %} {# Changed from 'head' to 'extra_head' to match base.html #}
+    <style>
+        /* All the CSS for course_detail page goes here */
+        /* --- Course Detail Specific Styles --- */
+        .course-detail-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            padding: 30px;
+            display: flex; /* THIS MAKES THE TWO MAIN COLUMNS SIDE-BY-SIDE */
+            flex-wrap: wrap; /* Allows columns to wrap on smaller screens */
+            gap: 30px; /* Space between the two main columns */
+            text-align: left;
+        }
+
+        /* Left Column: Image */
+        .course-media-column {
+            flex: 0 0 35%; /* Fixed width for image column: don't grow, don't shrink, basis 35% */
+            max-width: 35%; /* Explicit max width for stability */
+            min-width: 280px; /* Minimum width to prevent image squishing */
+            background: rgba(0, 0, 0, 0.2); /* CLEARLY VISIBLE BACKGROUND FOR COLUMN */
+            border-radius: 12px;
+            padding: 20px; /* Padding inside the image column */
+            box-sizing: border-box;
+            display: flex; /* For centering/aligning image */
+            justify-content: center; /* Center the image horizontally */
+            align-items: center; /* Center the image vertically */
+        }
+
+        .course-thumbnail {
+            width: 100%;
+            height: auto;
+            max-height: 400px; /* Limit max height for large images */
+            object-fit: cover; /* Crop image to fit */
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            display: block; /* Ensures no extra space below image */
+        }
+
+        /* Right Column: All other content (Title, Info, Description, Sidebar) */
+        .course-content-column {
+            flex: 1 1 65%; /* Takes the remaining space, explicitly defining its basis */
+            min-width: 500px; /* Ensures content column is readable */
+            background: rgba(0, 0, 0, 0.2); /* CLEARLY VISIBLE BACKGROUND FOR COLUMN */
+            border-radius: 12px;
+            padding: 25px; /* Padding inside the main content column */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column; /* Stacks its children (sections) vertically */
+            gap: 25px; /* Space between the main text section and the sidebar section */
+        }
+
+        /* ... rest of your course_detail.html CSS, including media queries ... */
+        /* Section within the right column for Title, Info Grid, Description */
+        .course-main-text-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Space between h1, info-grid, description */
+        }
+
+        .course-content-column h1 {
+            font-size: 2.8em;
+            margin-bottom: 0; /* Gap handled by parent */
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Responsive grid for info items */
+            gap: 15px;
+            margin-top: 0; /* Gap handled by parent */
+            margin-bottom: 0; /* Gap handled by parent */
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 0.95em;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+        }
+
+        .info-item strong {
+            font-weight: 600;
+            color: #d0d0d0;
+            margin-bottom: 5px;
+        }
+
+        .price-section {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #4CAF50; /* Green for price */
+            display: block;
+        }
+
+        .categories-list {
+            margin-top: 10px;
+        }
+
+        .categories-list span {
+            background-color: rgba(0, 0, 0, 0.25);
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-block;
+            font-size: 0.85em;
+            color: #a0a0a0;
+        }
+
+        .course-description {
+            padding: 0;
+            background: none;
+            border-radius: 0;
+            line-height: 1.7;
+            font-size: 1.05em;
+            color: rgba(255, 255, 255, 0.9);
+            box-shadow: none;
+            margin-top: 0; /* Gap handled by parent */
+        }
+
+        /* Sidebar is now a section within the right column */
+        .course-sidebar {
+            background: rgba(0, 0, 0, 0.2); /* Existing sidebar background */
+            border-radius: 12px;
+            padding: 25px; /* Existing sidebar padding */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start; /* ALIGN SIDEBAR CONTENT TO LEFT */
+            text-align: left; /* ALIGN SIDEBAR TEXT TO LEFT */
+            margin-top: 0; /* Gap handled by parent */
+            width: 100%; /* Take full width of its parent (.course-content-column) */
+        }
+
+        .login-register-prompt-sidebar {
+            text-align: left;
+            font-size: 1.1em;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .login-register-prompt-sidebar a {
+            color: #87CEEB;
+            text-decoration: underline;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .login-register-prompt-sidebar a:hover {
+            color: #5F9EA0;
+        }
+
+        .register-button {
+            display: inline-block;
+            padding: 15px 20px;
+            background: linear-gradient(90deg, #ff416c, #ff4b2b);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.3em;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 20px;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            width: fit-content;
+            margin-left: 0;
+            margin-right: auto;
+        }
+
+        .register-button:hover {
+            background: linear-gradient(90deg, #ff4b2b, #ff416c);
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
+        }
+
+        .enrolled-message {
+            text-align: left;
+            padding: 15px;
+            background-color: rgba(76, 175, 80, 0.2);
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #a5d6a7;
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: rgba(0, 123, 255, 0.8);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px; /* Corrected typo, was 88px */
+            margin-top: 30px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
+            font-size: 1.05em;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 992px) {
+            .course-detail-wrapper {
+                flex-direction: column; /* Stack the two main columns vertically */
+                gap: 30px;
+                padding: 25px;
+                margin: 0 20px;
+            }
+
+            .course-media-column, .course-content-column {
+                flex-basis: auto; /* Reset flex-basis */
+                max-width: unset; /* Remove max-width constraint */
+                min-width: unset; /* Remove min-width constraint */
+                width: 100%; /* Take full width when stacked */
+                padding: 20px; /* Keep consistent padding */
+            }
+
+            .course-content-column {
+                padding-top: 25px; /* Add some top padding when stacked */
+            }
+
+            .course-content-column h1 {
+                font-size: 2.2em;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr; /* Stack info items vertically */
+            }
+
+            .info-item {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 12px 18px;
+            }
+            .info-item strong {
+                margin-bottom: 0;
+                margin-right: 10px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body { padding-top: 60px; }
+            .main-header { padding: 10px 0; }
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .main-nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+                width: 100%;
+                padding-top: 10px;
+            }
+            .logo { margin-bottom: 10px; }
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .footer-section { padding-right: 0; }
+            .footer-nav ul, .social-links ul {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+            }
+            .social-links ul li { margin: 0 8px; }
+
+            .course-detail-wrapper {
+                padding: 15px;
+                margin: 0 10px;
+            }
+            .course-content-column h1 {
+                font-size: 1.8em;
+            }
+            .course-thumbnail {
+                margin-bottom: 15px;
+            }
+            .price-section {
+                font-size: 1.8em;
+            }
+            .register-button {
+                font-size: 1.1em;
+                padding: 12px 15px;
+            }
+            .categories-list span {
+                font-size: 0.8em;
+                padding: 4px 8px;
+                margin-right: 4px;
+                margin-bottom: 4px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="course-detail-wrapper">
+    
+
+    <div class="course-content-column"> {# This is the main right column for all content #}
+        <div class="course-main-text-section"> {# Grouping title, info, and description #}
+            <h1>{{ course.title }}</h1>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <strong>Price:</strong>
+                    <span><span class="price-section">${{ course.price }}</span></span>
+                </div>
+                <div class="info-item">
+                    <strong>Level:</strong>
+                    <span>{{ course.level }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Teacher:</strong>
+                    <span>{{ course.teacher_profile.user.get_full_name|default:course.teacher_profile.user.username }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Categories:</strong>
+                    <div class="categories-list">
+                        {% for category in course.categories.all %}
+                            <span>{{ category.name }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-description">
+                <p>{{ course.description }}</p>
+            </div>
+        </div>
+
+        <div class="course-sidebar"> {# This sidebar is now a section within the right column #}
+           
+            {# --- Register Button Logic (Moved to sidebar) --- #}
+            {% if user.is_authenticated %}
+                {% if is_enrolled %}
+                    <div class="enrolled-message">You are already enrolled in this course!</div>
+                {% else %}
+                    {# This form will handle the registration. #}
+                    <form action="{% url 'register_for_course' course.id %}" method="post" class="w-100 d-flex justify-content-start">
+                        {% csrf_token %}
+                        <button type="submit" class="register-button">Register for Course</button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <p class="login-register-prompt-sidebar">
+                    <a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to register for this course.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<p class="text-center">
+    <a href="{% url 'course_view' %}" class="back-button">Back to All Courses</a>
+</p>
+{% endblock %}

@@ -1,0 +1,78 @@
+{# This line tells Django that this template extends a base template. #}
+{# It must be the very first thing in the file. #}
+{% extends 'base.html' %} 
+
+{# Load the staticfiles app to use the {% static %} template tag for images, CSS, etc. #}
+{# This is still needed even when extending, if this specific template uses static files. #}
+{% load static %} 
+
+{# Define the title for this specific page. This content will be inserted into the {% block title %} in base.html #}
+{% block title %}Welcome to Our Learning Platform!{% endblock %} 
+
+{# This block defines the main content area of this page. #}
+{# Everything inside this block will be inserted into the {% block content %} in base.html #}
+{% block content %} 
+
+    {# --- Main Page Content (Hero Section) --- #}
+    {# This div applies the "frosted glass" look and centers the content as defined in base.css #}
+    <div class="page-content-wrapper">
+        <h1>Welcome to Our Learning Platform!</h1>
+        <p>Your journey to knowledge starts here. Explore a wide range of courses taught by expert instructors.</p>
+        {# Link to your full courses page. Ensure 'courses' URL is defined in your urls.py #}
+        <a href="{% url 'courses' %}" class="cta-button">Explore All Courses</a> 
+    </div>
+
+    {# --- Featured Courses Section (Dynamically rendered from DB) --- #}
+    {# This section has its own specific styling defined in base.css #}
+    <div class="featured-courses-section">
+        <h2>Our Featured Courses</h2>
+        <div class="courses-grid">
+            {# Check if the 'featured_courses' variable (passed from your Django view) exists and is not empty #}
+            {% if featured_courses %} 
+                {% for course in featured_courses %}
+                <div class="course-card">
+                    {# --- FEATURED LABEL (appears if course.featured is True) --- #}
+                    {% if course.featured %}
+                        <span class="featured-label">Featured</span>
+                    {% endif %}
+
+                    {# Display course image, or a default placeholder if none exists #}
+                    {% if course.course_picture %}
+                        <img src="{{ course.course_picture.url }}" alt="{{ course.title }}">
+                    {% else %}
+                        {# Path to your default image in static/images/ #}
+                        <img src="{% static 'images/default_course_picture.png' %}" alt="Default Course Image">
+                    {% endif %}
+
+                    <h3>{{ course.title }}</h3>
+                    <div class="badges">
+                        {# Display course level if it exists #}
+                        {% if course.level %}<span class="level-badge">{{ course.level }}</span>{% endif %}
+                        {# Loop through and display course categories #}
+                        {% for category in course.categories.all %}
+                            <span class="category-badge">{{ category.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {# Display a truncated description #}
+                    <p>{{ course.description|truncatechars:120 }}</p>
+                    {# Display the teacher's name, or username if full name isn't set #}
+                    <p class="teacher-name">Taught by: {{ course.teacher_profile.user.get_full_name|default:course.teacher_profile.user.username }}</p>
+                    <div class="price">${{ course.price }}</div>
+                    {# Link to the detailed course page. Ensure 'course_detail' URL is defined #}
+                    <a href="{% url 'course_detail' course.id %}" class="course-action">View Course</a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No featured courses available yet. Check back soon!</p>
+            {% endif %}
+        </div>
+        {# Display a "View All Courses" button if there are more than 3 featured courses shown (to encourage visiting the full list) #}
+        {% if featured_courses|length > 3 %}
+            <div style="margin-top: 30px;">
+                {# Link to the full courses list. Ensure 'courses_list' URL is defined #}
+                <a href="{% url 'courses_list' %}" class="cta-button">View All Courses</a>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock content %} {# This marks the end of the content block #}

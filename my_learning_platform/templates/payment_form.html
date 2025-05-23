@@ -1,0 +1,232 @@
+{# my_learning_platform/course_app/templates/course_app/payment_form.html #}
+{% extends 'base.html' %}
+{% load static %} {# If you use static files like CSS/JS linked in the head #}
+
+{% block title %}Payment for {{ course.title }}{% endblock %}
+
+{% block extra_head %}
+
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #764ba2, #764ba2); /* Your desired background */
+            color: white;
+            margin: 0;
+            padding-top: 70px; /* Adjust if you have a fixed header */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            line-height: 1.6;
+        }
+
+        .payment-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 40px;
+            margin: 50px auto;
+            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            backdrop-filter: blur(10px); /* For a nice frosted glass effect */
+            text-align: center;
+            width: 90%; /* Responsive width */
+        }
+
+        h1 {
+            font-size: 2.8em;
+            margin-bottom: 25px;
+            color: #fff;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .course-info-summary {
+            background-color: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .course-info-summary p {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+        .course-info-summary strong {
+            color: #e0e0e0;
+        }
+        .course-info-summary .price {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #4CAF50; /* Green color for price */
+            margin-top: 15px;
+        }
+
+        .payment-form label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e0e0e0;
+        }
+
+        .payment-form input[type="text"],
+        .payment-form select {
+            width: calc(100% - 20px); /* Account for padding */
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 1em;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+        .payment-form input[type="text"]:focus,
+        .payment-form select:focus {
+            border-color: #007bff; /* Highlight on focus */
+            background-color: rgba(0, 0, 0, 0.3);
+            outline: none;
+        }
+        .payment-form input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px; /* Space between columns */
+            margin-bottom: 20px;
+        }
+        .form-row .form-group {
+            flex: 1; /* Each group takes equal space */
+        }
+
+        .errorlist {
+            color: #ff416c; /* Red color for errors */
+            list-style-type: none;
+            padding: 0;
+            margin-top: -15px; /* Adjust spacing */
+            margin-bottom: 15px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        .submit-button {
+            display: block;
+            width: 100%;
+            padding: 18px 25px;
+            font-size: 1.4em;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #28a745, #218838); /* Green gradient for 'Pay' */
+            color: white;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        }
+        .submit-button:hover {
+            background: linear-gradient(90deg, #218838, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.4);
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #007bff; /* Blue for links */
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        .back-link:hover {
+            color: #0056b3;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .payment-container {
+                padding: 30px;
+                margin: 30px auto;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            .form-row {
+                flex-direction: column; /* Stack elements vertically on small screens */
+                gap: 0;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <h1>Complete Payment for {{ course.title }}</h1>
+
+    <div class="course-info-summary">
+        <p><strong>Course:</strong> {{ course.title }}</p>
+        {# Assuming your Course model has a foreign key to a Teacher Profile #}
+        <p><strong>Teacher:</strong> {{ course.teacher_profile.user.get_full_name|default:course.teacher_profile.user.username }}</p>
+        <p class="price"><strong>Total:</strong> ${{ course.price }}</p>
+    </div>
+
+    <form method="post" class="payment-form">
+        {% csrf_token %}
+
+        {# Display non-field errors (e.g., from clean methods in form) #}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {# Render each field manually for more control #}
+        <div>
+            <label for="{{ form.card_number.id_for_label }}">Card Number</label>
+            {{ form.card_number }}
+            {% if form.card_number.errors %}
+                <ul class="errorlist">
+                    {% for error in form.card_number.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+      
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="{{ form.expiry_month.id_for_label }}">Expiry Month</label>
+                {{ form.expiry_month }}
+                {% if form.expiry_month.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.expiry_month.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                <label for="{{ form.expiry_year.id_for_label }}">Expiry Year</label>
+                {{ form.expiry_year }}
+                {% if form.expiry_year.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.expiry_year.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+        </div>
+
+        <button type="submit" class="submit-button">Pay Now</button>
+    </form>
+
+    <a href="{% url 'course_detail' course.id %}" class="back-link">Cancel and Go Back to Course</a>
+</div>
+{% endblock %}

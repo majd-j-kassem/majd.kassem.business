@@ -4,12 +4,12 @@ from django.urls import path, include
 from django.conf import settings 
 from django.conf.urls.static import static 
 
+
 # API Documentation URLs (These are typically kept in the project's urls.py)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
     # Include all URL patterns from your 'accounts' app
     # This single line will now handle all your main navigation,
     # authentication, and profile URLs defined within 'accounts/urls.py'.

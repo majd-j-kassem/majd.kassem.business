@@ -13,10 +13,10 @@ venv/
 *.sqlite3
 
 # Collectstatic files
-static/
+#static/
 
 # Media files
-media/
+#media/
 
 # Distribution / build files
 dist/

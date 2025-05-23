@@ -306,6 +306,33 @@
             .page-content { margin: 20px; padding: 25px; border-radius: 15px; }
             .login-form-container { padding: 0 10px; }
         }
+        .message-container {
+    text-align: center; /* Center the content within the container */
+    margin-bottom: 20px; /* Add some space below the message */
+    padding: 10px;
+    /* Optional: Add a subtle background or border if you like */
+    /* background-color: #f8d7da; */
+    /* border: 1px solid #f5c6cb; */
+    /* border-radius: 5px; */
+}
+
+.approval-message {
+    font-size: 1.1em; /* Make the font size a bit larger */
+    font-weight: bold; /* Make the text bold */
+    color: #25cc9a; /* Example: A blue color for the message */
+    /* You can adjust color based on your theme. For an info message, blue or green might be suitable */
+    list-style: none; /* Remove bullet points from the list item */
+    padding: 0;
+    margin: 0;
+}
+
+/* If you have specific classes for message tags like 'success', 'warning', 'error', you might adjust them too */
+/* Example for a warning message (like pending approval might be classified) */
+.messages .warning.approval-message {
+    color: #ffc107; /* Yellowish for warning */
+    background-color: #fff3cd; /* Light yellow background */
+    border: 1px solid #ffeeba;
+}
     </style>
 </head>
 <body>
@@ -350,16 +377,19 @@
 
         {# Display messages (success, error, info) #}
         {# Note: Django messages framework automatically adds 'success', 'error', 'info' tags #}
-        {% if messages %}
-            <div class="messages">
-                {% for message in messages %}
-                    {# Use the message tags directly as CSS class #}
-                    <div class="{{ message.tags }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
+        {# --- ADD/VERIFY THIS MESSAGE DISPLAY BLOCK --- #}
+                {% if messages %}
+    <div class="message-container">
+        <ul class="messages">
+            {% for message in messages %}
+            <li class="{% if message.tags %}{{ message.tags }}{% endif %} approval-message">
+                {{ message }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+                {# --- END MESSAGE DISPLAY BLOCK --- #}
 
         <form method="post" class="login-form-container">
             {% csrf_token %}
@@ -393,7 +423,7 @@
     <footer class="main-footer">
         <div class="footer-content">
             <div class="footer-section footer-about">
-                <h3>Your Name</h3> {# Replace with your name #}
+                <h3>Learning Platform</h3> {# Replace with your name #}
                 <p>A brief description about you or your project. You can add more text here.</p> {# Replace with your about text #}
             </div>
             <div class="footer-section footer-nav">
@@ -404,6 +434,10 @@
                     <li><a href="{% url 'cv' %}">CV</a></li>
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                     {% if not user.is_authenticated %}
+                     <li><a href="{% url 'teacher_register_stage1' %}">Join us as a teacher</a></li>
+
+                    {% endif %}
                 </ul>
             </div>
             <div class="footer-section footer-contact">

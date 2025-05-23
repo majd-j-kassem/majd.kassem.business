@@ -1,0 +1,24 @@
+{# your_project/templates/_header.html #}
+{% load static %}
+<header class="main-header">
+    <div class="header-content">
+        {# ... your logo ... #}
+        <nav>
+            <ul>
+                {# ... your general navigation links ... #}
+                {% if user.is_authenticated %}
+                    {% if user.user_type == 'student' %} {# Assuming 'student' is the user_type for students #}
+                        <li><a href="{% url 'student_dashboard' %}">My Learning</a></li>
+                    {% elif user.user_type == 'teacher' %}
+                        <li><a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'profile_edit' %}">Profile</a></li>
+                    <li><a href="{% url 'logout' %}">Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}">Login</a></li>
+                    <li><a href="{% url 'signup' %}">Sign Up</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</header>
