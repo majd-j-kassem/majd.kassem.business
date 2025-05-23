@@ -2,6 +2,7 @@
 
 from django.urls import path
 from . import views # This import is CORRECT here because views.py is in the same 'accounts' app directory
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     # Core Landing Page (your homepage)
@@ -42,4 +43,8 @@ urlpatterns = [
 
     # Note: Removed duplicate entries for 'teacher_dashboard' and 'add_teacher_course'.
     # Ensure all names ('name=...') are unique across all URLs if you plan to use reverse lookups.
+    
+    
+    path('password_change/', auth_views.PasswordChangeView.as_view(template_name='accounts/password_change_form.html'), name='password_change'),
+    path('password_change/done/', auth_views.PasswordChangeDoneView.as_view(template_name='accounts/password_change_done.html'), name='password_change_done'),
 ]

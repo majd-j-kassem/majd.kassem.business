@@ -510,6 +510,13 @@
 
             <button type="submit" class="profile-button">Save Changes</button>
         </form>
+
+        {# New section for Change Password Link #}
+        <hr style="border-color: rgba(255,255,255,0.2); margin: 30px 0;">
+        <div style="text-align: center; margin-top: 30px;">
+            <p style="font-size: 1.1em; color: rgba(255, 255, 255, 0.9);">Want to update your password?</p>
+            <a href="{% url 'password_change' %}" class="profile-button" style="width: auto; padding: 10px 25px;">Change Password</a>
+        </div>
     </div>
 
     {# --- Footer --- #}

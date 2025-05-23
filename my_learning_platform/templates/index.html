@@ -278,6 +278,7 @@
             font-size: 1.35em;
             margin-bottom: 10px;
             font-weight: 600;
+            margin-top: 15px;
         }
         .course-card p {
             font-size: 0.9em;
@@ -447,7 +448,7 @@
                 <div class="course-card">
                     {# --- FEATURED LABEL INSERTION HERE --- #}
                     {% if course.featured %}
-                        <span class="featured-label">Featured</span>
+                        <span class="featured-label">Featured</span><br>
                     {% endif %}
 
                     {% if course.course_picture %}
