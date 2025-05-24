@@ -46,7 +46,6 @@
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
-                        <li><a href="{% url 'courses' %}">Courses</a></li>
                         {# Link to the teacher dashboard if the user is a teacher #}
                         {% if user.user_type == 'teacher' %}
                             <li><a href="{% url 'teacher_dashboard' %}">Dashboard</a></li>
