@@ -363,7 +363,7 @@
                         {% if user.user_type == 'student' %}
                             <li><a href="{% url 'student_dashboard' %}">My Courses</a></li>
                         {% elif user.user_type == 'teacher' %}
-                            <li><a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a></li>
+                            <li><a href="{% url 'teacher_dashboard' %}">Dashboard</a></li>
                         {% endif %}
                     {% else %}
                         <li><a href="{% url 'login' %}">Login</a></li>

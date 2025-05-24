@@ -362,10 +362,17 @@
                     {% if user.is_authenticated %}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
                         <li><a href="{% url 'profile_edit' %}">Profile</a></li>
+                        {% if user.user_type == 'student' %}
+                            <li><a href="{% url 'student_dashboard' %}">My Courses</a></li>
+                        {% elif user.user_type == 'teacher' %}
+                            <li><a href="{% url 'teacher_dashboard' %}">Dashboard</a></li>
+                        {% endif %}
+                       
                     {% else %}
                         {# Link to the login page (this page) #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
+                    
                 </ul>
             </nav>
         </div>

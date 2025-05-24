@@ -282,7 +282,6 @@ class TeacherCourseForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'rows': 4, 'class': 'form-control'}),
             'price': forms.NumberInput(attrs={'step': '0.01', 'min': '0.00', 'class': 'form-control'}),
-            'language': forms.TextInput(attrs={'placeholder': 'e.g., English, Arabic', 'class': 'form-control'}),
             'video_trailer_url': forms.URLInput(attrs={'placeholder': 'e.g., https://www.youtube.com/watch?v=xxxxxxxx', 'class': 'form-control'}),
             'course_picture': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
