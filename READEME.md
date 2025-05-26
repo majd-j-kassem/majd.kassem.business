@@ -1,1 +1,0 @@
-Always check pip3 freeze > requirements.txt s
