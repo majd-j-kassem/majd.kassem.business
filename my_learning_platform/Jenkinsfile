@@ -6,7 +6,7 @@ pipeline {
     triggers {
         // Poll SCM every minute (adjust cron as needed)
         // Alternatively, use a GitHub webhook for faster triggers
-        pollSCM('H/1 * * * *') 
+        pollSCM('H/2 * * * *') 
     }
 
     stages {
