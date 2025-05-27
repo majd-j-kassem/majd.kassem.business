@@ -52,8 +52,10 @@ pipeline {
                 script {
                     echo "Building the System Under Test (SUT) with Maven..."
                     // The 'mvn' command is now available in the PATH due to the 'tools' directive.
-                    sh 'mvn clean install'
-                    echo "SUT build complete."
+                    sh """
+                    cd business/
+                    $MAVEN_HOME/bin/mvn clean install
+                    """
                 }
             }
             // Post-actions for this specific stage.
