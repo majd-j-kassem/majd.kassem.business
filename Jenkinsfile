@@ -52,9 +52,9 @@ pipeline {
                 script {
                     echo "Building the System Under Test (SUT) with Maven..."
                     // The 'mvn' command is now available in the PATH due to the 'tools' directive.
-                    sh """
-                    cd business/
-                    $MAVEN_HOME/bin/mvn clean install
+                   sh """
+                        cd majd.kassem.business/ && \\  // <--- CHANGE THIS LINE based on your repo structure
+                        $MAVEN_HOME/bin/mvn clean install
                     """
                 }
             }
