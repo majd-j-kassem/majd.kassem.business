@@ -1,0 +1,54 @@
+// Jenkinsfile in majd.kassem.business repo
+pipeline {
+    agent any // Or a specific agent label if you have one
+
+    // Trigger for the dev branch
+    triggers {
+        // Poll SCM every minute (adjust cron as needed)
+        // Alternatively, use a GitHub webhook for faster triggers
+        pollSCM('H/1 * * * *') 
+    }
+
+    stages {
+        stage('Checkout SUT Code') {
+            steps {
+                checkout scm
+            }
+        }
+        
+        stage('Build SUT') {
+            steps {
+                // Assuming it's a Maven project
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Deploy to Dev Service') {
+            steps {
+                // **IMPORTANT: Replace this with your actual Render.com deployment command**
+                // This could be a 'render-cli' command, 'git push render', or a custom script.
+                // Example using a placeholder for 'render-cli' deployment:
+                script {
+                    echo "Deploying SUT to Dev Service: https://majd-kassem-business-dev.onrender.com/"
+                    // You might need to configure Render API key as a Jenkins credential
+                    // and use 'withCredentials' if it's sensitive.
+                    // Example: sh 'render-cli deploy majd-kassem-business-dev' 
+                    // Or a custom script that handles deployment:
+                    sh './deploy_to_render_dev.sh' // Ensure this script exists in your repo and is executable
+                }
+            }
+        }
+
+        stage('Trigger QA Tests') {
+            steps {
+                // This builds/triggers another Jenkins job named 'QA-Selenium-Pipeline'
+                // Pass the SUT's dev URL as a parameter to the QA pipeline
+                build job: 'QA-Selenium-Pipeline', 
+                      parameters: [
+                          string(name: 'SUT_DEV_URL', value: 'https://majd-kassem-business-dev.onrender.com/'),
+                          string(name: 'SUT_BUILD_NUMBER', value: env.BUILD_NUMBER) // Pass build info for traceability
+                      ]
+            }
+        }
+    }
+}
