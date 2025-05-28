@@ -36,7 +36,11 @@ pipeline {
                         sh "git merge origin/${env.SUT_BRANCH_DEV} -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
 
                         echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote (triggers Render live deploy)..."
-                        sh "git push origin ${env.SUT_BRANCH_MAIN}"
+                         withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            // Use the username and password variables in the URL for authentication
+                            // Make sure 'majd-j-kassem/majd.kassem.business.git' is your exact repository path
+                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
+                        }
                         echo "SUT Main branch updated. Render will now deploy to live."
                     }
                 }
