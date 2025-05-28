@@ -7,7 +7,7 @@ pipeline {
         QA_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business_qa.git'
         SUT_BRANCH_DEV = 'dev'
         SUT_BRANCH_MAIN = 'main'
-        QA_BRANCH = 'main'
+        QA_BRANCH = 'dev'
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/'
         LIVE_URL = 'https://majd-kassem-business.onrender.com/'
     }
