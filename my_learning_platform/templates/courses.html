@@ -302,6 +302,21 @@
             color: #28a745; /* Green for price */
             margin-bottom: 10px;
         }
+        .course-card .course-action {
+            display: block;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.3s ease, transform 0.2s ease;
+            margin-top: 10px;
+        }
+        .course-card .course-action:hover {
+            background: linear-gradient(90deg, #0056b3, #007bff);
+            transform: translateY(-2px);
+        }
         .course-card .details {
             font-size: 0.85em;
             color: rgba(255, 255, 255, 0.7);
@@ -321,7 +336,12 @@
         }
 
         .no-courses { text-align: center; color: #999; margin-top: 50px; font-size: 1.2em; }
+/*================================================
 
+
+
+
+*/
         /* Responsive Adjustments (FROM YOUR INDEX.HTML & NEW COURSE STYLES) */
         @media (max-width: 992px) {
             .main-header { padding: 10px 0; }
@@ -487,7 +507,7 @@
                             </span>
                         </div>
                         {# Optional: Add a link to a course detail page if you create one later #}
-                        {# <a href="{% url 'course_detail' course.id %}" class="btn-details">View Details</a> #}
+                        <a href="{% url 'course_detail' course.id %}" class="course-action">View Details</a>
                     </div>
                 {% endfor %}
             </div>

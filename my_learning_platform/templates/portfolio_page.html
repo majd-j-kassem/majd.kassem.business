@@ -310,25 +310,28 @@
                 </a>
             </div>
             <nav class="main-nav">
-                <ul>
-                    {# Link to the homepage using the 'index' URL name #}
-                    <li><a href="{% url 'index' %}">Home</a></li> {# Link to the homepage #}
+               <ul>
+                    <li><a href="{% url 'index' %}">Home</a></li>
+                    <li><a href="{% url 'courses' %}">Courses</a></li>
                     <li><a href="{% url 'cv' %}">CV</a></li>
-                    {# Link to this dedicated portfolio page #}
                     <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
                     <li><a href="{% url 'certificates' %}">Certificates</a></li>
                     <li><a href="{% url 'contact' %}">Contact</a></li>
                     <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
-                        {# Link to the logout view #}
                         <li><a href="{% url 'logout' %}">Logout</a></li>
-                        {# Link to the profile edit view #}
                         <li><a href="{% url 'profile_edit' %}">Profile</a></li>
+                    
                     {% else %}
-                        {# Link to the login view #}
                         <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
+                    {% if user.user_type == 'teacher' %}
+                            <li><a href="{% url 'teacher_dashboard' %}">Dashboard</a></li>
+                           
+                        {% elif user.user_type == 'student' %}
+                            <li><a href="{% url 'student_dashboard' %}">My Learning</a></li>
+                        {% endif %}
                 </ul>
             </nav>
         </div>
