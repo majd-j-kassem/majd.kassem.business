@@ -1,0 +1,61 @@
+// Jenkinsfile.sut_build_staging (in majd.kassem.business.git)
+pipeline {
+    agent any // This job can run on any available Jenkins agent.
+
+    environment {
+        SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
+        SUT_BRANCH_DEV = 'dev'
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
+        QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
+        GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
+    }
+
+    stages {
+        stage('Checkout SUT Dev') {
+            steps {
+                script {
+                    echo "Checking out SUT repository: ${env.SUT_REPO}, branch: ${env.SUT_BRANCH_DEV}"
+                    dir('sut-code') { // Checkout into a dedicated directory
+                        git branch: env.SUT_BRANCH_DEV, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
+                    }
+                }
+            }
+        }
+
+        stage('Build and Deploy SUT to Staging (via Render)') {
+            steps {
+                script {
+                    echo "SUT deployment to staging triggered by Render on commit to ${env.SUT_BRANCH_DEV}."
+                    echo "Waiting 30 seconds for Render deployment to complete. (Consider polling health endpoint for robustness)."
+                    sleep 30
+                    echo "Assumed Render deployment to staging is complete."
+                }
+            }
+        }
+
+        stage('Trigger QA Tests against Staging') {
+            steps {
+                script {
+                    echo "Triggering downstream QA job: ${env.QA_JOB_NAME}"
+                    // The 'build' step triggers the QA job and waits for its completion.
+                    // We pass the STAGING_URL as a parameter to the QA job.
+                    build job: env.QA_JOB_NAME, parameters: [
+                        string(name: 'STAGING_URL_PARAM', value: env.STAGING_URL)
+                    ]
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            deleteDir() // Clean up the workspace
+        }
+        success {
+            echo 'SUT Build and Deploy to Staging pipeline finished successfully.'
+        }
+        failure {
+            echo 'SUT Build and Deploy to Staging pipeline FAILED.'
+        }
+    }
+}

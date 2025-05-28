@@ -1,0 +1,69 @@
+// Jenkinsfile.sut_deploy_live (in majd.kassem.business.git)
+pipeline {
+    agent any // This job can run on any available Jenkins agent.
+
+    environment {
+        SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
+        SUT_BRANCH_DEV = 'dev'
+        SUT_BRANCH_MAIN = 'main'
+        LIVE_URL = 'https://majd-kassem-business.onrender.com/' // Your Render live URL
+        GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
+    }
+
+    stages {
+        stage('Checkout SUT Main for Merge') {
+            steps {
+                script {
+                    echo "Checking out SUT repository: ${env.SUT_REPO}, branch: ${env.SUT_BRANCH_MAIN}"
+                    dir('sut-main-for-deploy') { // Dedicated directory for merge operation
+                        git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
+                    }
+                }
+            }
+        }
+
+        stage('Merge Dev to Main & Push') {
+            steps {
+                script {
+                    dir('sut-main-for-deploy') {
+                        echo "Configuring Git user for the merge commit..."
+                        sh "git config user.email 'jenkins@example.com'"
+                        sh "git config user.name 'Jenkins CI Automation'"
+
+                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
+                        sh "git fetch origin ${env.SUT_BRANCH_DEV}"
+                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
+                        sh "git merge origin/${env.SUT_BRANCH_DEV} -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
+
+                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote (triggers Render live deploy)..."
+                        sh "git push origin ${env.SUT_BRANCH_MAIN}"
+                        echo "SUT Main branch updated. Render will now deploy to live."
+                    }
+                }
+            }
+        }
+
+        stage('Post-Deployment Verification (Optional)') {
+            steps {
+                script {
+                    echo "Performing quick verification on Live URL: ${env.LIVE_URL}..."
+                    // Add a simple health check here if you have one, e.g.:
+                    // sh "curl -f --silent --show-error --retry 5 --retry-delay 10 ${env.LIVE_URL}/health || { echo 'Live site not responding after deploy!'; exit 1; }"
+                    echo "Live verification steps completed (or skipped)."
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            deleteDir()
+        }
+        success {
+            echo 'SUT Deploy to Live pipeline finished successfully!'
+        }
+        failure {
+            echo 'SUT Deploy to Live pipeline FAILED!'
+        }
+    }
+}
