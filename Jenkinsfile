@@ -1,5 +1,6 @@
 pipeline {
-    agent any
+    agent any // This means the entire pipeline runs on any available Jenkins agent.
+              // We'll use a Docker agent for the specific Python-dependent stage.
 
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
@@ -21,13 +22,9 @@ pipeline {
         stage('Build and Deploy SUT to Staging') {
             steps {
                 script {
-                    // Assuming Render integration uses a webhook or similar from your SCM
-                    // For a simple trigger, you might just need to push to 'dev' branch
-                    // which Render is already configured to deploy from.
-                    // If not, you'd need Render API calls here.
                     echo "SUT automatically deployed to staging by Render on commit to ${env.SUT_BRANCH_DEV}"
-                    // You might want to add a small delay to ensure Render finishes deploying
-                    sleep 30 // Wait for 30 seconds for Render to deploy
+                    // Wait for Render to finish deploying. You might adjust this based on Render's typical deployment time.
+                    sleep 30
                 }
             }
         }
@@ -41,10 +38,18 @@ pipeline {
         }
 
         stage('Run QA Tests against Staging') {
+            agent { // <--- This ensures this stage runs inside a Docker container with Python.
+                docker {
+                    image 'python:3.9-slim-buster' // A lightweight Python image.
+                    args '-u root' // This can help with permissions inside the container.
+                }
+            }
             steps {
                 dir('qa-project') {
-                    sh 'pip install -r requirements.txt'
-                    sh "pytest src/tests --browser chrome-headless --base-url ${env.STAGING_URL}" // Adjust pytest command as needed
+                    // Use 'python -m pip' for robustness in Docker.
+                    sh 'python -m pip install --no-cache-dir -r requirements.txt'
+                    // Your pytest command. Ensure your QA project has 'pytest' installed via requirements.txt.
+                    sh "pytest src/tests --browser chrome-headless --base-url ${env.STAGING_URL}"
                 }
             }
         }
@@ -55,9 +60,10 @@ pipeline {
             }
             steps {
                 script {
-                    // Checkout SUT repo again to ensure we're on the correct state for merging
+                    // Checkout SUT repo again to ensure we're on the correct state for merging.
+                    // This 'git_id' should be the same as used in other git steps.
                     dir('sut-main-repo') {
-                        git branch: env.SUT_BRANCH_MAIN, credentials: 'YOUR_GIT_CREDENTIAL_ID', url: env.SUT_REPO
+                        git branch: env.SUT_BRANCH_MAIN, credentialsId: 'git_id', url: env.SUT_REPO
                         sh "git config user.email 'jenkins@example.com'"
                         sh "git config user.name 'Jenkins'"
                         sh "git merge ${env.SUT_BRANCH_DEV} -m 'Merge dev to main after successful QA tests'"
