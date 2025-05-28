@@ -45,5 +45,3 @@ typing_extensions==4.13.2
 tzdata==2025.2
 uritemplate==4.1.1
 whitenoise
-pytest-selenium
-allure-pytest
