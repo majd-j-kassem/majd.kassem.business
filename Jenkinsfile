@@ -35,7 +35,7 @@ pipeline {
         stage('Checkout QA Main') {
             steps {
                 dir('qa-project') {
-                    git branch: env.QA_BRANCH, credentials: 'YOUR_GIT_CREDENTIAL_ID', url: env.QA_REPO
+                    git branch: env.QA_BRANCH, credentials: 'git_id', url: env.QA_REPO
                 }
             }
         }
