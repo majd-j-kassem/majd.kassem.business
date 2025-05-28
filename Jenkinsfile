@@ -14,7 +14,7 @@ pipeline {
     stages {
         stage('Checkout SUT Dev') {
             steps {
-                git branch: env.SUT_BRANCH_DEV, credentials: 'git_id', url: env.SUT_REPO
+                git branch: env.SUT_BRANCH_DEV, credentialsId: 'git_id', url: env.SUT_REPO
             }
         }
 
