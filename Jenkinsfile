@@ -40,18 +40,13 @@ pipeline {
 
         // --- NEW STAGE: Build the custom QA Docker Image ---
         stage('Build QA Runner Image') {
-            // This stage runs on the main Jenkins agent (your jenkins-server container)
-            // which has access to the Docker daemon on the host via the mounted socket.
-            agent any
+            agent any // This stage runs on the main Jenkins agent (your jenkins-server container)
             steps {
                 script {
-                    // Navigate to the directory containing your Dockerfile
-                    // Assuming Dockerfile is in a 'qa-project' subfolder within your SUT_REPO (main repo)
                     dir('qa-project') {
                         echo "Building Docker image: ${env.QA_TEST_RUNNER_IMAGE}"
-                        // Build the image using the Dockerfile from qa-project/Dockerfile
-                        // The '.' means build context is the current directory (qa-project)
-                        sh "docker build -t ${env.QA_TEST_RUNNER_IMAGE} ."
+                        // Use the full path to the docker executable
+                        sh "/usr/bin/docker build -t ${env.QA_TEST_RUNNER_IMAGE} ."
                     }
                 }
             }
