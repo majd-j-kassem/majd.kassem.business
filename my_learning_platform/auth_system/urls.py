@@ -3,14 +3,17 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings 
 from django.conf.urls.static import static 
+from django.contrib.auth import views as auth_views
 
 
 # API Documentation URLs (These are typically kept in the project's urls.py)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    # Include all URL patterns from your 'accounts' app
+    path('admin/login/', auth_views.LoginView.as_view(template_name='admin/login.html'), name='admin_login'), # Optional: if you have a custom admin login template
+    path('admin/logout/', auth_views.LogoutView.as_view(next_page='/admin/'), name='admin_logout'), # <--- THIS IS THE KEY LINE
+    path('admin/', admin.site.urls), # Keep this for the rest of the admin functionality
+
     # This single line will now handle all your main navigation,
     # authentication, and profile URLs defined within 'accounts/urls.py'.
     path('', include('accounts.urls')),

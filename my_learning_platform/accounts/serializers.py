@@ -54,3 +54,6 @@ class UserLoginSerializer(serializers.Serializer):
 
     # No create or update methods needed for a login serializer as it doesn't create/update a model instance
     # Validation will happen in the view where we call authenticate()
+    
+class DeleteUserByEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)

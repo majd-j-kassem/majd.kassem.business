@@ -3,11 +3,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token as AuthToken
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser # <-- THIS LINE MUST INCLUDE IsAdminUser
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from .serializers import UserRegisterSerializer, UserLoginSerializer, DeleteUserByEmailSerializer # <-- ADD this serializer
+
 
 
 
@@ -96,3 +99,47 @@ class UserDetailAPIView(generics.RetrieveAPIView):
     #     serializer = self.get_serializer(instance)
     #     # You can modify serializer.data here before returning
     #     return Response(serializer.data)
+class DeleteUserByEmailAPIView(APIView):
+    """
+    API endpoint to delete a user by their email.
+    Requires admin authentication (IsAdminUser permission).
+    """
+    permission_classes = [IsAdminUser] # Only users with is_staff=True or is_superuser=True can access
+    serializer_class = DeleteUserByEmailSerializer # Assign the serializer for validation
+
+    def delete(self, request, *args, **kwargs):
+        """
+        Handles DELETE requests to delete a user.
+        Expects 'email' in the request body.
+        """
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True) # Validate input data
+
+        email = serializer.validated_data['email']
+        
+        # Using standard logging for API views
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"Attempting to delete user with email: {email} by admin: {request.user.email}")
+
+        try:
+            user_to_delete = User.objects.get(email=email)
+            
+            # Optional: Add a check to prevent an admin from deleting themselves or other superusers
+            if user_to_delete.is_superuser and not request.user.is_superuser:
+                 logger.warning(f"Non-superuser {request.user.email} attempted to delete superuser {email}.")
+                 return Response({"detail": "Cannot delete a superuser without superuser privileges."}, status=status.HTTP_403_FORBIDDEN)
+            if user_to_delete == request.user:
+                logger.warning(f"Admin {request.user.email} attempted to delete their own account via API.")
+                return Response({"detail": "Cannot delete your own account via this API."}, status=status.HTTP_403_FORBIDDEN)
+
+
+            user_to_delete.delete()
+            logger.info(f"Successfully deleted user with email: {email}")
+            return Response({"detail": f"User {email} deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist:
+            logger.warning(f"User with email {email} not found for deletion.")
+            return Response({"detail": f"User with email {email} not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            logger.error(f"Error deleting user {email}: {e}")
+            return Response({"detail": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
