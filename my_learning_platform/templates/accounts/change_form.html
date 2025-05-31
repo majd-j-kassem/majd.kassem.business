@@ -2,35 +2,42 @@
 {% extends "admin/change_form.html" %}
 {% load i18n admin_urls static %}
 
-{# No 'block content' here. We are specifically targeting 'submit_buttons_bottom'. #}
-{# This block is guaranteed to be inside the <form> tag in Django admin's change_form.html #}
 {% block submit_buttons_bottom %}
-    {# Render the default submit buttons provided by the parent template #}
     {{ block.super }}
 
-    {# Add your custom buttons here, always at the very bottom of the form #}
     {% if original and original.user.user_type == 'teacher' %}
         <div class="submit-row" style="padding: 10px; text-align: center; margin-top: 20px; border-top: 1px solid #eee; border-radius: 5px; background-color: #f9f9f9;">
             <h2>Teacher Application Actions:</h2>
 
             {% if original.is_teacher_application_pending %}
+                {# State: Teacher is PENDING approval - Initial Registration #}
                 <p style="font-weight: bold; color: #337ab7;">This teacher's application is currently awaiting review.</p>
                 <p>Set the commission percentage above and choose an action:</p>
 
-                {# Approve Button - NO onclick attribute #}
                 <button type="submit" name="_approve_teacher" class="button default" style="background-color: #28a745; border-color: #28a745; color: white;">Approve Teacher</button>
-
-                {# Reject Button - NO onclick attribute #}
                 <button type="submit" name="_reject_teacher" class="button" style="background-color: #dc3545; border-color: #dc3545; color: white; margin-left: 10px;">Reject Application!</button>
 
             {% elif original.is_teacher_approved %}
+                {# State: Teacher is APPROVED #}
                 <p style="font-weight: bold; color: #28a745;">This teacher is currently **Approved**.</p>
                 <p>Current Commission: <strong>{{ original.commission_percentage|default:"0.00" }}%</strong>.</p>
                 <p style="font-style: italic; color: #666;">To change commission, modify the field above and click "Save" (the main form save button).</p>
-            {% else %} {# Implies original.is_teacher_approved is False and not pending, so it was rejected #}
-                <p style="font-weight: bold; color: #dc3545;">This teacher's application was **Rejected**.</p>
-                <p>Reason for Rejection: <strong>{{ original.rejection_reason|default:"N/A" }}</strong></p>
-                <p style="font-style: italic; color: #666;">If you wish to re-evaluate, you'd need to manually change 'is_teacher_application_pending' back to True and save, then use these buttons.</p>
+                
+                {# DEACTIVATE button #}
+                <p style="margin-top: 15px;">To deactivate this teacher:</p>
+                <button type="submit" name="_deactivate_teacher" class="button delete-link" style="background-color: #ffc107; border-color: #ffc107; color: #333; margin-top: 5px;">Deactivate Teacher</button>
+                
+            {% else %} 
+                {# NEW STATE: Teacher is DEACTIVATED (not approved, not pending) #}
+                {# We now treat this as a "re-pending" state, requiring re-approval or rejection #}
+                <p style="font-weight: bold; color: #dc3545;">This teacher is currently **Deactivated**.</p>
+                <p>Last status reason: <strong>{{ original.rejection_reason|default:"No specific reason provided." }}</strong></p>
+                <p style="font-weight: bold; color: #337ab7; margin-top: 15px;">To change status, set the commission percentage above and choose an action:</p>
+                
+                {# Display Approve and Reject buttons here #}
+                <button type="submit" name="_approve_teacher" class="button default" style="background-color: #28a745; border-color: #28a745; color: white;">Approve Teacher</button>
+                <button type="submit" name="_reject_teacher" class="button" style="background-color: #dc3545; border-color: #dc3545; color: white; margin-left: 10px;">Reject Application!</button>
+
             {% endif %}
         </div>
     {% endif %}
