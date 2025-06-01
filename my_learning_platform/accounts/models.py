@@ -127,7 +127,7 @@ class Profile(models.Model):
         return f"{self.user.username}'s Profile"
 
 
-@receiver(post_save, sender=CustomUser)
+#@receiver(post_save, sender=CustomUser)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
