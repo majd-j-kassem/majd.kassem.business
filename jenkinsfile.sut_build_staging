@@ -27,7 +27,7 @@ pipeline {
                 script {
                     echo "SUT deployment to staging triggered by Render on commit to ${env.SUT_BRANCH_DEV}."
                     echo "Waiting 30 seconds for Render deployment to complete. (Consider polling health endpoint for robustness)."
-                    sleep 30
+                    sleep 20
                     echo "Assumed Render deployment to staging is complete."
                 }
             }
