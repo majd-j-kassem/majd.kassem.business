@@ -285,6 +285,7 @@ class TeacherCourseAdmin(admin.ModelAdmin):
     list_display = (
         'title',
         'teacher_profile_link',
+        'is_published_display',
         'get_categories_display',
         'level',
         'price',
@@ -293,7 +294,7 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         'status',
         'created_at',
         'updated_at',
-        'is_published_display',
+        
     )
     list_filter = (
         'status',
