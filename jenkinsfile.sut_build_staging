@@ -31,7 +31,6 @@ pipeline {
                     echo "Setting up Python virtual environment and installing dependencies..."
                     dir('sut-code') {
                         sh 'python3 -m venv .venv'
-                        // MODIFIED: Use bash -c for activation and pip commands
                         sh 'bash -c "source .venv/bin/activate && pip install --upgrade pip"'
                         sh 'bash -c "source .venv/bin/activate && pip install -r requirements.txt"'
                     }
@@ -42,15 +41,20 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
-                    dir('sut-code') {
-                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                        // MODIFIED: Use bash -c for activation and pytest commands
+                    dir('sut-code/my_learning_platform') { // <--- CRITICAL: Change into the actual Django project root
+                        sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/unit-tests" // Adjust path relative to current dir
+                        sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/unit-tests" // Adjust path relative to current dir
                         sh """bash -c "
-                            source .venv/bin/activate
+                            # Source the virtual environment using its full path relative to the workspace root
+                            source ${env.WORKSPACE}/sut-code/.venv/bin/activate
+
+                            # Set DJANGO_SETTINGS_MODULE and PYTHONPATH within this shell context
+                            # PYTHONPATH should point to the directory containing manage.py, which is current dir
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=\"\${PWD}\" # Use double quotes and escape for Jenkins Groovy
-                            pytest accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
+                            export PYTHONPATH=\$(pwd)
+
+                            # Run pytest relative to the my_learning_platform directory
+                            pytest ../accounts/tests/unit --alluredir=../${env.ALLURE_RESULTS_DIR}/unit-tests
                         " """
                     }
                 }
@@ -63,29 +67,28 @@ pipeline {
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code') {
-                        // MODIFIED: Use bash -c for activation and Django migrate
+                    dir('sut-code/my_learning_platform') { // <--- CRITICAL: Change into the actual Django project root
                         sh """bash -c "
-                            source .venv/bin/activate
+                            source ${env.WORKSPACE}/sut-code/.venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=\"\${PWD}\" # Use double quotes and escape for Jenkins Groovy
+                            export PYTHONPATH=\$(pwd)
                             python manage.py migrate --noinput
                         " """
-                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/integration-tests"
-                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/integration-tests"
-                        // MODIFIED: Use bash -c for activation and pytest commands
+                        sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/integration-tests" // Adjust path
+                        sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/integration-tests" // Adjust path
                         sh """bash -c "
-                            source .venv/bin/activate
+                            source ${env.WORKSPACE}/sut-code/.venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=\"\${PWD}\" # Use double quotes and escape for Jenkins Groovy
-                            pytest accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
+                            export PYTHONPATH=\$(pwd)
+                            pytest ../accounts/tests/integration --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         echo "Generating Allure report for Unit and Integration tests..."
+                        // Allure report generation should also reference paths relative to `my_learning_platform`
                         allure([
                             includeProperties: false,
                             jdk: '',
                             reportBuildPolicy: 'ALWAYS',
-                            results: ["${env.ALLURE_RESULTS_DIR}/unit-tests", "${env.ALLURE_RESULTS_DIR}/integration-tests"]
+                            results: ["../${env.ALLURE_RESULTS_DIR}/unit-tests", "../${env.ALLURE_RESULTS_DIR}/integration-tests"]
                         ])
                     }
                 }
@@ -98,13 +101,10 @@ pipeline {
             steps {
                 script {
                     echo "Running Postman API tests with Newman..."
-                    dir('sut-code') {
-                        // MODIFIED: Ensure npm commands also run in a shell that can resolve them
-                        // npm typically doesn't need 'source activate' but ensuring bash -c for consistency
+                    dir('sut-code') { // Newman is likely run from the 'sut-code' root, adjust paths
                         sh "bash -c 'npm install -g newman newman-reporter-allure'"
                         sh "rm -rf ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
-                        // MODIFIED: Use bash -c for newman run
                         sh "bash -c 'newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}'"
                     }
                 }
