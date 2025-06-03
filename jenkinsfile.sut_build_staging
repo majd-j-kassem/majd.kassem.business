@@ -41,7 +41,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') { // <--- CRITICAL: Change into the actual Django project root
+                    dir('sut-code/my_learning_platform') { // CRITICAL: Change into the actual Django project root
                         sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/unit-tests" // Adjust path relative to current dir
                         sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/unit-tests" // Adjust path relative to current dir
                         sh """bash -c "
@@ -49,9 +49,9 @@ pipeline {
                             source ${env.WORKSPACE}/sut-code/.venv/bin/activate
 
                             # Set DJANGO_SETTINGS_MODULE and PYTHONPATH within this shell context
-                            # PYTHONPATH should point to the directory containing manage.py, which is current dir
+                            # PYTHONPATH should point to the parent directory of 'my_learning_platform'
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=\$(pwd)
+                            export PYTHONPATH=${env.WORKSPACE}/sut-code # This is the parent directory of 'my_learning_platform'
 
                             # Run pytest relative to the my_learning_platform directory
                             pytest ../accounts/tests/unit --alluredir=../${env.ALLURE_RESULTS_DIR}/unit-tests
@@ -67,11 +67,11 @@ pipeline {
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') { // <--- CRITICAL: Change into the actual Django project root
+                    dir('sut-code/my_learning_platform') { // CRITICAL: Change into the actual Django project root
                         sh """bash -c "
                             source ${env.WORKSPACE}/sut-code/.venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=\$(pwd)
+                            export PYTHONPATH=${env.WORKSPACE}/sut-code # Point to the parent directory of 'my_learning_platform'
                             python manage.py migrate --noinput
                         " """
                         sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/integration-tests" // Adjust path
@@ -79,7 +79,7 @@ pipeline {
                         sh """bash -c "
                             source ${env.WORKSPACE}/sut-code/.venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=\$(pwd)
+                            export PYTHONPATH=${env.WORKSPACE}/sut-code # Point to the parent directory of 'my_learning_platform'
                             pytest ../accounts/tests/integration --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         echo "Generating Allure report for Unit and Integration tests..."
