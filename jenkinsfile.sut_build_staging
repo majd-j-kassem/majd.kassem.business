@@ -10,6 +10,8 @@ pipeline {
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
         DJANGO_SETTINGS_MODULE = 'auth_system.settings' // ADDED: Needed for Django commands
         ALLURE_RESULTS_DIR = 'allure-results' 
+        API_TESTS_DIR = 'api-tests'
+        NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results' 
     }
 
     stages {
@@ -23,8 +25,6 @@ pipeline {
                 }
             }
         }
-
-        // ADDED STAGE: Setup Python Environment
         stage('Setup Python Environment') {
             steps {
                 script {
@@ -37,21 +37,17 @@ pipeline {
                 }
             }
         }
-         // SEPARATED STAGE: Run Unit Tests
         stage('Run Unit Tests') {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
                     dir('sut-code') {
-                        // Create the Allure results directory if it doesn't exist
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}"
-                        // Run pytest with --alluredir to generate Allure XML files
                         sh ". .venv/bin/activate && pytest accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests"
                     }
                 }
             }
         }
-         // SEPARATED STAGE: Run Integration Tests
         stage('Run Integration Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -60,30 +56,33 @@ pipeline {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
                     dir('sut-code') {
-                        // Apply migrations for the test database.
                         sh '. .venv/bin/activate && python manage.py migrate --noinput'
-                        // Ensure the directory exists
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/integration-tests"
-                        // Run integration tests with --alluredir
                         sh ". .venv/bin/activate && pytest accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests"
-
-                        // NEW: Generate Allure Report specifically for Unit and Integration tests
                         echo "Generating Allure report for Unit and Integration tests..."
                         allure([
                             includeProperties: false,
                             jdk: '',
                             reportBuildPolicy: 'ALWAYS',
-                            // Point to both unit-tests and integration-tests result directories
                             results: ["${env.ALLURE_RESULTS_DIR}/unit-tests", "${env.ALLURE_RESULTS_DIR}/integration-tests"]
-                            // Alternatively, just point to the parent dir if you want all subdirectories:
-                            // results: ["${env.ALLURE_RESULTS_DIR}"]
                         ])
                     }
                 }
             }
         }
+        stage('Run API Tests') {
+            steps {
+                script {
+                    echo "Running Postman API tests with Newman..."
+                    dir('sut-code') {
+                        sh "npm install -g newman newman-reporter-allure"
+                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
+                        sh "newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
+                    }
+                }
+            }
+        }
         stage('Build and Deploy SUT to Staging (via Render)') {
-            // MODIFIED: Added 'when' condition to only run if previous stages passed
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
