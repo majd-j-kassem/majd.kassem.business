@@ -41,19 +41,18 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') { // CRITICAL: Change into the actual Django project root
-                        sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/unit-tests" // Adjust path relative to current dir
-                        sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/unit-tests" // Adjust path relative to current dir
+                    // We need to be in the 'sut-code' directory so 'my_learning_platform' is on PYTHONPATH
+                    dir('sut-code') { // Change into the directory *containing* your Django project root
+                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests" // Path relative to 'sut-code'
+                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests" // Path relative to 'sut-code'
                         sh """bash -c "
-                            # Source the virtual environment using its full path relative to the workspace root
-                            source ${env.WORKSPACE}/sut-code/.venv/bin/activate
+                            source .venv/bin/activate # Source relative to 'sut-code'
 
-                            # Set DJANGO_SETTINGS_MODULE and PYTHONPATH within this shell context
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=$PWD # <--- CHANGED THIS LINE: Now points to 'my_learning_platform' directory
+                            export PYTHONPATH=$PWD # Set PYTHONPATH to 'sut-code'
 
-                            # Run pytest relative to the my_learning_platform directory
-                            pytest ../accounts/tests/unit --alluredir=../${env.ALLURE_RESULTS_DIR}/unit-tests
+                            # Run pytest, specifying the full path to your unit tests relative to 'sut-code'
+                            pytest my_learning_platform/accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
                         " """
                     }
                 }
@@ -66,28 +65,30 @@ pipeline {
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') { // CRITICAL: Change into the actual Django project root
+                    dir('sut-code') { // Change into the directory *containing* your Django project root
+                        // Run Django migrations first
                         sh """bash -c "
-                            source ${env.WORKSPACE}/sut-code/.venv/bin/activate
+                            source .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=$PWD # <--- CHANGED THIS LINE: Now points to 'my_learning_platform' directory
-                            python manage.py migrate --noinput
+                            export PYTHONPATH=$PWD
+                            python my_learning_platform/manage.py migrate --noinput
                         " """
-                        sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/integration-tests" // Adjust path
-                        sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/integration-tests" // Adjust path
+
+                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/integration-tests" // Path relative to 'sut-code'
+                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/integration-tests" // Path relative to 'sut-code'
                         sh """bash -c "
-                            source ${env.WORKSPACE}/sut-code/.venv/bin/activate
+                            source .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=$PWD/.. # Set PYTHONPATH to the parent directory of the current working directory
-                            pytest ../accounts/tests/integration --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
+                            export PYTHONPATH=$PWD # Set PYTHONPATH to 'sut-code'
+                            pytest my_learning_platform/accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         echo "Generating Allure report for Unit and Integration tests..."
-                        // Allure report generation should also reference paths relative to `my_learning_platform`
+                        // Allure report generation should also reference paths relative to 'sut-code'
                         allure([
                             includeProperties: false,
                             jdk: '',
                             reportBuildPolicy: 'ALWAYS',
-                            results: ["../${env.ALLURE_RESULTS_DIR}/unit-tests", "../${env.ALLURE_RESULTS_DIR}/integration-tests"]
+                            results: ["${env.ALLURE_RESULTS_DIR}/unit-tests", "${env.ALLURE_RESULTS_DIR}/integration-tests"]
                         ])
                     }
                 }
