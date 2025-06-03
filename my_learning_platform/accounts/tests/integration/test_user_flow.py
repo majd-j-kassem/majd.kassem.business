@@ -8,7 +8,7 @@ User = get_user_model()
 class UserFlowsIntegrationTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.register_url = reverse('accounts:register')
+        self.register_url = reverse('accounts:signup')
         self.login_url = reverse('accounts:login')
         self.logout_url = reverse('accounts:logout')
         self.profile_update_url = reverse('accounts:profile_update') # Assuming this URL name

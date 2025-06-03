@@ -16,8 +16,7 @@ urlpatterns = [
 
     # This single line will now handle all your main navigation,
     # authentication, and profile URLs defined within 'accounts/urls.py'.
-    path('', include('accounts.urls')),
-
+    path('', include('accounts.urls', namespace='accounts')),
     # API Documentation URLs
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
