@@ -59,7 +59,7 @@ class SignupForm(UserCreationForm):
     bio = forms.CharField(max_length=500, required=False, label="Bio", widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}))
     full_name_en = forms.CharField(max_length=255, required=False, label="Full Name (Eng)", widget=forms.TextInput(attrs={'class': 'form-control'}))
     full_name_ar = forms.CharField(max_length=255, required=False, label="Full Name (Ar)", widget=forms.TextInput(attrs={'class': 'form-control'}))
-
+    
     class Meta(UserCreationForm.Meta):
         model = User
         fields = UserCreationForm.Meta.fields + ('email',)
