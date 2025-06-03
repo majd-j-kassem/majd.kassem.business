@@ -78,7 +78,7 @@ pipeline {
                         sh """bash -c "
                             source ${env.WORKSPACE}/sut-code/.venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=$PWD # <--- CHANGED THIS LINE: Now points to 'my_learning_platform' directory
+                            export PYTHONPATH=$PWD/.. # Set PYTHONPATH to the parent directory of the current working directory
                             pytest ../accounts/tests/integration --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         echo "Generating Allure report for Unit and Integration tests..."
