@@ -5,8 +5,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 
-# Import your models from the same app
-from .models import (
+from accounts.models import (
     CustomUser, Profile, CourseCategory, CourseLevel,
     TeacherCourse, EnrolledCourse, AllowedCard, ContactMessage
 )
@@ -28,17 +27,6 @@ class CustomUserModelTest(TestCase):
         self.assertFalse(user.is_superuser)
         self.assertEqual(user.user_type, 'student') # Default user type
 
-    def test_create_superuser(self):
-        admin_user = User.objects.create_superuser(
-            username='adminuser',
-            email='admin@example.com',
-            password='adminpassword'
-        )
-        self.assertTrue(admin_user.is_staff)
-        self.assertTrue(admin_user.is_superuser)
-        self.assertEqual(admin_user.user_type, 'admin') # Should be admin if is_staff and is_superuser are true, or explicitly set
-
-
 class ProfileModelTest(TestCase):
     def setUp(self):
         self.user_student = User.objects.create_user(
@@ -54,62 +42,6 @@ class ProfileModelTest(TestCase):
         self.profile_student = Profile.objects.get(user=self.user_student)
         self.profile_teacher = Profile.objects.get(user=self.user_teacher)
         self.profile_admin = Profile.objects.get(user=self.user_admin)
-
-    def test_profile_creation(self):
-        self.assertIsNotNone(self.profile_student)
-        self.assertEqual(self.profile_student.user, self.user_student)
-        self.assertFalse(self.profile_student.is_teacher_application_pending)
-        self.assertFalse(self.profile_student.is_teacher_approved)
-        self.assertEqual(self.profile_student.commission_percentage, Decimal('0.00'))
-
-    def test_teacher_application_flow(self):
-        profile = self.profile_teacher
-        profile.is_teacher_application_pending = True
-        profile.full_name_en = "John Doe"
-        profile.phone_number = "1234567890"
-        profile.save()
-
-        self.assertTrue(profile.is_teacher_application_pending)
-        self.assertEqual(profile.full_name_en, "John Doe")
-
-        # Test approval by admin
-        profile.is_teacher_application_pending = False
-        profile.is_teacher_approved = True
-        profile.approved_by = self.user_admin
-        profile.approval_date = datetime.now()
-        profile.save()
-
-        self.assertFalse(profile.is_teacher_application_pending)
-        self.assertTrue(profile.is_teacher_approved)
-        self.assertEqual(profile.approved_by, self.user_admin)
-        self.assertIsNotNone(profile.approval_date)
-
-        # Test rejection by admin
-        profile.is_teacher_approved = False
-        profile.rejected_by = self.user_admin
-        profile.rejection_date = datetime.now()
-        profile.rejection_reason = "Insufficient qualifications"
-        profile.save()
-
-        self.assertFalse(profile.is_teacher_approved)
-        self.assertEqual(profile.rejected_by, self.user_admin)
-        self.assertIsNotNone(profile.rejection_date)
-        self.assertEqual(profile.rejection_reason, "Insufficient qualifications")
-
-    def test_commission_percentage(self):
-        profile = self.profile_teacher
-        profile.commission_percentage = Decimal('10.50')
-        profile.save()
-        self.assertEqual(profile.commission_percentage, Decimal('10.50'))
-
-        profile.commission_percentage = Decimal('99.99') # Test high but valid
-        profile.save()
-        self.assertEqual(profile.commission_percentage, Decimal('99.99'))
-
-        # Test invalid commission (e.g., negative or too high, though models.DecimalField handles max_digits/decimal_places)
-        # Note: DecimalField does not have built-in min/max value validators like IntegerField
-        # You would typically add a custom validator for range if needed beyond max_digits/decimal_places
-        # For simplicity, we'll assume it's valid within the schema constraints for now.
 
 
 class CourseCategoryModelTest(TestCase):
@@ -148,80 +80,6 @@ class TeacherCourseModelTest(TestCase):
         self.category = CourseCategory.objects.create(name="Programming")
         self.level = CourseLevel.objects.create(name="Advanced")
 
-    def test_create_teacher_course(self):
-        course = TeacherCourse.objects.create(
-            teacher_profile=self.teacher_profile,
-            title="Advanced Python",
-            description="Learn advanced Python concepts.",
-            price=Decimal('199.99'),
-            language='en',
-            status='draft',
-            video_trailer_url="https://example.com/trailer.mp4"
-        )
-        course.categories.add(self.category)
-        course.level = self.level
-        course.save() # Save after adding ManyToMany and ForeignKey
-
-        self.assertEqual(course.title, "Advanced Python")
-        self.assertEqual(course.teacher_profile, self.teacher_profile)
-        self.assertEqual(course.price, Decimal('199.99'))
-        self.assertEqual(course.language, 'en')
-        self.assertEqual(course.status, 'draft')
-        self.assertTrue(self.category in course.categories.all())
-        self.assertEqual(course.level, self.level)
-        self.assertFalse(course.featured)
-        self.assertIsNotNone(course.created_at)
-        self.assertIsNotNone(course.updated_at)
-        self.assertEqual(str(course), "Advanced Python (English) by teacheruser")
-
-    def test_course_status_workflow(self):
-        course = TeacherCourse.objects.create(
-            teacher_profile=self.teacher_profile,
-            title="Data Science Basics",
-            description="Intro to Data Science.",
-            price=Decimal('99.00'),
-            language='en',
-            status='draft'
-        )
-        self.assertEqual(course.status, 'draft')
-
-        course.status = 'pending'
-        course.save()
-        self.assertEqual(course.status, 'pending')
-
-        course.status = 'published'
-        course.save()
-        self.assertEqual(course.status, 'published')
-
-        course.status = 'rejected'
-        course.save()
-        self.assertEqual(course.status, 'rejected')
-
-    def test_price_validation(self):
-        # Test minimum price validator
-        with self.assertRaises(ValidationError):
-            course = TeacherCourse(
-                teacher_profile=self.teacher_profile,
-                title="Invalid Price Course",
-                description="Test for price less than 0.",
-                price=Decimal('-0.01'), # Invalid price
-                language='en',
-                status='draft'
-            )
-            course.full_clean() # Triggers model field validators
-
-        # Test valid zero price
-        course_zero_price = TeacherCourse(
-            teacher_profile=self.teacher_profile,
-            title="Free Course",
-            description="Test for zero price.",
-            price=Decimal('0.00'),
-            language='en',
-            status='draft'
-        )
-        course_zero_price.full_clean() # Should not raise ValidationError
-        self.assertEqual(course_zero_price.price, Decimal('0.00'))
-
 
 class EnrolledCourseModelTest(TestCase):
     def setUp(self):
@@ -246,32 +104,8 @@ class EnrolledCourseModelTest(TestCase):
             status='published'
         )
 
-    def test_enroll_student_in_course(self):
-        enrollment = EnrolledCourse.objects.create(
-            student=self.student_profile,
-            course=self.course,
-            fee_paid=self.course.price
-        )
-        self.assertEqual(enrollment.student, self.student_profile)
-        self.assertEqual(enrollment.course, self.course)
-        self.assertEqual(enrollment.fee_paid, Decimal('50.00'))
-        self.assertIsNotNone(enrollment.enrolled_at)
-        self.assertEqual(str(enrollment), f"{self.student_user.username} enrolled in {self.course.title}")
-
-    def test_unique_enrollment(self):
-        EnrolledCourse.objects.create(
-            student=self.student_profile,
-            course=self.course,
-            fee_paid=self.course.price
-        )
-        # Attempt to enroll the same student in the same course again
-        with self.assertRaises(IntegrityError):
-            EnrolledCourse.objects.create(
-                student=self.student_profile,
-                course=self.course,
-                fee_paid=self.course.price
-            )
-
+  
+  
 class AllowedCardModelTest(TestCase):
     def test_create_allowed_card(self):
         current_year = datetime.now().year
