@@ -57,7 +57,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-ROOT_URLCONF = 'auth_system.urls'
+ROOT_URLCONF = 'my_learning_platform_core.urls'
 
 TEMPLATES = [
     {
@@ -76,7 +76,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'auth_system.wsgi.application'
+WSGI_APPLICATION = 'my_learning_platform_core.wsgi.application'
 
 # Database
 DATABASES = {
