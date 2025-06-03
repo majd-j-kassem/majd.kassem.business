@@ -8,7 +8,7 @@ pipeline {
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
         QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
-        DJANGO_SETTINGS_MODULE = 'my_learning_platform.settings' // Corrected based on previous discussion
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings' // <--- CHANGED THIS LINE
         ALLURE_RESULTS_DIR = 'allure-results'
         API_TESTS_DIR = 'api-tests'
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
@@ -49,9 +49,8 @@ pipeline {
                             source ${env.WORKSPACE}/sut-code/.venv/bin/activate
 
                             # Set DJANGO_SETTINGS_MODULE and PYTHONPATH within this shell context
-                            # PYTHONPATH should point to the parent directory of 'my_learning_platform'
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=${env.WORKSPACE}/sut-code # This is the parent directory of 'my_learning_platform'
+                            export PYTHONPATH=$PWD # <--- CHANGED THIS LINE: Now points to 'my_learning_platform' directory
 
                             # Run pytest relative to the my_learning_platform directory
                             pytest ../accounts/tests/unit --alluredir=../${env.ALLURE_RESULTS_DIR}/unit-tests
@@ -71,7 +70,7 @@ pipeline {
                         sh """bash -c "
                             source ${env.WORKSPACE}/sut-code/.venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=${env.WORKSPACE}/sut-code # Point to the parent directory of 'my_learning_platform'
+                            export PYTHONPATH=$PWD # <--- CHANGED THIS LINE: Now points to 'my_learning_platform' directory
                             python manage.py migrate --noinput
                         " """
                         sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/integration-tests" // Adjust path
@@ -79,7 +78,7 @@ pipeline {
                         sh """bash -c "
                             source ${env.WORKSPACE}/sut-code/.venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=${env.WORKSPACE}/sut-code # Point to the parent directory of 'my_learning_platform'
+                            export PYTHONPATH=$PWD # <--- CHANGED THIS LINE: Now points to 'my_learning_platform' directory
                             pytest ../accounts/tests/integration --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         echo "Generating Allure report for Unit and Integration tests..."
