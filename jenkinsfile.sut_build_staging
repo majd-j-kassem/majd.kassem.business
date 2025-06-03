@@ -8,10 +8,11 @@ pipeline {
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
         QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
-        DJANGO_SETTINGS_MODULE = 'auth_system.settings' // ADDED: Needed for Django commands
-        ALLURE_RESULTS_DIR = 'allure-results' 
+        // MODIFIED: Correct DJANGO_SETTINGS_MODULE based on your project structure
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform.settings'
+        ALLURE_RESULTS_DIR = 'allure-results'
         API_TESTS_DIR = 'api-tests'
-        NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results' 
+        NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
     }
 
     stages {
@@ -31,8 +32,13 @@ pipeline {
                     echo "Setting up Python virtual environment and installing dependencies..."
                     dir('sut-code') {
                         sh 'python3 -m venv .venv'
-                        sh '. .venv/bin/activate && pip install --upgrade pip'
-                        sh '. .venv/bin/activate && pip install -r requirements.txt'
+                        // Use a single `bash -c` block for activation and commands
+                        sh """
+                            #!/bin/bash
+                            source .venv/bin/activate
+                            pip install --upgrade pip
+                            pip install -r requirements.txt
+                        """
                     }
                 }
             }
@@ -42,8 +48,20 @@ pipeline {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
                     dir('sut-code') {
-                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}"
-                        sh ". .venv/bin/activate && pytest accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests"
+                        // MODIFIED: Clear previous Allure results for unit tests to ensure fresh data
+                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                        sh """
+                            #!/bin/bash
+                            source .venv/bin/activate
+
+                            # Set the Django settings module for pytest-django
+                            export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
+                            # Add the project's base directory (which contains manage.py and my_learning_platform/) to PYTHONPATH
+                            export PYTHONPATH="${PWD}"
+
+                            pytest accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
+                        """
                     }
                 }
             }
@@ -56,13 +74,30 @@ pipeline {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
                     dir('sut-code') {
-                        sh '. .venv/bin/activate && python manage.py migrate --noinput'
+                        // Ensure Django can run commands like migrate with the correct settings
+                        sh """
+                            #!/bin/bash
+                            source .venv/bin/activate
+                            export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
+                            export PYTHONPATH="${PWD}" # Ensure correct path for manage.py
+                            python manage.py migrate --noinput
+                        """
+                        // MODIFIED: Clear previous Allure results for integration tests
+                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/integration-tests"
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/integration-tests"
-                        sh ". .venv/bin/activate && pytest accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests"
+                        sh """
+                            #!/bin/bash
+                            source .venv/bin/activate
+                            export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
+                            export PYTHONPATH="${PWD}"
+
+                            pytest accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
+                        """
                         echo "Generating Allure report for Unit and Integration tests..."
+                        // Allure report generation will now combine unit-tests and integration-tests
                         allure([
                             includeProperties: false,
-                            jdk: '',
+                            jdk: '', // Leave empty if Jenkins handles Java or Allure doesn't need a specific JDK for generation
                             reportBuildPolicy: 'ALWAYS',
                             results: ["${env.ALLURE_RESULTS_DIR}/unit-tests", "${env.ALLURE_RESULTS_DIR}/integration-tests"]
                         ])
@@ -71,11 +106,16 @@ pipeline {
             }
         }
         stage('Run API Tests') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 script {
                     echo "Running Postman API tests with Newman..."
                     dir('sut-code') {
                         sh "npm install -g newman newman-reporter-allure"
+                        // MODIFIED: Clear previous Newman Allure results
+                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
                         sh "newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
                     }
@@ -96,14 +136,12 @@ pipeline {
             }
         }
         stage('Trigger QA Tests against Staging') {
-            // MODIFIED: Added 'when' condition to only run if previous stages passed
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
                 script {
                     echo "Triggering downstream QA job: ${env.QA_JOB_NAME}"
-                    // MODIFIED: Added 'wait: true' to wait for the downstream job's completion
                     build job: env.QA_JOB_NAME, parameters: [
                         string(name: 'STAGING_URL_PARAM', value: env.STAGING_URL)
                     ], wait: true
