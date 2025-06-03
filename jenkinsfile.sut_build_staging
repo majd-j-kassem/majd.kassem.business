@@ -8,8 +8,7 @@ pipeline {
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
         QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
-        // MODIFIED: Correct DJANGO_SETTINGS_MODULE based on your project structure
-        DJANGO_SETTINGS_MODULE = 'my_learning_platform.settings'
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform.settings' // Corrected based on previous discussion
         ALLURE_RESULTS_DIR = 'allure-results'
         API_TESTS_DIR = 'api-tests'
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
@@ -32,13 +31,9 @@ pipeline {
                     echo "Setting up Python virtual environment and installing dependencies..."
                     dir('sut-code') {
                         sh 'python3 -m venv .venv'
-                        // Use a single `bash -c` block for activation and commands
-                        sh """
-                            #!/bin/bash
-                            source .venv/bin/activate
-                            pip install --upgrade pip
-                            pip install -r requirements.txt
-                        """
+                        // MODIFIED: Use bash -c for activation and pip commands
+                        sh 'bash -c "source .venv/bin/activate && pip install --upgrade pip"'
+                        sh 'bash -c "source .venv/bin/activate && pip install -r requirements.txt"'
                     }
                 }
             }
@@ -48,20 +43,15 @@ pipeline {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
                     dir('sut-code') {
-                        // MODIFIED: Clear previous Allure results for unit tests to ensure fresh data
                         sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                        sh """
-                            #!/bin/bash
+                        // MODIFIED: Use bash -c for activation and pytest commands
+                        sh """bash -c "
                             source .venv/bin/activate
-
-                            # Set the Django settings module for pytest-django
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            # Add the project's base directory (which contains manage.py and my_learning_platform/) to PYTHONPATH
-                            export PYTHONPATH="${PWD}"
-
+                            export PYTHONPATH=\"\${PWD}\" # Use double quotes and escape for Jenkins Groovy
                             pytest accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
-                        """
+                        " """
                     }
                 }
             }
@@ -74,30 +64,26 @@ pipeline {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
                     dir('sut-code') {
-                        // Ensure Django can run commands like migrate with the correct settings
-                        sh """
-                            #!/bin/bash
+                        // MODIFIED: Use bash -c for activation and Django migrate
+                        sh """bash -c "
                             source .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH="${PWD}" # Ensure correct path for manage.py
+                            export PYTHONPATH=\"\${PWD}\" # Use double quotes and escape for Jenkins Groovy
                             python manage.py migrate --noinput
-                        """
-                        // MODIFIED: Clear previous Allure results for integration tests
+                        " """
                         sh "rm -rf ${env.ALLURE_RESULTS_DIR}/integration-tests"
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/integration-tests"
-                        sh """
-                            #!/bin/bash
+                        // MODIFIED: Use bash -c for activation and pytest commands
+                        sh """bash -c "
                             source .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH="${PWD}"
-
+                            export PYTHONPATH=\"\${PWD}\" # Use double quotes and escape for Jenkins Groovy
                             pytest accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
-                        """
+                        " """
                         echo "Generating Allure report for Unit and Integration tests..."
-                        // Allure report generation will now combine unit-tests and integration-tests
                         allure([
                             includeProperties: false,
-                            jdk: '', // Leave empty if Jenkins handles Java or Allure doesn't need a specific JDK for generation
+                            jdk: '',
                             reportBuildPolicy: 'ALWAYS',
                             results: ["${env.ALLURE_RESULTS_DIR}/unit-tests", "${env.ALLURE_RESULTS_DIR}/integration-tests"]
                         ])
@@ -113,11 +99,13 @@ pipeline {
                 script {
                     echo "Running Postman API tests with Newman..."
                     dir('sut-code') {
-                        sh "npm install -g newman newman-reporter-allure"
-                        // MODIFIED: Clear previous Newman Allure results
+                        // MODIFIED: Ensure npm commands also run in a shell that can resolve them
+                        // npm typically doesn't need 'source activate' but ensuring bash -c for consistency
+                        sh "bash -c 'npm install -g newman newman-reporter-allure'"
                         sh "rm -rf ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
-                        sh "newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
+                        // MODIFIED: Use bash -c for newman run
+                        sh "bash -c 'newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}'"
                     }
                 }
             }
@@ -130,7 +118,7 @@ pipeline {
                 script {
                     echo "SUT deployment to staging triggered by Render on commit to ${env.SUT_BRANCH_DEV}."
                     echo "Waiting 30 seconds for Render deployment to complete. (Consider polling health endpoint for robustness)."
-                    sleep 30 // MODIFIED: Increased sleep to 30 seconds
+                    sleep 30
                     echo "Assumed Render deployment to staging is complete."
                 }
             }
@@ -152,7 +140,7 @@ pipeline {
 
     post {
         always {
-            deleteDir() // Clean up the workspace
+            deleteDir()
         }
         success {
             echo 'SUT Build and Deploy to Staging pipeline finished successfully.'
