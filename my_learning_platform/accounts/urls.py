@@ -3,7 +3,6 @@
 from django.urls import path
 from . import views # This import is CORRECT here because views.py is in the same 'accounts' app directory
 from django.contrib.auth import views as auth_views
-app_name = 'accounts'
 urlpatterns = [
     # Core Landing Page (your homepage)
     path('', views.index_view, name='index'), # Typically your main site homepage

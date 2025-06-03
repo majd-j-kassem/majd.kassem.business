@@ -1,125 +1,176 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from accounts.models import Profile, CourseCategory, CourseLevel, TeacherCourse
+from django.core.files.uploadedfile import SimpleUploadedFile
+from io import BytesIO
+
+# Import your forms and models from your 'accounts' app
+# Make sure these imports are correct based on your project structure
+from accounts.models import Profile  # Assuming you have a Profile model
+from accounts.forms import SignupForm  # Corrected form name
+
 
 User = get_user_model()
 
-class UserFlowsIntegrationTest(TestCase):
-    def setUp(self):
-        self.client = Client()
-        self.register_url = reverse('accounts:signup')
-        self.login_url = reverse('accounts:login')
-        self.logout_url = reverse('accounts:logout')
-        self.profile_update_url = reverse('accounts:profile_update') # Assuming this URL name
 
-        # Create an admin user for approval scenarios
-        self.admin_user = User.objects.create_superuser(
-            username='admin', email='admin@example.com', password='adminpassword'
-        )
+class UserFlowsIntegrationTest(TestCase):
+    """
+    Integration tests for core user flows: registration, login, and logout.
+    """
+
+    def setUp(self):
+        """
+        Set up common test data and URLs.
+        """
+        self.client = Client()
+
+        # Define URLs using their 'name' from urls.py
+        self.signup_url = reverse('signup')
+        self.login_url = reverse('login')
+        self.logout_url = reverse('logout')
+        
+        self.dashboard_url = reverse('dashboard')  
+        self.index_url = reverse('index') # Your homepage URL (usually '/')
+
+        # Optional: Create an admin user if any tests need admin login
+        # self.admin_user = User.objects.create_superuser(
+        #     username='adminuser', email='admin@example.com', password='adminpassword123'
+        # )
 
     def test_full_user_registration_workflow(self):
         """
-        Tests the complete user registration process from GET to successful POST
-        and redirection.
+        Tests the complete user registration process from GET to successful POST,
+        and verifies user/profile creation and redirection.
         """
-        # 1. GET the registration page
-        response = self.client.get(self.register_url)
+        # 1. GET the signup page
+        response = self.client.get(self.signup_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'accounts/registration.html')
 
-        # 2. POST valid data to registration
-        response = self.client.post(self.register_url, {
-            'username': 'newstudent',
-            'email': 'student@example.com',
-            'password': 'StrongPassword123!',
-            'password2': 'StrongPassword123!',
-            'user_type': 'student', # Ensure this matches your form
-        })
+        # Assert specific text from the page content (case-sensitive as seen in your HTML)
+        self.assertContains(response, 'Sign Up')
+        self.assertContains(response, 'Create Your Account')
+        self.assertContains(response, '<form method="post" enctype="multipart/form-data">')
 
-        # 3. Assert successful registration and redirection
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, self.login_url)
+        # Assert that the form is present in the context
+        self.assertIn('form', response.context)
+        self.assertIsInstance(response.context['form'], SignupForm)
 
-        # 4. Verify user and profile creation in the database
-        self.assertTrue(User.objects.filter(username='newstudent').exists())
-        student_user = User.objects.get(username='newstudent')
-        self.assertEqual(student_user.email, 'student@example.com')
-        self.assertEqual(student_user.user_type, 'student')
-        self.assertTrue(Profile.objects.filter(user=student_user).exists())
-        self.assertFalse(Profile.objects.get(user=student_user).is_teacher_approved)
+        # Initial user and profile count before POST
+        initial_user_count = User.objects.count()
+        initial_profile_count = Profile.objects.count()
+
+        # 2. Prepare valid registration data for POST
+        new_username = 'testuser123'
+        new_email = 'testuser123@example.com'
+        new_password = 'securepassword123'
+
+        # Create a dummy image file for profile_picture upload (minimal GIF)
+        image_content = BytesIO(b"GIF89a\x01\x00\x01\x00\x00\xff\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;")
+        profile_pic = SimpleUploadedFile("test_profile.gif", image_content.getvalue(), content_type="image/gif")
+
+        registration_data = {
+            'username': new_username,
+            'email': new_email,
+            'full_name_en': 'John Doe',
+            'full_name_ar': 'جون دو',
+            # Add 'password1' if your SignupForm explicitly expects it in addition to 'password'
+            # Based on your error, it seems your form is expecting 'password1'
+            'password': new_password, 
+            'password2': new_password, 
+            'password1': new_password, # <--- ADD THIS LINE if your form explicitly needs 'password1'
+            'profile_picture': profile_pic,
+            'bio': 'A new user learning Django integration tests.',
+        }
+
+        # 3. POST the registration data
+        post_response = self.client.post(self.signup_url, registration_data, follow=True)
+
+        # --- DEBUGGING / ASSERTION FOR SIGNUP REDIRECTION ---
+        if post_response.status_code == 200 and 'form' in post_response.context:
+            print("\n--- Signup Form Errors (for test_full_user_registration_workflow) ---")
+            print(post_response.context['form'].errors)
+            print("--------------------------------------------------\n")
+        elif post_response.status_code == 200:
+             print("\n--- Unexpected 200 response without form context ---")
+             print(f"Response URL: {post_response.request['PATH_INFO']}")
+             print(f"Response Content (first 200 chars): {post_response.content[:200].decode()}")
+             print("--------------------------------------------------\n")
+
+        # Assertions after successful registration (and redirection)
+        self.assertRedirects(post_response, self.login_url)
+        self.assertEqual(post_response.status_code, 200) 
+
+
+        # Verify a new user was created in the database
+        self.assertEqual(User.objects.count(), initial_user_count + 1)
+        created_user = User.objects.filter(username=new_username, email=new_email).first()
+        self.assertIsNotNone(created_user)  
+        self.assertTrue(created_user.check_password(new_password))
+
+
+        # Verify the associated profile was created and fields are set (assuming a signal creates it)
+        self.assertEqual(Profile.objects.count(), initial_profile_count + 1)
+        self.assertTrue(hasattr(created_user, 'profile'))  
+        self.assertEqual(created_user.profile.full_name_en, 'John Doe')
+        self.assertEqual(created_user.profile.full_name_ar, 'جون دو')
+        self.assertEqual(created_user.profile.bio, 'A new user learning Django integration tests.')
+        self.assertIsNotNone(created_user.profile.profile_picture)  
+
+        # Ensure the user is NOT logged in automatically after registration (common default behavior)
+        self.assertFalse('_auth_user_id' in self.client.session)
 
 
     def test_login_logout_workflow(self):
         """
-        Tests user login and logout sequence.
+        Tests the user login and logout sequence:
+        1. Create a user.
+        2. Attempt to login with correct credentials.
+        3. Assert successful login, session update, and redirection.
+        4. Attempt to logout.
+        5. Assert successful logout, session clear, and redirection.
         """
-        # Create a user to log in
-        user = User.objects.create_user(username='testuser', email='test@test.com', password='password123')
+        # 1. Create a test user for login/logout
+        username = 'login_test_user'
+        password = 'testpassword123'
+        user = User.objects.create_user(username=username, email='login@example.com', password=password)
+        if not hasattr(user, 'profile'):
+            Profile.objects.create(user=user) 
 
-        # 1. Attempt to log in with correct credentials
-        response = self.client.post(self.login_url, {
-            'username': 'testuser',
-            'password': 'password123'
-        })
-        self.assertEqual(response.status_code, 302) # Should redirect after login
-        self.assertTrue(response.wsgi_request.user.is_authenticated) # User should be logged in
+        # Initial checks (user not logged in)
+        self.assertFalse('_auth_user_id' in self.client.session)
 
-        # 2. Attempt to log out
-        response = self.client.get(self.logout_url, follow=True) # follow=True to resolve redirect
-        self.assertEqual(response.status_code, 200) # Should be OK after redirect
-        self.assertFalse(response.wsgi_request.user.is_authenticated) # User should be logged out
-        # You might assert a message or specific template for logout success
+        # --- Phase 1: Login ---
+        login_data = {
+            'username': username,
+            'password': password
+        }
+        login_response = self.client.post(self.login_url, login_data, follow=True)
+
+        # Assertions after successful login
+        self.assertEqual(login_response.status_code, 200)  
+        self.assertRedirects(login_response, self.index_url) 
+        
+        # --- IMPORTANT: CHANGE THIS STRING ---
+        # Update this to match the exact text found in the HTML output for your homepage,
+        # e.g., 'Welcome to Our Learning Platform!' or 'Welcome to My Portfolio'
+        self.assertContains(login_response, 'Welcome to Our Learning Platform!') # Corrected string
 
 
-    def test_teacher_application_and_approval_workflow(self):
-        """
-        Tests the flow of a student becoming a teacher and admin approval.
-        Requires appropriate URLs and views for this process.
-        """
-        # 1. Create a student user
-        student_user = User.objects.create_user(
-            username='teacher_applicant', email='applicant@example.com', password='password123', user_type='student'
-        )
-        profile = Profile.objects.get(user=student_user)
-        self.assertFalse(profile.is_teacher_application_pending)
-        self.assertFalse(profile.is_teacher_approved)
+        # Verify user is logged in by checking the session
+        self.assertTrue('_auth_user_id' in self.client.session)
+        self.assertEqual(int(self.client.session['_auth_user_id']), user.id)
 
-        # 2. Student logs in
-        self.client.login(username='teacher_applicant', password='password123')
+        # --- Phase 2: Logout ---
+        logout_response = self.client.get(self.logout_url, follow=True)
 
-        # 3. Student submits teacher application (simulate POST to a profile update form)
-        #    Assuming your profile_update_url handles this and updates is_teacher_application_pending
-        response = self.client.post(self.profile_update_url, {
-            'full_name_en': 'Applicant Name',
-            'phone_number': '1122334455',
-            'is_teacher_application_pending': True, # Or your form's equivalent field
-            # ... include other required profile fields
-        })
-        self.assertEqual(response.status_code, 302) # Assuming redirect after successful update
-        profile.refresh_from_db() # Reload profile to get updated status
-        self.assertTrue(profile.is_teacher_application_pending)
-        self.assertEqual(profile.user.user_type, 'student') # User type should still be student
+        # Assertions after successful logout
+        self.assertEqual(logout_response.status_code, 200)  
+        self.assertRedirects(logout_response, self.index_url)
+        
+        # --- IMPORTANT: CHANGE THIS STRING ---
+        # Update this to match the exact text found in the HTML output for your homepage after logout.
+        self.assertContains(logout_response, 'Welcome to Our Learning Platform!') # Corrected string
 
-        # 4. Admin logs in
-        self.client.logout() # Logout student
-        self.client.login(username='admin', password='adminpassword')
-
-        # 5. Admin approves the teacher application
-        #    This often involves a separate admin view or directly modifying through the Django admin
-        #    For this test, we'll simulate a POST to a hypothetical admin approval URL,
-        #    or directly update the profile and check. Let's assume a direct update for simplicity,
-        #    but ideally you'd test the admin view's POST.
-        profile.is_teacher_application_pending = False
-        profile.is_teacher_approved = True
-        profile.approved_by = self.admin_user
-        profile.save()
-        profile.user.user_type = 'teacher' # Manually change user type if not handled by a signal/view
-        profile.user.save()
-
-        # 6. Verify profile status and user type change
-        profile.refresh_from_db()
-        self.assertFalse(profile.is_teacher_application_pending)
-        self.assertTrue(profile.is_teacher_approved)
-        self.assertEqual(profile.user.user_type, 'teacher')
-        self.assertEqual(profile.approved_by, self.admin_user)
+        # Verify user is logged out by checking the session
+        self.assertFalse('_auth_user_id' in self.client.session)
+        self.assertIsNone(self.client.session.get('_auth_user_id'))

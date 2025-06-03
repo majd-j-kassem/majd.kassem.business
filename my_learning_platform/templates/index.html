@@ -402,7 +402,7 @@
     <header class="main-header">
         <div class="header-content">
             <div class="logo">
-                <a href="{% if user.is_authenticated %}{% url 'accounts:courses' %}{% else %}{% url 'index' %}{% endif %}">
+                <a href="{% if user.is_authenticated %}{% url 'courses' %}{% else %}{% url 'index' %}{% endif %}">
                     {% if user.is_authenticated %}
                         {{ user.username }}
                     {% else %}
@@ -412,26 +412,26 @@
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="{% url 'accounts:index' %}">Home</a></li>
-                    <li><a href="{% url 'accounts:courses' %}">Courses</a></li>
-                    <li><a href="{% url 'accounts:cv' %}">CV</a></li>
-                    <li><a href="{% url 'accounts:portfolio_page' %}">Portfolio</a></li>
-                    <li><a href="{% url 'accounts:certificates' %}">Certificates</a></li>
-                    <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
-                    <li><a href="{% url 'accounts:about' %}">About</a></li>
+                    <li><a href="{% url 'index' %}">Home</a></li>
+                    <li><a href="{% url 'courses' %}">Courses</a></li>
+                    <li><a href="{% url 'cv' %}">CV</a></li>
+                    <li><a href="{% url 'portfolio_page' %}">Portfolio</a></li>
+                    <li><a href="{% url 'certificates' %}">Certificates</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'about' %}">About</a></li>
 
                     {% if user.is_authenticated %}
-                        <li><a href="{% url 'accounts:logout' %}">Logout</a></li>
-                        <li><a href="{% url 'accounts:profile_edit' %}">Profile</a></li>
+                        <li><a href="{% url 'logout' %}">Logout</a></li>
+                        <li><a href="{% url 'profile_edit' %}">Profile</a></li>
                     
                     {% else %}
-                        <li><a href="{% url 'accounts:login' %}">Login</a></li>
+                        <li><a href="{% url 'login' %}">Login</a></li>
                     {% endif %}
                     {% if user.user_type == 'teacher' %}
-                            <li><a href="{% url 'accounts:teacher_dashboard' %}">Dashboard</a></li>
+                            <li><a href="{% url 'teacher_dashboard' %}">Dashboard</a></li>
                            
                         {% elif user.user_type == 'student' %}
-                            <li><a href="{% url 'accounts:student_dashboard' %}">My Learning</a></li>
+                            <li><a href="{% url 'student_dashboard' %}">My Learning</a></li>
                         {% endif %}
                 </ul>
             </nav>
