@@ -63,8 +63,7 @@ pipeline {
                             echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
                             echo "XXXXXXXXXXXXX: $(pwd)"
                             pytest accounts/tests/unit --alluredir=../allure-results/unit-tests
-                            "
-                        """
+                            " """
                         }
                 }
             }
