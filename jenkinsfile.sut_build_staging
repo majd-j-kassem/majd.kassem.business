@@ -8,11 +8,13 @@ pipeline {
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
         QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
-        DJANGO_SETTINGS_MODULE = 'my_learning_platform.my_learning_platform_core.settings'
         
+        // Define DJANGO_SETTINGS_MODULE here as it's constant for the pipeline
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform.my_learning_platform_core.settings'
 
+        // Define Allure and API test directories relative to sut-code
         ALLURE_RESULTS_DIR = 'allure-results'
-        API_TESTS_DIR = 'api-tests'
+        API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
     }
 
@@ -27,69 +29,80 @@ pipeline {
                 }
             }
         }
+        
         stage('Setup Python Environment') {
             steps {
                 script {
                     echo "Setting up Python virtual environment and installing dependencies..."
                     dir('sut-code') {
                         sh 'python3 -m venv .venv'
+                        // Use bash -c to ensure activate sources in the same shell as pip commands
                         sh 'bash -c "source .venv/bin/activate && pip install --upgrade pip"'
                         sh 'bash -c "source .venv/bin/activate && pip install -r requirements.txt"'
                     }
                 }
             }
         }
+        
         stage('Run Unit Tests') {
-    steps {
-        script {
-    echo "Running Django unit tests with pytest and generating Allure results..."
-    dir('sut-code') {
-        // Clean and prepare Allure results directory
-        sh 'rm -rf allure-results/unit-tests'
-        sh 'mkdir -p allure-results/unit-tests'
-        sh 'ls -la' // List contents to confirm directory structure
-
-        // Check for core Django application directory
-        sh """
-            if [ -d "my_learning_platform/my_learning_platform_core" ]; then
-                echo "my_learning_platform_core directory found."
-            else
-                echo "my_learning_platform_core directory NOT found under my_learning_platform. Exiting pipeline."
-                exit 1 // Fail the pipeline if the core directory is missing
-            fi
-        """
-
-        // --- All commands that require the virtual environment should be in this single sh block ---
-        sh """
-            # Activate the virtual environment
-            . .venv/bin/activate
-
-            # Debug environment variables for verification
-            echo "--- Debugging Environment ---"
-            echo "Current directory: " && pwd
-            echo "Python executable path: " && which python
-            echo "DJANGO_SETTINGS_MODULE: " && echo \${DJANGO_SETTINGS_MODULE} # Use \${} to escape Groovy interpolation
-            echo "PYTHONPATH: " && echo \${PYTHONPATH}
-            echo "--- End Debugging ---"
-
-            # Set PYTHONPATH to include the project root and the parent directory for imports
-            # Ensure these paths are relative to your 'sut-code' directory
-            export PYTHONPATH="\$PWD":\$PWD/my_learning_platform
-
-            # Verify Python can import the settings module.
-            # This will cause the 'sh' step to fail if the import fails.
-            python -c "import sys; try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings'); sys.exit(0)
-            except ImportError as e: print(f'Failed to import settings: {e}', file=sys.stderr); sys.exit(1)"
-
-            # Run pytest with increased verbosity and Allure reporting
-            # This command will use the Python from the activated virtual environment
-            pytest my_learning_platform/accounts/tests/unit -v --alluredir=allure-results/unit-tests
-        """
-    }
-}
-    }
-}
-       
+            steps {
+                script {
+                    echo "Running Django unit tests with pytest and generating Allure results..."
+                    dir('sut-code') {
+                        // Clean and prepare Allure results directory for unit tests
+                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                        sh 'ls -la' // List contents to confirm directory structure
+        
+                        // Check for core Django application directory
+                        sh """
+                            if [ -d "my_learning_platform/my_learning_platform_core" ]; then
+                                echo "my_learning_platform_core directory found."
+                            else
+                                echo "my_learning_platform_core directory NOT found under my_learning_platform. Exiting pipeline."
+                                exit 1 // Fail the pipeline if the core directory is missing
+                            fi
+                        """
+        
+                        // --- All commands that require the virtual environment should be in this single sh block ---
+                        sh """
+                            # Activate the virtual environment
+                            . .venv/bin/activate
+        
+                            # Debug environment variables for verification
+                            echo "--- Debugging Environment ---"
+                            echo "Current directory: " && pwd
+                            echo "Python executable path: " && which python
+                            echo "DJANGO_SETTINGS_MODULE: " && echo \${DJANGO_SETTINGS_MODULE} # Use \${} to escape Groovy interpolation
+                            echo "PYTHONPATH: " && echo \${PYTHONPATH}
+                            echo "--- End Debugging ---"
+        
+                            # Set PYTHONPATH to include the project root (sut-code) and the my_learning_platform directory for imports
+                            # \$PWD refers to /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code due to 'dir("sut-code")'
+                            export PYTHONPATH="\$PWD":\$PWD/my_learning_platform
+        
+                            # Verify Python can import the settings module.
+                            # This will cause the 'sh' step to fail if the import fails.
+                            python -c \"\"\"
+import sys
+try:
+    import my_learning_platform.my_learning_platform_core.settings
+    print('Successfully imported settings')
+    sys.exit(0) # Exit with 0 for success
+except ImportError as e:
+    print(f'Failed to import settings: {e}', file=sys.stderr)
+    sys.exit(1) # Exit with 1 for failure
+                            \"\"\"
+        
+                            # Run pytest with increased verbosity and Allure reporting
+                            # This command will use the Python from the activated virtual environment
+                            pytest my_learning_platform/accounts/tests/unit -v --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
+                        """
+                    }
+                }
+            }
+        }
+           
         stage('Run Integration Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -98,27 +111,32 @@ pipeline {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
                     dir('sut-code') { // Change into the directory *containing* your Django project root
-                        // Run Django migrations first
+                        // Run Django migrations first inside the virtual environment
                         sh """bash -c "
                             . .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=$PWD
+                            export PYTHONPATH=\$PWD # Set PYTHONPATH to 'sut-code'
                             python manage.py migrate --noinput
                         " """
 
-                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/integration-tests" // Path relative to 'sut-code'
-                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/integration-tests" // Path relative to 'sut-code'
+                        // Clean and prepare Allure results directory for integration tests
+                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/integration-tests"
+                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/integration-tests"
+                        
+                        // Run integration tests
                         sh """bash -c "
                             . .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=$PWD # Set PYTHONPATH to 'sut-code'
-                            pytest accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
+                            export PYTHONPATH=\$PWD # Set PYTHONPATH to 'sut-code'
+                            pytest my_learning_platform/accounts/tests/integration -v --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
+                        
                         echo "Generating Allure report for Unit and Integration tests..."
-                        // Allure report generation should also reference paths relative to 'sut-code'
+                        // Allure report generation should reference paths relative to 'sut-code'
+                        // The 'allure' step takes paths relative to the current workspace (sut-code in this case)
                         allure([
                             includeProperties: false,
-                            jdk: '',
+                            jdk: '', // If you have a specific JDK for Allure, define it here
                             reportBuildPolicy: 'ALWAYS',
                             results: ["${env.ALLURE_RESULTS_DIR}/unit-tests", "${env.ALLURE_RESULTS_DIR}/integration-tests"]
                         ])
@@ -126,6 +144,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Run API Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -133,15 +152,30 @@ pipeline {
             steps {
                 script {
                     echo "Running Postman API tests with Newman..."
-                    dir('sut-code') { // Newman is likely run from the 'sut-code' root, adjust paths
-                        sh "bash -c 'npm install -g newman newman-reporter-allure'"
+                    dir('sut-code') { // Newman is run from the 'sut-code' root
+                        // Install Newman and Allure reporter globally or into a local node_modules
+                        sh "npm install -g newman newman-reporter-allure" // Using -g for global install
+
+                        // Clean and prepare Allure results directory for Newman
                         sh "rm -rf ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
                         sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
-                        sh "bash -c 'newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}'"
+                        
+                        // Run Newman tests. Adjust collection and environment paths if different.
+                        // Ensure your collection and environment JSON files are in the ${env.API_TESTS_DIR} folder.
+                        sh "newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
+                        
+                        echo "Generating Allure report for API tests..."
+                        allure([
+                            includeProperties: false,
+                            jdk: '',
+                            reportBuildPolicy: 'ALWAYS',
+                            results: ["${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"]
+                        ])
                     }
                 }
             }
         }
+        
         stage('Build and Deploy SUT to Staging (via Render)') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -150,11 +184,12 @@ pipeline {
                 script {
                     echo "SUT deployment to staging triggered by Render on commit to ${env.SUT_BRANCH_DEV}."
                     echo "Waiting 30 seconds for Render deployment to complete. (Consider polling health endpoint for robustness)."
-                    sleep 30
+                    sleep 30 // This is a placeholder; a health check would be better
                     echo "Assumed Render deployment to staging is complete."
                 }
             }
         }
+        
         stage('Trigger QA Tests against Staging') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -162,6 +197,7 @@ pipeline {
             steps {
                 script {
                     echo "Triggering downstream QA job: ${env.QA_JOB_NAME}"
+                    // Ensure the 'STAGING_URL_PARAM' matches the parameter name in your QA-Tests-Staging job
                     build job: env.QA_JOB_NAME, parameters: [
                         string(name: 'STAGING_URL_PARAM', value: env.STAGING_URL)
                     ], wait: true
@@ -172,7 +208,8 @@ pipeline {
 
     post {
         always {
-            deleteDir()
+            // Cleans up the workspace on the Jenkins agent regardless of build result
+            deleteDir() 
         }
         success {
             echo 'SUT Build and Deploy to Staging pipeline finished successfully.'
