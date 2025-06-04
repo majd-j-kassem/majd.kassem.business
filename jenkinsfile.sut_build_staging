@@ -8,7 +8,9 @@ pipeline {
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
         QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
-        DJANGO_SETTINGS_MODULE = 'my_learning_platform.my_learning_platform_core.settings' // <--- CHANGED THIS LINE
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform.my_learning_platform_core.settings'
+        
+
         ALLURE_RESULTS_DIR = 'allure-results'
         API_TESTS_DIR = 'api-tests'
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
@@ -45,7 +47,7 @@ pipeline {
                 sh 'rm -rf allure-results/unit-tests'
                 sh 'mkdir -p allure-results/unit-tests'
                 sh 'ls -la'
-                sh '''
+                sh """
                     # Check if my_learning_platform_core exists and print message
                     if [ -d "my_learning_platform/my_learning_platform_core" ]; then
                         echo "my_learning_platform_core directory found."
@@ -54,8 +56,8 @@ pipeline {
                         # You might want to exit here if it's a critical missing directory
                         # exit 1
                     fi
-                '''
-                  sh '''
+                 """
+                  sh """
                     . .venv/bin/activate
                     
                     # Debug environment
@@ -72,7 +74,7 @@ pipeline {
                     
                     # Run pytest with increased verbosity
                     pytest my_learning_platform/accounts/tests/unit -v --alluredir=allure-results/unit-tests
-                '''
+                """
             }
         }
     }
