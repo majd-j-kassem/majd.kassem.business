@@ -112,13 +112,16 @@ except ImportError as e:
                     echo "Running Django integration tests with pytest and generating Allure results..."
                     // Change into the directory *containing* your Django project's manage.py
                     dir('sut-code/my_learning_platform') { // Current working directory is now /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/my_learning_platform
+                        // Get the absolute path to the .venv directory from the current location
+                        def venvPath = sh(script: 'cd .. && pwd', returnStdout: true).trim() + "/.venv"
+
                         // Run Django migrations first inside the virtual environment
                         sh """bash -c "
-                            . .venv/bin/activate  # Correct path to activate from my_learning_platform
+                            . ${venvPath}/bin/activate  # Use the absolute path for activation
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
                             # PYTHONPATH needs to include the 'sut-code' directory (which is '../')
                             # so that 'my_learning_platform' can be imported as a top-level module.
-                            export PYTHONPATH=\$PYTHONPATH:../ # Add the parent directory (sut-code) to PYTHONPATH
+                            export PYTHONPATH=\$PYTHONPATH:../ # Keep this as it's relative to the current dir
                             python manage.py migrate --noinput
                         " """
 
@@ -129,10 +132,10 @@ except ImportError as e:
                         
                         // Run integration tests
                         sh """bash -c "
-                            . .venv/bin/activate # Correct path to activate from my_learning_platform
+                            . ${venvPath}/bin/activate # Use the absolute path for activation
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
                             # Set PYTHONPATH similarly for pytest execution
-                            export PYTHONPATH=\$PYTHONPATH:../ # Add the parent directory (sut-code) to PYTHONPATH
+                            export PYTHONPATH=\$PYTHONPATH:../ # Keep this as it's relative to the current dir
                             pytest accounts/tests/integration -v --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         
@@ -148,7 +151,6 @@ except ImportError as e:
                 }
             }
         }
-        
         stage('Run API Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
