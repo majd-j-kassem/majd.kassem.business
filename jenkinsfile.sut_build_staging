@@ -80,7 +80,7 @@ pipeline {
                             source .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
                             export PYTHONPATH=$PWD # Set PYTHONPATH to 'sut-code'
-                            pytest my_learning_platform/accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
+                            pytest /accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         echo "Generating Allure report for Unit and Integration tests..."
                         // Allure report generation should also reference paths relative to 'sut-code'
