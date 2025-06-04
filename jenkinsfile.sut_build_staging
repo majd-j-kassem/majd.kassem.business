@@ -47,33 +47,62 @@ pipeline {
         }
         
         stage('Run Unit Tests') {
-    steps {
-        script {
-            echo "Running Django unit tests with pytest and generating Allure results..."
-            // Change CWD to the Django project root for consistent pathing with pytest.ini
-            dir('sut-code/my_learning_platform') {
-                sh '''#!/bin/bash
-                    # Remove existing Allure results for unit tests
-                    rm -rf ../${ALLURE_RESULTS_DIR}/unit-tests
-                    # Create the directory for new Allure results
-                    mkdir -p ../${ALLURE_RESULTS_DIR}/unit-tests
+            steps {
+                script {
+                    echo "Running Django unit tests with pytest and generating Allure results..."
+                    // Change CWD to the Django project root for consistent pathing with pytest.ini
+                    dir('sut-code/my_learning_platform') {
+                        sh '''#!/bin/bash
+                            # Remove existing Allure results for unit tests
+                            rm -rf ../${ALLURE_RESULTS_DIR}/unit-tests
+                            # Create the directory for new Allure results
+                            mkdir -p ../${ALLURE_RESULTS_DIR}/unit-tests
 
-                    # Check if the core app directory exists
-                    [ -d my_learning_platform_core ] && echo "my_learning_platform_core directory found." || echo "Error: my_learning_platform_core directory NOT found."
+                            # Check if the core app directory exists
+                            [ -d my_learning_platform_core ] && echo "my_learning_platform_core directory found." || echo "Error: my_learning_platform_core directory NOT found."
 
-                    echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-                    echo "Current working directory: $(pwd)" # Use pwd without XXXXX
-                    
-                    # Activate the virtual environment
-                    source ../.venv/bin/activate
-                    
-                    # Run pytest for unit tests and generate Allure results
-                    pytest accounts/tests/unit --alluredir=../${ALLURE_RESULTS_DIR}/unit-tests
-                '''
+                            echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                            echo "Current working directory: $(pwd)" # Use pwd without XXXXX
+                            
+                            # Activate the virtual environment
+                            source ../.venv/bin/activate
+                            
+                            # Run pytest for unit tests and generate Allure results
+                            pytest accounts/tests/unit --alluredir=../${ALLURE_RESULTS_DIR}/unit-tests
+                        '''
+                    }
+                }
             }
         }
-    }
-}
+        stage('Run Integration Tests') {
+            steps {
+                script {
+                    echo "Running Django integration tests with pytest and generating Allure results..."
+                    dir('sut-code/my_learning_platform') { // Assuming integration tests also run from the Django project root
+                        sh '''#!/bin/bash
+                            # Remove existing Allure results for integration tests
+                            rm -rf ../${ALLURE_RESULTS_DIR}/integration-tests
+                            # Create the directory for new Allure results
+                            mkdir -p ../${ALLURE_RESULTS_DIR}/integration-tests
+
+                            # Activate the virtual environment
+                            source ../.venv/bin/activate
+
+                            # Run pytest for integration tests
+                            # You might need to specify a different path or use pytest markers
+                            # Example 1: Run tests in a specific directory
+                            pytest accounts/tests/integration --alluredir=../${ALLURE_RESULTS_DIR}/integration-tests
+
+                            # Example 2: Run tests with a specific marker (e.g., @pytest.mark.integration)
+                            # pytest -m integration --alluredir=../${ALLURE_RESULTS_DIR}/integration-tests
+
+                            # Example 3: Run all tests that are NOT marked as 'unit' (if you've marked unit tests)
+                            # pytest -m "not unit" --alluredir=../${ALLURE_RESULTS_DIR}/integration-tests
+                        '''
+                    }
+                }
+            }
+        }
            
        
         
