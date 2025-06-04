@@ -42,34 +42,41 @@ pipeline {
         script {
             echo "Running Django unit tests with pytest and generating Allure results..."
             dir('sut-code') {
-                sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                
-                // Add this debug command to verify the directory structure
-                sh "ls -la"
-                sh "ls -la my_learning_platform_core || echo 'No my_learning_platform_core directory found'"
-                
-                sh """bash -c "
+                sh 'rm -rf allure-results/unit-tests'
+                sh 'mkdir -p allure-results/unit-tests'
+                sh 'ls -la'
+                sh '''
+                    # Check if my_learning_platform_core exists and print message
+                    if [ -d "my_learning_platform/my_learning_platform_core" ]; then
+                        echo "my_learning_platform_core directory found."
+                    else
+                        echo "my_learning_platform_core directory NOT found under my_learning_platform."
+                        # You might want to exit here if it's a critical missing directory
+                        # exit 1
+                    fi
+                '''
+                sh '''
                     source .venv/bin/activate
                     
                     # Debug environment
                     echo 'Current directory: ' && pwd
-                    echo 'Python path: ' && echo \$PYTHONPATH
-                    echo 'DJANGO_SETTINGS_MODULE: ' && echo \$DJANGO_SETTINGS_MODULE
+                    echo 'Python path: ' && which python
+                    echo 'DJANGO_SETTINGS_MODULE: ' && echo my_learning_platform_core.settings
                     
                     # Set PYTHONPATH to include both the project root and the parent directory
-                    export PYTHONPATH=\$PWD:\$PWD/my_learning_platform_core
+                    export PYTHONPATH=/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code:/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/my_learning_platform
                     
                     # Verify Python can import the settings
-                    python -c 'import my_learning_platform_core.settings; print(\"Successfully imported settings\")' || echo 'Failed to import settings'
+                    python -c "try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings') except ImportError: print('Failed to import settings'); exit(1)"
                     
                     # Run pytest with increased verbosity
-                    pytest accounts/tests/unit -v --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
-                " """
+                    pytest my_learning_platform/accounts/tests/unit -v --alluredir=allure-results/unit-tests
+                '''
             }
         }
     }
 }
+       
         stage('Run Integration Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
