@@ -9,8 +9,10 @@ pipeline {
         QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
         
-        // Define DJANGO_SETTINGS_MODULE here as it's constant for the pipeline
-        DJANGO_SETTINGS_MODULE = 'my_learning_platform.my_learning_platform_core.settings'
+        // --- MODIFICATION START ---
+        // Correct DJANGO_SETTINGS_MODULE to match pytest.ini's expectation when my_learning_platform is the base
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings'
+        // --- MODIFICATION END ---
 
         // Define Allure and API test directories relative to sut-code
         ALLURE_RESULTS_DIR = 'allure-results'
@@ -48,57 +50,54 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
-                    dir('sut-code') {
+                    // --- MODIFICATION START ---
+                    // Change CWD to the Django project root for consistent pathing with pytest.ini
+                    dir('sut-code/my_learning_platform') {
+                        // Get the absolute path to the .venv directory from the current location
+                        // This path will be ../.venv relative to 'my_learning_platform'
+                        def venvPath = sh(script: 'cd .. && pwd', returnStdout: true).trim() + "/.venv"
+
                         // Clean and prepare Allure results directory for unit tests
-                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                        // Paths are now relative to sut-code/my_learning_platform, so results go up one level
+                        sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/unit-tests"
+                        sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/unit-tests"
                         sh 'ls -la' // List contents to confirm directory structure
         
-                        // Check for core Django application directory
+                        // Check for core Django application directory (no my_learning_platform/ prefix needed now)
                         sh """
-                            if [ -d "my_learning_platform/my_learning_platform_core" ]; then
+                            if [ -d "my_learning_platform_core" ]; then # Check relative to current dir
                                 echo "my_learning_platform_core directory found."
                             else
-                                echo "my_learning_platform_core directory NOT found under my_learning_platform. Exiting pipeline."
+                                echo "my_learning_platform_core directory NOT found. Exiting pipeline."
                                 exit 1 // Fail the pipeline if the core directory is missing
                             fi
                         """
         
-                        // --- All commands that require the virtual environment should be in this single sh block ---
-                        sh """
-                            # Activate the virtual environment
-                            . .venv/bin/activate
+                        sh """bash -c "
+                            # Activate the virtual environment using the absolute path
+                            . ${venvPath}/bin/activate
         
-                            # Debug environment variables for verification
-                            echo "--- Debugging Environment ---"
+                            # Unset explicit PYTHONPATH and DJANGO_SETTINGS_MODULE to rely on pytest.ini
+                            # when running pytest from the project root.
+                            unset PYTHONPATH
+                            unset DJANGO_SETTINGS_MODULE # Will be set by pytest-django based on pytest.ini
+        
+                            # Debug environment variables for verification (optional, remove for cleaner logs later)
+                            echo "--- Debugging Environment for Unit Tests ---"
                             echo "Current directory: " && pwd
                             echo "Python executable path: " && which python
-                            echo "DJANGO_SETTINGS_MODULE: " && echo \${DJANGO_SETTINGS_MODULE} # Use \${} to escape Groovy interpolation
-                            echo "PYTHONPATH: " && echo \${PYTHONPATH}
+                            echo "DJANGO_SETTINGS_MODULE (should be empty or from pytest.ini): " && echo \${DJANGO_SETTINGS_MODULE}
+                            echo "PYTHONPATH (should be empty or from pytest.ini): " && echo \${PYTHONPATH}
                             echo "--- End Debugging ---"
         
-                            # Set PYTHONPATH to include the project root (sut-code) and the my_learning_platform directory for imports
-                            # \$PWD refers to /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code due to 'dir("sut-code")'
-                            export PYTHONPATH="\$PWD":\$PWD/my_learning_platform
-        
-                            # Verify Python can import the settings module.
-                            # This will cause the 'sh' step to fail if the import fails.
-                            python -c \"\"\"
-import sys
-try:
-    import my_learning_platform.my_learning_platform_core.settings
-    print('Successfully imported settings')
-    sys.exit(0) # Exit with 0 for success
-except ImportError as e:
-    print(f'Failed to import settings: {e}', file=sys.stderr)
-    sys.exit(1) # Exit with 1 for failure
-                            \"\"\"
+                            # No need for python -c settings check, pytest will fail if settings don't load.
         
                             # Run pytest with increased verbosity and Allure reporting
-                            # This command will use the Python from the activated virtual environment
-                            pytest my_learning_platform/accounts/tests/unit -v --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
-                        """
+                            # The 'accounts' path is now relative to the current working directory
+                            pytest accounts/tests/unit -v --alluredir=../${env.ALLURE_RESULTS_DIR}/unit-tests
+                        " """
                     }
+                    // --- MODIFICATION END ---
                 }
             }
         }
@@ -110,32 +109,41 @@ except ImportError as e:
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
-                    // Change into the directory *containing* your Django project's manage.py
-                    dir('sut-code/my_learning_platform') { // Current working directory is now /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/my_learning_platform
-                        // Get the absolute path to the .venv directory from the current location
+                    // Change into the directory *containing* your Django project's manage.py (already correct)
+                    dir('sut-code/my_learning_platform') { 
+                        // Get the absolute path to the .venv directory from the current location (already correct)
                         def venvPath = sh(script: 'cd .. && pwd', returnStdout: true).trim() + "/.venv"
 
                         // Run Django migrations first inside the virtual environment
                         sh """bash -c "
-                            . ${venvPath}/bin/activate  # Use the absolute path for activation
-                            export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            # PYTHONPATH needs to include the 'sut-code' directory (which is '../')
-                            # so that 'my_learning_platform' can be imported as a top-level module.
-                            export PYTHONPATH=\$PYTHONPATH:../ # Keep this as it's relative to the current dir
+                            . ${venvPath}/bin/activate
+                            # DJANGO_SETTINGS_MODULE is now correctly set in the environment block
+                            # No need for explicit export here; manage.py will use it correctly.
+                            # PYTHONPATH is handled implicitly by manage.py being run from the project root.
                             python manage.py migrate --noinput
                         " """
 
-                        // Clean and prepare Allure results directory for integration tests
-                        // These paths are now relative to sut-code/my_learning_platform
+                        // Clean and prepare Allure results directory for integration tests (already correct)
                         sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/integration-tests"
                         sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/integration-tests"
                         
                         // Run integration tests
                         sh """bash -c "
-                            . ${venvPath}/bin/activate # Use the absolute path for activation
-                            export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            # Set PYTHONPATH similarly for pytest execution
-                            export PYTHONPATH=\$PYTHONPATH:../ # Keep this as it's relative to the current dir
+                            . ${venvPath}/bin/activate
+                            # --- MODIFICATION START ---
+                            # Unset explicit DJANGO_SETTINGS_MODULE and PYTHONPATH for pytest to use pytest.ini
+                            unset DJANGO_SETTINGS_MODULE
+                            unset PYTHONPATH
+                            # --- MODIFICATION END ---
+                            
+                            # Debug environment variables for verification (optional)
+                            echo "--- Debugging Environment for Integration Tests ---"
+                            echo "Current directory: " && pwd
+                            echo "Python executable path: " && which python
+                            echo "DJANGO_SETTINGS_MODULE (should be empty or from pytest.ini): " && echo \${DJANGO_SETTINGS_MODULE}
+                            echo "PYTHONPATH (should be empty or from pytest.ini): " && echo \${PYTHONPATH}
+                            echo "--- End Debugging ---"
+
                             pytest accounts/tests/integration -v --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         
