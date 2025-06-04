@@ -13,7 +13,7 @@ class UserRegistrationFormTest(TestCase):
             'username': 'testuser',
             'email': 'test@example.com',
             'password': 'StrongPassword123!',
-            'password2': 'StrongPassword123!',
+            #'password2': 'StrongPassword123!',
             'user_type': 'student',
         }
         form = UserRegistrationForm(data=form_data)
