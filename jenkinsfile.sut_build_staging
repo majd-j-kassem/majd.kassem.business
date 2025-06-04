@@ -8,7 +8,7 @@ pipeline {
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
         QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
         GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
-        DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings' // <--- CHANGED THIS LINE
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform.my_learning_platform_core.settings' // <--- CHANGED THIS LINE
         ALLURE_RESULTS_DIR = 'allure-results'
         API_TESTS_DIR = 'api-tests'
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
