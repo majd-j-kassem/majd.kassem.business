@@ -55,20 +55,21 @@ pipeline {
                         # exit 1
                     fi
                 '''
-                sh '''
+                  sh '''
                     . .venv/bin/activate
                     
                     # Debug environment
                     echo 'Current directory: ' && pwd
                     echo 'Python path: ' && which python
-                    echo 'DJANGO_SETTINGS_MODULE: ' && echo my_learning_platform_core.settings
+                    echo 'DJANGO_SETTINGS_MODULE: ' && echo ${env.DJANGO_SETTINGS_MODULE}
                     
                     # Set PYTHONPATH to include both the project root and the parent directory
                     export PYTHONPATH=/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code:/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/my_learning_platform
                     
-                    # Verify Python can import the settings
-                    python -c "try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings')\\nexcept ImportError as e: print(f'Failed to import settings: {e}'); exit(1)"
-
+                    # Verify Python can import the settings - Ensure this is a single, valid Python statement
+                    python -c "try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings'); exit(0) # Use exit(0) for success
+                    except ImportError as e: print(f'Failed to import settings: {e}'); exit(1)"
+                    
                     # Run pytest with increased verbosity
                     pytest my_learning_platform/accounts/tests/unit -v --alluredir=allure-results/unit-tests
                 '''
