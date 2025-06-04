@@ -61,9 +61,8 @@ pipeline {
                             // THIS IS THE LIKELY CULPRIT!
                             sh 'echo MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM'
                             sh 'echo "XXXXXXXXXXXXX: $(pwd)"'
-                            sh 'pytest --alluredir=../allure-results/unit-tests' // <- problematic (
+                            sh 'pytest account/tests/unit --alluredir=../allure-results/unit-tests'
                         }
-                    // --- MODIFICATION END ---
                 }
             }
         }
