@@ -39,8 +39,8 @@ pipeline {
                     dir('sut-code') {
                         sh 'python3 -m venv .venv'
                         // Use bash -c to ensure activate sources in the same shell as pip commands
-                        sh 'bash -c "source .venv/bin/activate && pip install --upgrade pip"'
-                        sh 'bash -c "source .venv/bin/activate && pip install -r requirements.txt"'
+                        //sh 'bash -c "source .venv/bin/activate && pip install --upgrade pip"'
+                        //sh 'bash -c "source .venv/bin/activate && pip install -r requirements.txt"'
                     }
                 }
             }
@@ -61,7 +61,7 @@ pipeline {
                             // THIS IS THE LIKELY CULPRIT!
                             sh 'echo MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM'
                             sh 'echo "XXXXXXXXXXXXX: $(pwd)"'
-                            sh 'pytest --alluredir=../allure-results/unit-tests --some-option (like this)' // <- problematic (
+                            sh 'pytest --alluredir=../allure-results/unit-tests
                         }
                     // --- MODIFICATION END ---
                 }
