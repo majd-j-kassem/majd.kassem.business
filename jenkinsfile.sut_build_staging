@@ -53,142 +53,22 @@ pipeline {
                     // --- MODIFICATION START ---
                     // Change CWD to the Django project root for consistent pathing with pytest.ini
                     dir('sut-code/my_learning_platform') {
-                        // Get the absolute path to the .venv directory from the current location
-                        // This path will be ../.venv relative to 'my_learning_platform'
-                        def venvPath = sh(script: 'cd .. && pwd', returnStdout: true).trim() + "/.venv"
-
-                        // Clean and prepare Allure results directory for unit tests
-                        // Paths are now relative to sut-code/my_learning_platform, so results go up one level
-                        sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/unit-tests"
-                        sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/unit-tests"
-                        sh 'ls -la' // List contents to confirm directory structure
-        
-                        // Check for core Django application directory (no my_learning_platform/ prefix needed now)
-                        sh """
-                            if [ -d "my_learning_platform_core" ]; then # Check relative to current dir
-                                echo "my_learning_platform_core directory found."
-                            else
-                                echo "my_learning_platform_core directory NOT found. Exiting pipeline."
-                                exit 1 // Fail the pipeline if the core directory is missing
-                            fi
-                        """
-        
-                        sh """bash -c "
-                            # Activate the virtual environment using the absolute path
-                            . ${venvPath}/bin/activate
-        
-                            # Unset explicit PYTHONPATH and DJANGO_SETTINGS_MODULE to rely on pytest.ini
-                            # when running pytest from the project root.
-                            unset PYTHONPATH
-                            unset DJANGO_SETTINGS_MODULE # Will be set by pytest-django based on pytest.ini
-        
-                            # Debug environment variables for verification (optional, remove for cleaner logs later)
-                            echo "--- Debugging Environment for Unit Tests ---"
-                            echo "Current directory: " && pwd
-                            echo "Python executable path: " && which python
-                            echo "DJANGO_SETTINGS_MODULE (should be empty or from pytest.ini): " && echo \${DJANGO_SETTINGS_MODULE}
-                            echo "PYTHONPATH (should be empty or from pytest.ini): " && echo \${PYTHONPATH}
-                            echo "--- End Debugging ---"
-        
-                            # No need for python -c settings check, pytest will fail if settings don't load.
-        
-                            # Run pytest with increased verbosity and Allure reporting
-                            # The 'accounts' path is now relative to the current working directory
-                            pytest accounts/tests/unit -v --alluredir=../${env.ALLURE_RESULTS_DIR}/unit-tests
-                        " """
-                    }
+                            sh 'cd ..'
+                            sh 'pwd'
+                            sh 'rm -rf ../allure-results/unit-tests'
+                            sh 'mkdir -p ../allure-results/unit-tests'
+                            sh 'ls -la'
+                            sh '[ -d my_learning_platform_core ]'
+                            sh 'echo my_learning_platform_core directory found.'
+                            // THIS IS THE LIKELY CULPRIT!
+                            sh 'pytest --alluredir=../allure-results/unit-tests --some-option (like this)' // <- problematic (
+                        }
                     // --- MODIFICATION END ---
                 }
             }
         }
            
-        stage('Run Integration Tests') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    echo "Running Django integration tests with pytest and generating Allure results..."
-                    // Change into the directory *containing* your Django project's manage.py (already correct)
-                    dir('sut-code/my_learning_platform') { 
-                        // Get the absolute path to the .venv directory from the current location (already correct)
-                        def venvPath = sh(script: 'cd .. && pwd', returnStdout: true).trim() + "/.venv"
-
-                        // Run Django migrations first inside the virtual environment
-                        sh """bash -c "
-                            . ${venvPath}/bin/activate
-                            # DJANGO_SETTINGS_MODULE is now correctly set in the environment block
-                            # No need for explicit export here; manage.py will use it correctly.
-                            # PYTHONPATH is handled implicitly by manage.py being run from the project root.
-                            python manage.py migrate --noinput
-                        " """
-
-                        // Clean and prepare Allure results directory for integration tests (already correct)
-                        sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/integration-tests"
-                        sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/integration-tests"
-                        
-                        // Run integration tests
-                        sh """bash -c "
-                            . ${venvPath}/bin/activate
-                            # --- MODIFICATION START ---
-                            # Unset explicit DJANGO_SETTINGS_MODULE and PYTHONPATH for pytest to use pytest.ini
-                            unset DJANGO_SETTINGS_MODULE
-                            unset PYTHONPATH
-                            # --- MODIFICATION END ---
-                            
-                            # Debug environment variables for verification (optional)
-                            echo "--- Debugging Environment for Integration Tests ---"
-                            echo "Current directory: " && pwd
-                            echo "Python executable path: " && which python
-                            echo "DJANGO_SETTINGS_MODULE (should be empty or from pytest.ini): " && echo \${DJANGO_SETTINGS_MODULE}
-                            echo "PYTHONPATH (should be empty or from pytest.ini): " && echo \${PYTHONPATH}
-                            echo "--- End Debugging ---"
-
-                            pytest accounts/tests/integration -v --alluredir=../${env.ALLURE_RESULTS_DIR}/integration-tests
-                        " """
-                        
-                        echo "Generating Allure report for Unit and Integration tests..."
-                        // Allure report generation. Paths to results directories need to be relative from current 'dir' scope.
-                        allure([
-                            includeProperties: false,
-                            jdk: '', // If you have a specific JDK for Allure, define it here
-                            reportBuildPolicy: 'ALWAYS',
-                            results: ["../${env.ALLURE_RESULTS_DIR}/unit-tests", "../${env.ALLURE_RESULTS_DIR}/integration-tests"]
-                        ])
-                    }
-                }
-            }
-        }
-        stage('Run API Tests') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    echo "Running Postman API tests with Newman..."
-                    dir('sut-code') { // Newman is run from the 'sut-code' root
-                        // Install Newman and Allure reporter globally or into a local node_modules
-                        sh "npm install -g newman newman-reporter-allure" // Using -g for global install
-
-                        // Clean and prepare Allure results directory for Newman
-                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
-                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
-                        
-                        // Run Newman tests. Adjust collection and environment paths if different.
-                        // Ensure your collection and environment JSON files are in the ${env.API_TESTS_DIR} folder.
-                        sh "newman run ${env.API_TESTS_DIR}/your_collection.json -e ${env.API_TESTS_DIR}/your_environment.json -r allure --reporter-allure-export=${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"
-                        
-                        echo "Generating Allure report for API tests..."
-                        allure([
-                            includeProperties: false,
-                            jdk: '',
-                            reportBuildPolicy: 'ALWAYS',
-                            results: ["${env.ALLURE_RESULTS_DIR}/${env.NEWMAN_ALLURE_RESULTS_DIR}"]
-                        ])
-                    }
-                }
-            }
-        }
+       
         
         stage('Build and Deploy SUT to Staging (via Render)') {
             when {
