@@ -47,27 +47,33 @@ pipeline {
         }
         
         stage('Run Unit Tests') {
-            steps {
-                script {
-                    echo "Running Django unit tests with pytest and generating Allure results..."
-                    // --- MODIFICATION START ---
-                    // Change CWD to the Django project root for consistent pathing with pytest.ini
-                    dir('sut-code/my_learning_platform') {
-                        sh '''#!/bin/bash
-                            sh "rm -rf ../${env.ALLURE_RESULTS_DIR}/unit-tests"
-                            sh "mkdir -p ../${env.ALLURE_RESULTS_DIR}/unit-tests"
-                            
-                            [ -d my_learning_platform_core ]
-                            echo "my_learning_platform_core directory found."
-                            // THIS IS THE LIKELY CULPRIT!
-                            echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
-                            echo "XXXXXXXXXXXXX: $(pwd)"
-                            pytest accounts/tests/unit --alluredir=../${env.ALLURE_RESULTS_DIR}/unit-tests
-                            '''
-                        }
-                }
+    steps {
+        script {
+            echo "Running Django unit tests with pytest and generating Allure results..."
+            // Change CWD to the Django project root for consistent pathing with pytest.ini
+            dir('sut-code/my_learning_platform') {
+                sh '''#!/bin/bash
+                    # Remove existing Allure results for unit tests
+                    rm -rf ../${ALLURE_RESULTS_DIR}/unit-tests
+                    # Create the directory for new Allure results
+                    mkdir -p ../${ALLURE_RESULTS_DIR}/unit-tests
+
+                    # Check if the core app directory exists
+                    [ -d my_learning_platform_core ] && echo "my_learning_platform_core directory found." || echo "Error: my_learning_platform_core directory NOT found."
+
+                    echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+                    echo "Current working directory: $(pwd)" # Use pwd without XXXXX
+                    
+                    # Activate the virtual environment
+                    source ../.venv/bin/activate
+                    
+                    # Run pytest for unit tests and generate Allure results
+                    pytest accounts/tests/unit --alluredir=../${ALLURE_RESULTS_DIR}/unit-tests
+                '''
             }
         }
+    }
+}
            
        
         
