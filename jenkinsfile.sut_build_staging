@@ -110,7 +110,7 @@ except ImportError as e:
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code') { // Change into the directory *containing* your Django project root
+                    dir('sut-code/my_learning_platform') { // Change into the directory *containing* your Django project root
                         // Run Django migrations first inside the virtual environment
                         sh """bash -c "
                             . .venv/bin/activate
