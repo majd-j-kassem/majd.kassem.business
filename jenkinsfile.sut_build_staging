@@ -67,8 +67,8 @@ pipeline {
                     export PYTHONPATH=/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code:/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/my_learning_platform
                     
                     # Verify Python can import the settings
-                    python -c "try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings') except ImportError: print('Failed to import settings'); exit(1)"
-                    
+                    python -c "try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings')\\nexcept ImportError as e: print(f'Failed to import settings: {e}'); exit(1)"
+
                     # Run pytest with increased verbosity
                     pytest my_learning_platform/accounts/tests/unit -v --alluredir=allure-results/unit-tests
                 '''
