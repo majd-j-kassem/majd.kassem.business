@@ -114,7 +114,7 @@ except ImportError as e:
                     dir('sut-code/my_learning_platform') { // Current working directory is now /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/my_learning_platform
                         // Run Django migrations first inside the virtual environment
                         sh """bash -c "
-                            . ../.venv/bin/activate  # Correct path to activate from my_learning_platform
+                            . .venv/bin/activate  # Correct path to activate from my_learning_platform
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
                             # PYTHONPATH needs to include the 'sut-code' directory (which is '../')
                             # so that 'my_learning_platform' can be imported as a top-level module.
@@ -129,7 +129,7 @@ except ImportError as e:
                         
                         // Run integration tests
                         sh """bash -c "
-                            . ../.venv/bin/activate # Correct path to activate from my_learning_platform
+                            . .venv/bin/activate # Correct path to activate from my_learning_platform
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
                             # Set PYTHONPATH similarly for pytest execution
                             export PYTHONPATH=\$PYTHONPATH:../ # Add the parent directory (sut-code) to PYTHONPATH
