@@ -59,6 +59,8 @@ pipeline {
                             sh '[ -d my_learning_platform_core ]'
                             sh 'echo my_learning_platform_core directory found.'
                             // THIS IS THE LIKELY CULPRIT!
+                            sh 'echo MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM'
+                            sh 'echo pwd'
                             sh 'pytest --alluredir=../allure-results/unit-tests --some-option (like this)' // <- problematic (
                         }
                     // --- MODIFICATION END ---
