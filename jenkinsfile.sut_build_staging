@@ -38,26 +38,38 @@ pipeline {
             }
         }
         stage('Run Unit Tests') {
-            steps {
-                script {
-                    echo "Running Django unit tests with pytest and generating Allure results..."
-                    // We need to be in the 'sut-code' directory so 'my_learning_platform' is on PYTHONPATH
-                    dir('sut-code') { // Change into the directory *containing* your Django project root
-                        sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests" // Path relative to 'sut-code'
-                        sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests" // Path relative to 'sut-code'
-                        sh """bash -c "
-                            source .venv/bin/activate # Source relative to 'sut-code'
-
-                            export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
-                            export PYTHONPATH=$PWD # Set PYTHONPATH to 'sut-code'
-
-                            # Run pytest, specifying the full path to your unit tests relative to 'sut-code'
-                            pytest accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
-                        " """
-                    }
-                }
+    steps {
+        script {
+            echo "Running Django unit tests with pytest and generating Allure results..."
+            dir('sut-code') {
+                sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                
+                // Add this debug command to verify the directory structure
+                sh "ls -la"
+                sh "ls -la my_learning_platform_core || echo 'No my_learning_platform_core directory found'"
+                
+                sh """bash -c "
+                    source .venv/bin/activate
+                    
+                    # Debug environment
+                    echo 'Current directory: ' && pwd
+                    echo 'Python path: ' && echo \$PYTHONPATH
+                    echo 'DJANGO_SETTINGS_MODULE: ' && echo \$DJANGO_SETTINGS_MODULE
+                    
+                    # Set PYTHONPATH to include both the project root and the parent directory
+                    export PYTHONPATH=\$PWD:\$PWD/my_learning_platform_core
+                    
+                    # Verify Python can import the settings
+                    python -c 'import my_learning_platform_core.settings; print(\"Successfully imported settings\")' || echo 'Failed to import settings'
+                    
+                    # Run pytest with increased verbosity
+                    pytest accounts/tests/unit -v --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
+                " """
             }
         }
+    }
+}
         stage('Run Integration Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
