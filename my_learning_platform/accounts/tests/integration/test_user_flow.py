@@ -22,8 +22,8 @@ class UserFlowsIntegrationTest(TestCase):
         self.client = Client()
 
         # Define URLs using their 'name' from urls.py
-        self.signup_url = reverse('signup')
-        self.login_url = reverse('login')
+        self.signup_url = '/signup/' # Corrected!
+        self.login_url = '/login/' 
         self.logout_url = reverse('logout')
         
         self.dashboard_url = reverse('dashboard')  
