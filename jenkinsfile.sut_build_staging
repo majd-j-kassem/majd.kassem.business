@@ -44,42 +44,40 @@ pipeline {
         script {
             echo "Running Django unit tests with pytest and generating Allure results..."
             dir('sut-code') {
-                sh 'rm -rf allure-results/unit-tests'
-                sh 'mkdir -p allure-results/unit-tests'
-                sh 'ls -la'
+                sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
+                
                 sh """
-                    # Check if my_learning_platform_core exists and print message
-                    if [ -d "my_learning_platform/my_learning_platform_core" ]; then
-                        echo "my_learning_platform_core directory found."
-                    else
-                        echo "my_learning_platform_core directory NOT found under my_learning_platform."
-                        # You might want to exit here if it's a critical missing directory
-                        # exit 1
-                    fi
-                 """
-                  sh """
                     . .venv/bin/activate
                     
-                    # Debug environment
-                    echo 'Current directory: ' && pwd
-                    echo 'Python path: ' && which python
-                    echo 'DJANGO_SETTINGS_MODULE: ' && echo ${env.DJANGO_SETTINGS_MODULE}
+                    # Set environment variables
+                    export PYTHONPATH=\$PWD
+                    export DJANGO_SETTINGS_MODULE=my_learning_platform.my_learning_platform_core.settings
                     
-                    # Set PYTHONPATH to include both the project root and the parent directory
-                    export PYTHONPATH=/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code:/var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/my_learning_platform
+                    # Debug output
+                    echo "Current directory: \$(pwd)"
+                    echo "Python path: \$PYTHONPATH"
+                    echo "Django settings: \$DJANGO_SETTINGS_MODULE"
+                    ls -la my_learning_platform/
                     
-                    # Verify Python can import the settings - Ensure this is a single, valid Python statement
-                    python -c "try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings'); exit(0) # Use exit(0) for success
-                    except ImportError as e: print(f'Failed to import settings: {e}'); exit(1)"
+                    # Verify settings can be imported (fixed syntax)
+                    python -c \"\"
+\"try:
+    import my_learning_platform.my_learning_platform_core.settings
+    print('Successfully imported settings')
+except ImportError as e:
+    print(f'Failed to import settings: {e}')
+    exit(1)
+\"\"\"
                     
-                    # Run pytest with increased verbosity
-                    pytest my_learning_platform/accounts/tests/unit -v --alluredir=allure-results/unit-tests
+                    # Run pytest
+                    pytest accounts/tests/unit -v --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
                 """
             }
         }
     }
 }
-       
+        
         stage('Run Integration Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
