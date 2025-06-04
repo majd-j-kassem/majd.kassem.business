@@ -56,7 +56,7 @@ pipeline {
                     fi
                 '''
                 sh '''
-                    source .venv/bin/activate
+                    . .venv/bin/activate
                     
                     # Debug environment
                     echo 'Current directory: ' && pwd
