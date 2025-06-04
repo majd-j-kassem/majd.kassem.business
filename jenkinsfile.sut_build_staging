@@ -52,7 +52,7 @@ pipeline {
                             export PYTHONPATH=$PWD # Set PYTHONPATH to 'sut-code'
 
                             # Run pytest, specifying the full path to your unit tests relative to 'sut-code'
-                            pytest my_learning_platform/accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
+                            pytest accounts/tests/unit --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
                         " """
                     }
                 }
@@ -71,7 +71,7 @@ pipeline {
                             source .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
                             export PYTHONPATH=$PWD
-                            python my_learning_platform/manage.py migrate --noinput
+                            python manage.py migrate --noinput
                         " """
 
                         sh "rm -rf ${env.ALLURE_RESULTS_DIR}/integration-tests" // Path relative to 'sut-code'
@@ -80,7 +80,7 @@ pipeline {
                             source .venv/bin/activate
                             export DJANGO_SETTINGS_MODULE=${env.DJANGO_SETTINGS_MODULE}
                             export PYTHONPATH=$PWD # Set PYTHONPATH to 'sut-code'
-                            pytest /accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
+                            pytest accounts/tests/integration --alluredir=${env.ALLURE_RESULTS_DIR}/integration-tests
                         " """
                         echo "Generating Allure report for Unit and Integration tests..."
                         // Allure report generation should also reference paths relative to 'sut-code'
