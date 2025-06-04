@@ -53,7 +53,7 @@ pipeline {
                     // --- MODIFICATION START ---
                     // Change CWD to the Django project root for consistent pathing with pytest.ini
                     dir('sut-code/my_learning_platform') {
-                        sh """bash -c "
+                        sh '''#!/bin/bash
                             rm -rf ../allure-results/unit-tests
                             mkdir -p ../allure-results/unit-tests
                             
@@ -63,7 +63,7 @@ pipeline {
                             echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
                             echo "XXXXXXXXXXXXX: $(pwd)"
                             pytest accounts/tests/unit --alluredir=../allure-results/unit-tests
-                            " """
+                            '''
                         }
                 }
             }
