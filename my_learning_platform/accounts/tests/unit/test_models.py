@@ -6,8 +6,8 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 
 from accounts.models import (
-    CustomUser, Profile, CourseCategory, CourseLevel,
-    TeacherCourse, EnrolledCourse, AllowedCard, ContactMessage
+    CustomUser, CourseCategory, CourseLevel,
+    AllowedCard, ContactMessage, TeacherCourse, EnrolledCourse
 )
 
 # Get the CustomUser model for consistency

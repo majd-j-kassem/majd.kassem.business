@@ -4,14 +4,11 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from io import BytesIO
 
-# Import your forms and models from your 'accounts' app
-# Make sure these imports are correct based on your project structure
-from accounts.models import Profile  # Assuming you have a Profile model
+from accounts.models import Profile
+
 from accounts.forms import SignupForm  # Corrected form name
 
-
 User = get_user_model()
-
 
 class UserFlowsIntegrationTest(TestCase):
     """

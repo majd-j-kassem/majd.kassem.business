@@ -1,5 +1,6 @@
 from django.test import TestCase
-from accounts.forms import UserRegistrationForm, ProfileForm # Assuming these forms exist
+from accounts.forms import UserRegistrationForm, ProfileForm
+
 from django.contrib.auth import get_user_model
 from decimal import Decimal
 

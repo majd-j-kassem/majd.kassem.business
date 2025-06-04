@@ -32,12 +32,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'course.apps.CourseConfig',
     'accounts.apps.AccountsConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
-    'utils',
+    'utils', 
 ]
 AUTH_USER_MODEL = 'accounts.CustomUser'
 SITE_ID = 1
