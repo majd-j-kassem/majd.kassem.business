@@ -53,11 +53,9 @@ pipeline {
                     // --- MODIFICATION START ---
                     // Change CWD to the Django project root for consistent pathing with pytest.ini
                     dir('sut-code/my_learning_platform') {
-                            sh 'cd ..'
-                            sh 'pwd'
                             sh 'rm -rf ../allure-results/unit-tests'
                             sh 'mkdir -p ../allure-results/unit-tests'
-                            sh 'ls -la'
+                            //sh 'ls -la'
                             sh '[ -d my_learning_platform_core ]'
                             sh 'echo my_learning_platform_core directory found.'
                             // THIS IS THE LIKELY CULPRIT!
