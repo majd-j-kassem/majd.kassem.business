@@ -42,42 +42,54 @@ pipeline {
         stage('Run Unit Tests') {
     steps {
         script {
-            echo "Running Django unit tests with pytest and generating Allure results..."
-            dir('sut-code') {
-                sh "rm -rf ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                sh "mkdir -p ${env.ALLURE_RESULTS_DIR}/unit-tests"
-                
-                sh """
-                    . .venv/bin/activate
-                    
-                    # Set environment variables
-                    export PYTHONPATH=\$PWD
-                    export DJANGO_SETTINGS_MODULE=my_learning_platform.my_learning_platform_core.settings
-                    
-                    # Debug output
-                    echo "Current directory: \$(pwd)"
-                    echo "Python path: \$PYTHONPATH"
-                    echo "Django settings: \$DJANGO_SETTINGS_MODULE"
-                    ls -la my_learning_platform/
-                    
-                    # Verify settings can be imported (fixed syntax)
-                    python -c \"\"
-\"try:
-    import my_learning_platform.my_learning_platform_core.settings
-    print('Successfully imported settings')
-except ImportError as e:
-    print(f'Failed to import settings: {e}')
-    exit(1)
-\"\"\"
-                    
-                    # Run pytest
-                    pytest accounts/tests/unit -v --alluredir=${env.ALLURE_RESULTS_DIR}/unit-tests
-                """
-            }
-        }
+    echo "Running Django unit tests with pytest and generating Allure results..."
+    dir('sut-code') {
+        // Clean and prepare Allure results directory
+        sh 'rm -rf allure-results/unit-tests'
+        sh 'mkdir -p allure-results/unit-tests'
+        sh 'ls -la' // List contents to confirm directory structure
+
+        // Check for core Django application directory
+        sh """
+            if [ -d "my_learning_platform/my_learning_platform_core" ]; then
+                echo "my_learning_platform_core directory found."
+            else
+                echo "my_learning_platform_core directory NOT found under my_learning_platform. Exiting pipeline."
+                exit 1 // Fail the pipeline if the core directory is missing
+            fi
+        """
+
+        // --- All commands that require the virtual environment should be in this single sh block ---
+        sh """
+            # Activate the virtual environment
+            . .venv/bin/activate
+
+            # Debug environment variables for verification
+            echo "--- Debugging Environment ---"
+            echo "Current directory: " && pwd
+            echo "Python executable path: " && which python
+            echo "DJANGO_SETTINGS_MODULE: " && echo \${DJANGO_SETTINGS_MODULE} # Use \${} to escape Groovy interpolation
+            echo "PYTHONPATH: " && echo \${PYTHONPATH}
+            echo "--- End Debugging ---"
+
+            # Set PYTHONPATH to include the project root and the parent directory for imports
+            # Ensure these paths are relative to your 'sut-code' directory
+            export PYTHONPATH="\$PWD":\$PWD/my_learning_platform
+
+            # Verify Python can import the settings module.
+            # This will cause the 'sh' step to fail if the import fails.
+            python -c "import sys; try: import my_learning_platform.my_learning_platform_core.settings; print('Successfully imported settings'); sys.exit(0)
+            except ImportError as e: print(f'Failed to import settings: {e}', file=sys.stderr); sys.exit(1)"
+
+            # Run pytest with increased verbosity and Allure reporting
+            # This command will use the Python from the activated virtual environment
+            pytest my_learning_platform/accounts/tests/unit -v --alluredir=allure-results/unit-tests
+        """
     }
 }
-        
+    }
+}
+       
         stage('Run Integration Tests') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
