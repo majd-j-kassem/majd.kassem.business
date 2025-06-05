@@ -105,39 +105,39 @@ pipeline {
             }
         }
         stage('Run API Tests') {
-            steps {
-                script {
-                    echo "Running Postman API tests with Newman and generating Allure results..."
+    steps {
+        script {
+            echo "Running Postman API tests with Newman and generating Allure results..."
+            
+            // Define paths relative to workspace root
+            def newmanAllureResultsDir = "allure-results/api-tests"
+            
+            // Clean and create directory structure
+            sh "mkdir -p ${newmanAllureResultsDir}"
+            
+            dir("sut-code/${env.API_TESTS_DIR}") {
+                // Verify files exist before running tests
+                sh '''#!/bin/bash
+                    echo "Current directory: $(pwd)"
+                    echo "Files in directory:"
+                    ls -la
                     
-                    // Define a specific directory for Newman's Allure results
-                    def newmanAllureResultsDir = "${env.ALLURE_RESULTS_DIR}/api-tests"
-
-                    // Clean and create the directory for API test results
-                    //sh "rm -rf ${newmanAllureResultsDir}"
-                    //sh "mkdir -p ${newmanAllureResultsDir}"
-
-                    // Navigate to the directory containing your Postman collection and environment files
-                    dir("sut-code/${env.API_TESTS_DIR}") {
-                        sh '''#!/bin/bash
-                            # Ensure Node.js is on PATH if it's not handled by Jenkins tool config automatically
-                            # source ~/.nvm/nvm.sh # Uncomment if you use NVM and need to activate it
-
-                            # Execute Newman tests for the specific folder
-
-                            rm -rf ${newmanAllureResultsDir}
-                            mkdir -p ${newmanAllureResultsDir}
-
-                            newman run 5_june_api.json \\
-                                --folder "test_1" \\
-                                -e 5_june_env.json \\
-                                --reporters cli,htmlextra,allure \\
-                                --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export ../${newmanAllureResultsDir} # Note the '../' to point relative to sut-code/API_POSTMAN
-                        '''
-                    }
-                }
+                    if [ ! -f "5_june_env.json" ]; then
+                        echo "ERROR: Environment file 5_june_env.json not found!"
+                        exit 1
+                    fi
+                    
+                    newman run 5_june_api.json \\
+                        --folder "test_1" \\
+                        -e 5_june_env.json \\
+                        --reporters cli,htmlextra,allure \\
+                        --reporter-htmlextra-export newman-report.html \\
+                        --reporter-allure-export ${WORKSPACE}/allure-results/api-tests
+                '''
             }
         }
+    }
+}
            
        
         
