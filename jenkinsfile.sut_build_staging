@@ -105,32 +105,32 @@ pipeline {
         }
         stage('Run API Tests') {
             steps {
-                script {
-                    echo "Running Postman API tests with Newman and generating Allure results..."
-                    
-                    // Define a specific directory for Newman's Allure results
-                    def newmanAllureResultsDir = "${env.ALLURE_RESULTS_DIR}/api-tests"
+               script {
+    echo "Running Postman API tests with Newman and generating Allure results..."
 
-                    // Clean and create the directory for API test results
-                    sh "rm -rf ${newmanAllureResultsDir}"
-                    sh "mkdir -p ${newmanAllureResultsDir}"
+    // Define the full absolute path for Newman's Allure results
+    // currentDir is /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging
+    def newmanAllureResultsAbsoluteDir = "${pwd()}/${env.ALLURE_RESULTS_DIR}/api-tests"
 
-                    // Navigate to the directory containing your Postman collection and environment files
-                    dir("sut-code/${env.API_TESTS_DIR}") {
-                        sh '''#!/bin/bash
-                            # Ensure Node.js is on PATH if it's not handled by Jenkins tool config automatically
-                            # source ~/.nvm/nvm.sh # Uncomment if you use NVM and need to activate it
+    // Clean and create the directory for API test results using the absolute path
+    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
+    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
 
-                            # Execute Newman tests for the specific folder
-                            newman run 5_june_api.json \\
-                                --folder "test_1" \\
-                                -e 5_june_env.json \\
-                                --reporters cli,htmlextra,allure \\
-                                --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export ../${newmanAllureResultsDir} # Note the '../' to point relative to sut-code/API_POSTMAN
-                        '''
-                    }
-                }
+    // Navigate to the directory containing your Postman collection and environment files
+    dir("sut-code/${env.API_TESTS_DIR}") {
+        // Current working directory is now:
+        // /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/API_POSTMAN
+
+        sh """#!/bin/bash
+            newman run 5_june_api.json \\
+                --folder "test_1" \\
+                -e 5_june_env.json \\
+                --reporters cli,htmlextra,allure \\
+                --reporter-htmlextra-export newman-report.html \\
+                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} # <<< -- ALWAYS PASS ABSOLUTE PATH
+        """
+    }
+}
             }
         }
            
