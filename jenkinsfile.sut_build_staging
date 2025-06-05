@@ -122,8 +122,8 @@ pipeline {
                     echo "Files in directory:"
                     ls -la
                     
-                    if [ ! -f "5_june_env.json" ]; then
-                        echo "ERROR: Environment file 5_june_env.json not found!"
+                    if [ ! -f "5_jun_env.json" ]; then
+                        echo "ERROR: Environment file 5_jun_env.json not found!"
                         exit 1
                     fi
                     
