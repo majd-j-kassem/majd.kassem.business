@@ -166,7 +166,7 @@ pipeline {
                 echo "Publishing Allure Report..."
                 // Ensure Allure Commandline tool is configured in Jenkins -> Global Tool Configuration
                 // Replace 'Allure_2.24.0' with the name you gave your Allure Commandline installation
-                tool name: 'Allure_2.24.0', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
+                tool name: 'Allure_2.34.0', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
                 
                 // The 'allure' step aggregates results from all specified directories
                 allure([
