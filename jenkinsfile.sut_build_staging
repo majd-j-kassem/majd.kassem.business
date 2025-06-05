@@ -18,6 +18,18 @@ pipeline {
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
     }
+    stages {
+        stage('Test NodeJS Tool') {
+            steps {
+                script {
+                    echo "Attempting to use NodeJS tool..."
+                    tool name: 'NodeJS_24', type: 'org.jenkinsci.plugins.nodejs.tools.NodeJSInstallation'
+                    sh 'node -v' // Check if node command is available
+                    sh 'npm -v'  // Check if npm command is available
+                }
+            }
+        }
+    }
 
     stages {
         stage('Checkout SUT Dev') {
@@ -51,7 +63,8 @@ pipeline {
                     echo "Setting up NodeJS and installing Newman and Allure reporter..."
                     // Ensure you have configured a NodeJS tool in Jenkins -> Manage Jenkins -> Global Tool Configuration
                     // Replace 'NodeJS_18' with the name you gave your NodeJS installation
-                    tool name: 'NodeJS_24', type: 'org.jenkinsci.plugins.nodejs.tools.NodeJSInstallation'                    
+                    tool name: 'NodeJS_24', type: 'org.jenkinsci.plugins.nodejs.tools.NodeJSInstallation' 
+                                       
                     // Install Newman and its Allure reporter globally on the agent
                     // This command should run successfully for Newman to find the reporter
                     sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra'
