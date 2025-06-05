@@ -179,7 +179,9 @@ pipeline {
                         "${ALLURE_RESULTS_DIR}/integration-tests",
                         "${ALLURE_RESULTS_DIR}/api-tests" // Path for your Newman API test results
                     ]
-                ])
+                ],
+                 reportBuildPolicy: 'ALWAYS'
+                 )
                 echo "Allure Report should be available via the link on the build page."
             }
             // Cleans up the workspace on the Jenkins agent regardless of build result
