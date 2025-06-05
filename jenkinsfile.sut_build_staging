@@ -18,8 +18,8 @@ pipeline {
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
     }
-    stages {
-        stage('Test NodeJS Tool') {
+    
+    stages {stage('Test NodeJS Tool') {
             steps {
                 script {
                     echo "Attempting to use NodeJS tool..."
@@ -29,9 +29,7 @@ pipeline {
                 }
             }
         }
-    }
 
-    stages {
         stage('Checkout SUT Dev') {
             steps {
                 script {
