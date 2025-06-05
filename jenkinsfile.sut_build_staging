@@ -8,22 +8,18 @@ pipeline {
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
         SUT_BRANCH_DEV = 'dev'
-        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' 
-        QA_JOB_NAME = 'QA-Tests-Staging' 
-        GIT_CREDENTIAL_ID = 'git_id'         
-        // --- MODIFICATION START ---
-        // Correct DJANGO_SETTINGS_MODULE to match pytest.ini's expectation when my_learning_platform is the base
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Ensure this is your actual Render dev URL
+        QA_JOB_NAME = 'QA-Tests-Staging'
+        GIT_CREDENTIAL_ID = 'git_id'
         DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings'
-        // --- MODIFICATION END ---
 
-        // Define Allure and API test directories relative to sut-code
-        ALLURE_RESULTS_DIR = 'allure-results'
+        // Define Allure results directory relative to workspace root
+        ALLURE_RESULTS_ROOT = 'allure-results'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
-        NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
-        
     }
-    
-    stages {stage('Test NodeJS Tool') {
+
+    stages {
+        stage('Test NodeJS Tool') {
             steps {
                 script {
                     echo "Attempting to use NodeJS tool..."
@@ -43,7 +39,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Setup Python Environment') {
             steps {
                 script {
@@ -57,90 +53,58 @@ pipeline {
                 }
             }
         }
-        // --- NEW STAGE FOR NODE.JS AND NEWMAN SETUP ---
+
         stage('Setup NodeJS and Newman') {
             steps {
                 script {
                     echo "Installing Newman and Allure reporter..."
                     sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra'
-
                 }
             }
         }
-        // --- END NEW STAGE ---
-        
+
         stage('Run Unit Tests') {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure results..."
-                    // Change CWD to the Django project root for consistent pathing with pytest.ini
                     dir('sut-code/my_learning_platform') {
-                        sh '''#!/bin/bash
-                            rm -rf ../${ALLURE_RESULTS_DIR}/unit-tests
-                            mkdir -p ../${ALLURE_RESULTS_DIR}/unit-tests
+                        // Define absolute path for Allure results for unit tests
+                        def unitTestAllureResultsDir = "${pwd()}/../${ALLURE_RESULTS_ROOT}/unit-tests"
 
+                        sh "rm -rf ${unitTestAllureResultsDir}"
+                        sh "mkdir -p ${unitTestAllureResultsDir}"
+
+                        sh '''#!/bin/bash
                             # Check if the core app directory exists
                             [ -d my_learning_platform_core ] && echo "my_learning_platform_core directory found." || echo "Error: my_learning_platform_core directory NOT found."
                             source ../.venv/bin/activate
-                            pytest accounts/tests/unit --alluredir=../${ALLURE_RESULTS_DIR}/unit-tests
+                            pytest accounts/tests/unit --alluredir=''' + unitTestAllureResultsDir + '''
                         '''
                     }
                 }
             }
         }
+
         stage('Run Integration Tests') {
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') { // Assuming integration tests also run from the Django project root
-                        sh '''#!/bin/bash
+                    dir('sut-code/my_learning_platform') {
+                        // Define absolute path for Allure results for integration tests
+                        def integrationTestAllureResultsDir = "${pwd()}/../${ALLURE_RESULTS_ROOT}/integration-tests"
 
-                            rm -rf ../${ALLURE_RESULTS_DIR}/integration-tests
-                            mkdir -p ../${ALLURE_RESULTS_DIR}/integration-tests
+                        sh "rm -rf ${integrationTestAllureResultsDir}"
+                        sh "mkdir -p ${integrationTestAllureResultsDir}"
+
+                        sh '''#!/bin/bash
                             source ../.venv/bin/activate
-                            pytest accounts/tests/integration --alluredir=../${ALLURE_RESULTS_DIR}/integration-tests
+                            pytest accounts/tests/integration --alluredir=''' + integrationTestAllureResultsDir + '''
                         '''
                     }
                 }
             }
         }
-        stage('Run API Tests') {
-    steps {
-        script {
-            echo "Running Postman API tests with Newman and generating Allure results..."
-            
-            // Define paths relative to workspace root
-            def newmanAllureResultsDir = "allure-results/api-tests"
-            
-            // Clean and create directory structure
-            sh "mkdir -p ${newmanAllureResultsDir}"
-            
-            dir("sut-code/${env.API_TESTS_DIR}") {
-                // Verify files exist before running tests
-                sh '''#!/bin/bash
-                    echo "Current directory: $(pwd)"
-                    echo "Files in directory:"
-                    ls -la
-                    
-                    if [ ! -f "5_jun_env.json" ]; then
-                        echo "ERROR: Environment file 5_jun_env.json not found!"
-                        exit 1
-                    fi
-                    
-                    newman run 5_jun_api.json \\
-                        --folder "test_1" \\
-                        -e 5_jun_env.json \\
-                        --reporters cli,htmlextra,allure \\
-                        --reporter-htmlextra-export newman-report.html \\
-                        --reporter-allure-export ${WORKSPACE}/allure-results/api-tests
-                '''
-            }
-        }
-    }
-}
-           
-       
-        
+
         stage('Build and Deploy SUT to Staging (via Render)') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -154,7 +118,44 @@ pipeline {
                 }
             }
         }
-        
+
+        stage('Run API Tests') {
+            steps {
+                script {
+                    echo "Running Postman API tests with Newman and generating Allure results..."
+
+                    // Define the full absolute path for Newman's Allure results
+                    def newmanAllureResultsAbsoluteDir = "${pwd()}/${ALLURE_RESULTS_ROOT}/api-tests"
+
+                    // Clean and create directory structure using the absolute path
+                    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
+                    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
+
+                    dir("sut-code/${env.API_TESTS_DIR}") {
+                        sh """#!/bin/bash
+                            echo "Current directory: \$(pwd)"
+                            echo "Files in directory:"
+                            ls -la
+
+                            if [ ! -f "5_jun_env.json" ]; then
+                                echo "ERROR: Environment file 5_jun_env.json not found!"
+                                exit 1
+                            fi
+
+                            # Pass the STAGING_URL from Jenkins environment to Newman's 'baseUrl' variable
+                            newman run 5_jun_api.json \\
+                                --folder "test_1" \\
+                                -e 5_jun_env.json \\
+                                --reporters cli,htmlextra,allure \\
+                                --reporter-htmlextra-export newman-report.html \\
+                                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
+                                --env-var "baseUrl=${env.STAGING_URL}"
+                        """
+                    }
+                }
+            }
+        }
+
         stage('Trigger QA Tests against Staging') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -177,28 +178,28 @@ pipeline {
             script {
                 echo "Publishing Allure Report..."
                 tool name: 'Allure_2.34.0', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
-                
-                    allure(
-                        reportBuildPolicy: 'ALWAYS',
-                        results: [
-                            [path: 'allure-results/unit-tests'],
-                            [path: 'allure-results/integration-tests'],
-                            [path: 'allure-results/api-tests']
-                        ],
-                        includeProperties: false,
-                        jdk: '',
-                        properties: []
-                    )
+
+                allure(
+                    reportBuildPolicy: 'ALWAYS',
+                    results: [
+                        [path: "${env.ALLURE_RESULTS_ROOT}/unit-tests"],
+                        [path: "${env.ALLURE_RESULTS_ROOT}/integration-tests"],
+                        [path: "${env.ALLURE_RESULTS_ROOT}/api-tests"]
+                    ],
+                    includeProperties: false,
+                    jdk: '',
+                    properties: []
+                )
                 echo "Allure Report should be available via the link on the build page."
             }
             // Cleans up the workspace on the Jenkins agent regardless of build result
             // It's generally good to deleteDir() AFTER publishing reports/artifacts if they are generated in the workspace.
-            deleteDir() 
+            deleteDir()
         }
         success {
             echo 'SUT Build and Deploy to Staging pipeline finished successfully.'
         }
-        unstable { // Add an 'unstable' block if you have tests that can make a build unstable but not outright fail
+        unstable {
             echo 'SUT Build and Deploy to Staging pipeline finished with UNSTABLE tests.'
         }
         failure {
@@ -206,7 +207,7 @@ pipeline {
             // You might add notifications here, e.g., email or Slack
             // mail to: 'devs@example.com', subject: "Jenkins Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}"
         }
-        aborted { // Handle manual abortion
+        aborted {
             echo 'SUT Build and Deploy to Staging pipeline ABORTED.'
         }
     }
