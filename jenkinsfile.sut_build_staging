@@ -61,7 +61,9 @@ pipeline {
                     echo "Setting up NodeJS and installing Newman and Allure reporter..."
                     // Ensure you have configured a NodeJS tool in Jenkins -> Manage Jenkins -> Global Tool Configuration
                     // Replace 'NodeJS_18' with the name you gave your NodeJS installation
-                    nodejs 'NodeJS_24'
+                    tools{
+                        nodejs 'NodeJS_24'
+                    }
                                        
                     // Install Newman and its Allure reporter globally on the agent
                     // This command should run successfully for Newman to find the reporter
