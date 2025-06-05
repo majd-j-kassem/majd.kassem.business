@@ -7,9 +7,7 @@ pipeline {
         SUT_BRANCH_DEV = 'dev'
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' 
         QA_JOB_NAME = 'QA-Tests-Staging' 
-        GIT_CREDENTIAL_ID = 'git_id' 
-        API_TESTS_DIR = 'API_POSTMAN'
-        
+        GIT_CREDENTIAL_ID = 'git_id'         
         // --- MODIFICATION START ---
         // Correct DJANGO_SETTINGS_MODULE to match pytest.ini's expectation when my_learning_platform is the base
         DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings'
