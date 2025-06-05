@@ -1,6 +1,9 @@
 // Jenkinsfile.sut_build_staging (in majd.kassem.business.git)
 pipeline {
     agent any // This job can run on any available Jenkins agent.
+    tools{
+        nodejs 'NodeJS_24'
+    }
 
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
@@ -17,9 +20,7 @@ pipeline {
         ALLURE_RESULTS_DIR = 'allure-results'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
         NEWMAN_ALLURE_RESULTS_DIR = 'newman-allure-results'
-         tools{
-                        nodejs 'NodeJS_24'
-                    }
+        
     }
     
     stages {stage('Test NodeJS Tool') {
