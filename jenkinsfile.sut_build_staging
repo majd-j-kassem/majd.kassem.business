@@ -109,8 +109,10 @@ pipeline {
     echo "Running Postman API tests with Newman and generating Allure results..."
 
     // Define the full absolute path for Newman's Allure results
-    // currentDir is /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging
-    def newmanAllureResultsAbsoluteDir = "${pwd()}/${env.ALLURE_RESULTS_DIR}/api-tests"
+    // pwd() returns /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging
+    // So newmanAllureResultsAbsoluteDir will be:
+    // /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/allure-results/api-tests
+    def newmanAllureResultsAbsoluteDir = "${pwd()}/allure-results/api-tests" // Assuming env.ALLURE_RESULTS_DIR is 'allure-results' relative to workspace root
 
     // Clean and create the directory for API test results using the absolute path
     sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
@@ -122,12 +124,16 @@ pipeline {
         // /var/lib/jenkins/workspace/SUT-Build-Deploy-Staging/sut-code/API_POSTMAN
 
         sh """#!/bin/bash
+            echo "Current directory inside Newman execution block: $(pwd)"
+            echo "Files in current directory:"
+            ls -la
+
             newman run 5_june_api.json \\
                 --folder "test_1" \\
                 -e 5_june_env.json \\
                 --reporters cli,htmlextra,allure \\
                 --reporter-htmlextra-export newman-report.html \\
-                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} # <<< -- ALWAYS PASS ABSOLUTE PATH
+                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} # <<< --- THIS IS THE CRITICAL CHANGE
         """
     }
 }
