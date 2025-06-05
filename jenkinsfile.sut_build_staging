@@ -1,7 +1,9 @@
 // Jenkinsfile.sut_build_staging (in majd.kassem.business.git)
 pipeline {
     agent any // This job can run on any available Jenkins agent.
-   
+    tools{
+        nodejs 'NodeJS_24'
+    }
 
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
@@ -25,7 +27,6 @@ pipeline {
             steps {
                 script {
                     echo "Attempting to use NodeJS tool..."
-                    tool name: 'NodeJS_24', type: 'org.jenkinsci.plugins.nodejs.tools.NodeJSInstallation'
                     sh 'node -v' // Check if node command is available
                     sh 'npm -v'  // Check if npm command is available
                 }
@@ -60,15 +61,7 @@ pipeline {
         stage('Setup NodeJS and Newman') {
             steps {
                 script {
-                    echo "Setting up NodeJS and installing Newman and Allure reporter..."
-                    // Ensure you have configured a NodeJS tool in Jenkins -> Manage Jenkins -> Global Tool Configuration
-                    // Replace 'NodeJS_18' with the name you gave your NodeJS installation
-                    tools{
-                        nodejs 'NodeJS_24'
-                    }
-                                       
-                    // Install Newman and its Allure reporter globally on the agent
-                    // This command should run successfully for Newman to find the reporter
+                    echo "Installing Newman and Allure reporter..."
                     sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra'
                 }
             }
