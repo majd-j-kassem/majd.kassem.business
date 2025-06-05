@@ -5,9 +5,10 @@ pipeline {
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
         SUT_BRANCH_DEV = 'dev'
-        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render staging URL
-        QA_JOB_NAME = 'QA-Tests-Staging' // EXACT name of the Jenkins job for QA tests
-        GIT_CREDENTIAL_ID = 'git_id' // <--- Use the ID you created in Step 1
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' 
+        QA_JOB_NAME = 'QA-Tests-Staging' 
+        GIT_CREDENTIAL_ID = 'git_id' 
+        API_TESTS_DIR = 'API_POSTMAN'
         
         // --- MODIFICATION START ---
         // Correct DJANGO_SETTINGS_MODULE to match pytest.ini's expectation when my_learning_platform is the base
@@ -45,6 +46,22 @@ pipeline {
                 }
             }
         }
+        // --- NEW STAGE FOR NODE.JS AND NEWMAN SETUP ---
+        stage('Setup NodeJS and Newman') {
+            steps {
+                script {
+                    echo "Setting up NodeJS and installing Newman and Allure reporter..."
+                    // Ensure you have configured a NodeJS tool in Jenkins -> Manage Jenkins -> Global Tool Configuration
+                    // Replace 'NodeJS_18' with the name you gave your NodeJS installation
+                    tool name: 'NodeJS_18', type: 'org.jenkinsci.plugins.nodejs.tools.NodeJSInstallation'
+                    
+                    // Install Newman and its Allure reporter globally on the agent
+                    // This command should run successfully for Newman to find the reporter
+                    sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra'
+                }
+            }
+        }
+        // --- END NEW STAGE ---
         
         stage('Run Unit Tests') {
             steps {
@@ -76,6 +93,36 @@ pipeline {
                             mkdir -p ../${ALLURE_RESULTS_DIR}/integration-tests
                             source ../.venv/bin/activate
                             pytest accounts/tests/integration --alluredir=../${ALLURE_RESULTS_DIR}/integration-tests
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Run API Tests') {
+            steps {
+                script {
+                    echo "Running Postman API tests with Newman and generating Allure results..."
+                    
+                    // Define a specific directory for Newman's Allure results
+                    def newmanAllureResultsDir = "${env.ALLURE_RESULTS_DIR}/api-tests"
+
+                    // Clean and create the directory for API test results
+                    sh "rm -rf ${newmanAllureResultsDir}"
+                    sh "mkdir -p ${newmanAllureResultsDir}"
+
+                    // Navigate to the directory containing your Postman collection and environment files
+                    dir("sut-code/${env.API_TESTS_DIR}") {
+                        sh '''#!/bin/bash
+                            # Ensure Node.js is on PATH if it's not handled by Jenkins tool config automatically
+                            # source ~/.nvm/nvm.sh # Uncomment if you use NVM and need to activate it
+
+                            # Execute Newman tests for the specific folder
+                            newman run 5_june_api.json \\
+                                --folder "test_1" \\
+                                -e 5_june_env.json \\
+                                --reporters cli,htmlextra,allure \\
+                                --reporter-htmlextra-export newman-report.html \\
+                                --reporter-allure-export ../${newmanAllureResultsDir} # Note the '../' to point relative to sut-code/API_POSTMAN
                         '''
                     }
                 }
@@ -115,15 +162,45 @@ pipeline {
     }
 
     post {
+        // This 'always' block ensures these steps run regardless of the build outcome (success, failure, unstable, aborted).
         always {
+            script {
+                echo "Publishing Allure Report..."
+                // Ensure Allure Commandline tool is configured in Jenkins -> Global Tool Configuration
+                // Replace 'Allure_2.24.0' with the name you gave your Allure Commandline installation
+                tool name: 'Allure_2.24.0', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
+                
+                // The 'allure' step aggregates results from all specified directories
+                allure([
+                    includeProperties: false,
+                    jdk: '', // If you have a specific JDK for Allure, configure it here (e.g., 'jdk-17')
+                    properties: [],
+                    reportBuildPolicy: 'ALWAYS', // ALWAYS, UNSATBLE, or FAILURE. ALWAYS is good for visibility.
+                    results: [
+                        "${ALLURE_RESULTS_DIR}/unit-tests",
+                        "${ALLURE_RESULTS_DIR}/integration-tests",
+                        "${ALLURE_RESULTS_DIR}/api-tests" // Path for your Newman API test results
+                    ]
+                ])
+                echo "Allure Report should be available via the link on the build page."
+            }
             // Cleans up the workspace on the Jenkins agent regardless of build result
+            // It's generally good to deleteDir() AFTER publishing reports/artifacts if they are generated in the workspace.
             deleteDir() 
         }
         success {
             echo 'SUT Build and Deploy to Staging pipeline finished successfully.'
         }
+        unstable { // Add an 'unstable' block if you have tests that can make a build unstable but not outright fail
+            echo 'SUT Build and Deploy to Staging pipeline finished with UNSTABLE tests.'
+        }
         failure {
             echo 'SUT Build and Deploy to Staging pipeline FAILED.'
+            // You might add notifications here, e.g., email or Slack
+            // mail to: 'devs@example.com', subject: "Jenkins Build Failed: ${env.JOB_NAME} - ${env.BUILD_NUMBER}"
+        }
+        aborted { // Handle manual abortion
+            echo 'SUT Build and Deploy to Staging pipeline ABORTED.'
         }
     }
 }
