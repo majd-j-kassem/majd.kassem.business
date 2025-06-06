@@ -117,7 +117,7 @@ pipeline {
                             //    - This is the command that initiates a new build/deploy on Render
                             sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
                             echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
-                            sleep(60)
+                            
                     }
                 }
             }
@@ -127,7 +127,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Postman API tests with Newman and generating Allure results..."
-
+                    sleep(90)
                     // Define the full absolute path for Newman's Allure results
                     def newmanAllureResultsAbsoluteDir = "${pwd()}/${ALLURE_RESULTS_ROOT}/api-tests"
 
