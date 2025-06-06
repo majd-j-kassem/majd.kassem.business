@@ -254,7 +254,7 @@ pipeline {
                 }
             }
         }
-     stage('Merge Dev to Main & Push') {
+        stage('Merge Dev to Main & Push') {
             when {
                 expression { currentBuild.result == 'SUCCESS' }
             }
@@ -376,5 +376,6 @@ pipeline {
         }
         // The success, unstable, failure, aborted blocks are no longer needed here
         // as their logic has been moved into the 'always' block for correct timing.
+    }
     }
 }
