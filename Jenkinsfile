@@ -254,7 +254,6 @@ pipeline {
                 }
             }
         }
-    }
      stage('Merge Dev to Main & Push') {
             when {
                 expression { currentBuild.result == 'SUCCESS' }
