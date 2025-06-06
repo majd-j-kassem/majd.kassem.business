@@ -106,18 +106,38 @@ pipeline {
         }
 
         stage('Build and Deploy SUT to Staging (via Render)') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    echo "SUT deployment to staging triggered by Render on commit to ${env.SUT_BRANCH_DEV}."
-                    echo "Waiting 30 seconds for Render deployment to complete. (Consider polling health endpoint for robustness)."
-                    sleep 30 // This is a placeholder; a health check would be better
-                    echo "Assumed Render deployment to staging is complete."
+    steps {
+        script {
+            echo "SUT deployment to staging triggered by Render on commit to dev."
+            // ... (your Render deploy trigger code if any)
+
+            echo "Polling Render deployment health endpoint..."
+            def apiHealthUrl = "https://majd-kassem-business-dev.onrender.com/api/health" // **IMPORTANT: Use your actual health endpoint!**
+            def maxRetries = 20 // Adjust as needed for your Render service
+            def retryIntervalSeconds = 15 // Check every 15 seconds
+
+            for (int i = 0; i < maxRetries; i++) {
+                try {
+                    // Use curl to get the HTTP status code
+                    def response = sh(script: "curl -s -o /dev/null -w '%{http_code}' ${apiHealthUrl}", returnStdout: true).trim()
+                    echo "Health check attempt ${i+1}: HTTP Status Code: ${response}"
+                    if (response == "200") {
+                        echo "API is up and healthy! Proceeding with tests."
+                        break
+                    }
+                } catch (Exception e) {
+                    echo "Health check failed (curl error): ${e.getMessage()}. Retrying..."
+                }
+                if (i < maxRetries - 1) {
+                    sleep(retryIntervalSeconds)
+                } else {
+                    error "API did not become healthy after ${maxRetries} attempts. Aborting pipeline."
                 }
             }
         }
+    }
+}
+// ... (Your "Run API Tests" stage comes after this)
 
         stage('Run API Tests') {
             steps {
