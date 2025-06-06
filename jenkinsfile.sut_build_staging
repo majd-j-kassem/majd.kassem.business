@@ -83,9 +83,7 @@ pipeline {
                             # Check if the core app directory exists
                             [ -d my_learning_platform_core ] && echo "my_learning_platform_core directory found." || echo "Error: my_learning_platform_core directory NOT found."
                             source ../.venv/bin/activate
-                            pytest accounts/tests/unit \\
-                                --alluredir=''' + unitTestAllureResultsDir + ''' \\
-                                --junitxml=''' + unitTestJunitReportFile + '''
+                            pytest accounts/tests/unit --alluredir=''' + unitTestAllureResultsDir + ''' --junitxml=''' + unitTestJunitReportFile + '''
                         '''
                     }
                 }
