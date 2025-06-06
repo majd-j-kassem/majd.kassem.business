@@ -127,7 +127,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Postman API tests with Newman and generating Allure results..."
-                    sleep(90)
+                    sleep(120)
                     // Define the full absolute path for Newman's Allure results
                     def newmanAllureResultsAbsoluteDir = "${pwd()}/${ALLURE_RESULTS_ROOT}/api-tests"
 
