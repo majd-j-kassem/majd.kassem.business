@@ -10,22 +10,23 @@ pipeline {
         // Consolidated Environment Variables
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
         QA_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business_qa.git'
-        
+
         STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render dev URL
         LIVE_URL = 'https://majd-kassem-business.onrender.com/' // Your Render live URL
 
         // Ensure a single credential ID variable is used for all Git checkouts
-        GIT_CREDENTIAL_ID = 'git_id' 
+        GIT_CREDENTIAL_ID = 'git_id'
 
         DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings' // Specific to SUT
         SUT_BRANCH_DEV = 'dev' // Assuming you're working on dev branch for SUT
+        QA_BRANCH = 'dev' // Assuming your QA repo also has a dev branch
 
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
 
         // Global report directories (relative to Jenkins WORKSPACE root)
-        ALLURE_ROOT_DIR = 'allure-results' 
-        JUNIT_ROOT_DIR = 'junit-reports'   
-        
+        ALLURE_ROOT_DIR = 'allure-results'
+        JUNIT_ROOT_DIR = 'junit-reports'
+
         // QA_JOB_NAME and LIVE_DEPLOY_JOB_NAME are no longer needed as separate jobs are integrated
         // QA_ALLURE_RESULTS_ROOT and QA_JUNIT_RESULTS_ROOT are no longer needed as they are sub-directories
     }
@@ -189,29 +190,33 @@ pipeline {
             }
         }
 
-        // --- NEW: Integrated QA Stages (from your old 'Jenkinsfile.qa_tests') ---
+        // --- FIXED: Integrated QA Stages (from your old 'Jenkinsfile.qa_tests') ---
         stage('Checkout QA Test Code') {
             steps {
-                echo "Checking out QA repository: ${QA_REPO}, branch: ${QA_BRANCH}"
-                dir('qa-code') { // Checkout into a dedicated directory
-                    git branch: QA_BRANCH, credentialsId: GIT_CREDENTIAL_ID, url: QA_REPO
-                }
+                script { // <--- ADDED THIS SCRIPT BLOCK
+                    echo "Checking out QA repository: ${QA_REPO}, branch: ${QA_BRANCH}"
+                    dir('qa-code') { // Checkout into a dedicated directory
+                        git branch: QA_BRANCH, credentialsId: GIT_CREDENTIAL_ID, url: QA_REPO
+                    }
+                } // <--- END OF SCRIPT BLOCK
             }
         }
 
         stage('Setup Python Environment (QA)') {
             steps {
-                echo "Setting up Python virtual environment and installing dependencies for QA tests..."
-                dir('qa-code') {
-                    sh 'python3 -m venv ./.venv'
-                    sh 'bash -c ". ./.venv/bin/activate && pip install --no-cache-dir -r requirements.txt"'
+                script { // <--- Ensure script block is here too if it was missing
+                    echo "Setting up Python virtual environment and installing dependencies for QA tests..."
+                    dir('qa-code') {
+                        sh 'python3 -m venv ./.venv'
+                        sh 'bash -c ". ./.venv/bin/activate && pip install --no-cache-dir -r requirements.txt"'
+                    }
                 }
             }
         }
 
         stage('Run QA Tests against Staging') {
             steps {
-                script {
+                script { // <--- Ensure script block is here too if it was missing
                     echo "Running Selenium tests against Staging URL: ${STAGING_URL}"
                     dir('qa-code') {
                         // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
@@ -251,7 +256,7 @@ pipeline {
         }
     }
 
-    // --- CONSOLIDATED POST SECTION (combining all reporting and notifications) ---
+    // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
         always {
             script {
@@ -285,71 +290,63 @@ pipeline {
                 archiveArtifacts artifacts: "${ALLURE_ROOT_DIR}/**,${JUNIT_ROOT_DIR}/*.xml", fingerprint: true
 
                 // Removed problematic 'testResultAction' logic. Jenkins handles basic test stats display automatically.
+
+                // --- NEW FIX: Email logic executed *before* deleteDir() within the 'always' block ---
+                if (currentBuild.result == 'SUCCESS') {
+                    echo 'Pipeline finished successfully. Deployment to Live triggered (if configured).'
+                    emailext (
+                        to: 'mjdwassouf@gmail.com',
+                        subject: "Jenkins Pipeline SUCCESS: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                        body: """
+                        <p>Build Status: <b>SUCCESS</b></p>
+                        <p>Project: ${env.JOB_NAME}</p>
+                        <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                        <p>Consolidated Allure Report: <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
+                        <p>See attached for consolidated JUnit XML results.</p>
+                        """,
+                        mimeType: 'text/html',
+                        attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
+                    )
+                } else if (currentBuild.result == 'UNSTABLE') {
+                    echo 'Pipeline finished with UNSTABLE tests.'
+                    emailext (
+                        to: 'mjdwassouf@gmail.com',
+                        subject: "Jenkins Pipeline UNSTABLE: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} (Some Tests Failed)",
+                        body: """
+                        <p>Build Status: <b>UNSTABLE</b> (Some tests failed)</p>
+                        <p>Project: ${env.JOB_NAME}</p>
+                        <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                        <p>Consolidated Allure Report: <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
+                        <p>See attached for consolidated JUnit XML results.</p>
+                        """,
+                        mimeType: 'text/html',
+                        attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
+                    )
+                } else if (currentBuild.result == 'FAILURE') {
+                    echo 'Pipeline FAILED. No deployment to live.'
+                    emailext (
+                        to: 'mjdwassouf@gmail.com',
+                        subject: "Jenkins Pipeline FAILED: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
+                        body: """
+                        <p>Build Status: <b>FAILED!</b></p>
+                        <p>Project: ${env.JOB_NAME}</p>
+                        <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                        <p>Please check the console output for details: <a href="${env.BUILD_URL}console">Console Output</a></p>
+                        <p>Consolidated Allure Report (if generated): <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
+                        <p>See attached for consolidated JUnit XML results (if generated).</p>
+                        """,
+                        mimeType: 'text/html',
+                        attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
+                    )
+                } else if (currentBuild.result == 'ABORTED') {
+                    echo 'Pipeline ABORTED.'
+                    // If you want an email for aborted builds, uncomment and configure it here.
+                }
             }
-            // This ensures the workspace is cleaned up AFTER all reports and artifacts are published.
+            // --- NEW FIX: deleteDir() is the absolute LAST thing to happen in 'always' ---
             deleteDir()
         }
-
-        success {
-            script {
-                echo 'Pipeline finished successfully. Deployment to Live triggered (if configured).'
-                emailext (
-                    to: 'mjdwassouf@gmail.com',
-                    subject: "Jenkins Pipeline SUCCESS: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                    body: """
-                    <p>Build Status: <b>SUCCESS</b></p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                    <p>Consolidated Allure Report: <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
-                    <p>See attached for consolidated JUnit XML results.</p>
-                    """,
-                    mimeType: 'text/html',
-                    attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
-                )
-            }
-        }
-
-        unstable {
-            script {
-                echo 'Pipeline finished with unstable results (e.g., some tests failed).'
-                emailext (
-                    to: 'mjdwassouf@gmail.com',
-                    subject: "Jenkins Pipeline UNSTABLE: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} (Some Tests Failed)",
-                    body: """
-                    <p>Build Status: <b>UNSTABLE</b> (Some tests failed)</p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                    <p>Consolidated Allure Report: <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
-                    <p>See attached for consolidated JUnit XML results.</p>
-                    """,
-                    mimeType: 'text/html',
-                    attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
-                )
-            }
-        }
-
-        failure {
-            script {
-                echo 'Pipeline FAILED. No deployment to live.'
-                emailext (
-                    to: 'mjdwassouf@gmail.com',
-                    subject: "Jenkins Pipeline FAILED: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                    body: """
-                    <p>Build Status: <b>FAILED!</b></p>
-                    <p>Project: ${env.JOB_NAME}</p>
-                    <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                    <p>Please check the console output for details: <a href="${env.BUILD_URL}console">Console Output</a></p>
-                    <p>Consolidated Allure Report (if generated): <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
-                    <p>See attached for consolidated JUnit XML results (if generated).</p>
-                    """,
-                    mimeType: 'text/html',
-                    attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
-                )
-            }
-        }
-
-        aborted {
-            echo 'Pipeline ABORTED.'
-        }
+        // The success, unstable, failure, aborted blocks are no longer needed here
+        // as their logic has been moved into the 'always' block for correct timing.
     }
 }
