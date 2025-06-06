@@ -283,6 +283,7 @@ pipeline {
                 }
             }
         }
+    }
 
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
@@ -374,8 +375,7 @@ pipeline {
             // --- NEW FIX: deleteDir() is the absolute LAST thing to happen in 'always' ---
             deleteDir()
         }
-        // The success, unstable, failure, aborted blocks are no longer needed here
-        // as their logic has been moved into the 'always' block for correct timing.
-    }
     }
 }
+        // The success, unstable, failure, aborted blocks are no longer needed here
+        // as their logic has been moved into the 'always' block for correct timin
