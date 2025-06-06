@@ -111,10 +111,12 @@ pipeline {
             }
             steps {
                 script {
-                    echo "SUT deployment to staging triggered by Render on commit to ${env.SUT_BRANCH_DEV}."
-                    echo "Waiting 30 seconds for Render deployment to complete. (Consider polling health endpoint for robustness)."
-                    sleep 10 // This is a placeholder; a health check would be better
-                    echo "Assumed Render deployment to staging is complete."
+                    withCredentials([string(credentialsId: 'RENDER_DEV_DEPLOY_HOOK', variable: 'RENDER_DEPLOY_HOOK_URL')]) {
+                            echo "Triggering Render deployment for ${env.STAGING_URL}..."
+                            // 2. TRIGGER THE DEPLOYMENT USING CURL AND THE DEPLOY HOOK URL
+                            //    - This is the command that initiates a new build/deploy on Render
+                            sh "curl -X POST ${RENDER_DEPLOY_HOOK_URL}"
+                            echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
                 }
             }
         }
