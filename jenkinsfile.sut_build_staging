@@ -117,6 +117,7 @@ pipeline {
                             //    - This is the command that initiates a new build/deploy on Render
                             sh "curl -X POST ${RENDER_DEPLOY_HOOK_URL}"
                             echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
+                    }
                 }
             }
         }
