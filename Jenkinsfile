@@ -235,6 +235,44 @@ pipeline {
                 }
             }
         }
+         // --- NEW: Simplified Live Deployment Stage (relies on Git push) ---
+        stage('Merge Dev to Main & Push (and Trigger Live Deploy)') { // Renamed for clarity
+            when {
+                // This condition ensures this critical stage only runs if the entire pipeline is successful
+                expression { currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    dir('sut-code') {
+                        echo "Checking out SUT Main branch for merge operation..."
+                        // Ensure env.SUT_BRANCH_MAIN is defined, e.g., in your environment block:
+                        // SUT_BRANCH_MAIN = 'main'
+                        git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
+
+                        echo "Configuring Git user for the merge commit..."
+                        sh "git config user.email 'jenkins@example.com'"
+                        sh "git config user.name 'Jenkins CI Automation'"
+
+                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
+                        sh "git fetch origin ${env.SUT_BRANCH_DEV}" // Fetch the dev branch as well
+
+                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
+                        sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
+
+                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This will trigger Render live deploy."
+                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
+                        }
+                        echo "SUT Main branch updated. Render will now deploy to live."
+
+                        // OPTIONAL: Add a sleep or polling here if Render deployment takes time
+                        // and you want to ensure it's "mostly done" before the build completes.
+                        // However, the main purpose of this stage is the push.
+                        // sleep(60)
+                    }
+                }
+            }
+        }
 
         // --- NEW: Integrated Live Deployment Stage (from your old 'SUT-Deploy-Live' job) ---
         stage('Trigger SUT Live Deployment (if all tests pass)') {
@@ -254,36 +292,7 @@ pipeline {
                 }
             }
         }
-        stage('Merge Dev to Main & Push') {
-            echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM " ${currentBuild.result}
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    dir('sut-code') { // Or 'sut-main-for-deploy' if you want a separate directory
-                        echo "Checking out SUT Main branch for merge operation..."
-                        git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
-
-                        echo "Configuring Git user for the merge commit..."
-                        sh "git config user.email 'jenkins@example.com'"
-                        sh "git config user.name 'Jenkins CI Automation'"
-
-                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
-                        sh "git fetch origin ${env.SUT_BRANCH_DEV}"
-
-                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
-                        sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
-
-                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote (triggers Render live deploy)..."
-                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
-                        }
-                        echo "SUT Main branch updated. Render will now deploy to live."
-                    }
-                }
-            }
-        }
+      
     }
 
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
