@@ -20,7 +20,7 @@ class UserRegistrationFormTest(TestCase):
         self.assertTrue(form.is_valid(), form.errors) # Assert True, and print errors if not valid
 
         # Verify cleaned data
-        self.assertNotEqual(form.cleaned_data['username'], 'testuser')
+        self.assertEqual(form.cleaned_data['username'], 'testuser')
         self.assertEqual(form.cleaned_data['email'], 'test@example.com')
         self.assertIn('password', form.cleaned_data) # Password will be hashed/processed by the form
         
