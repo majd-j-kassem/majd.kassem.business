@@ -19,6 +19,7 @@ pipeline {
 
         DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings' // Specific to SUT
         SUT_BRANCH_DEV = 'dev' // Assuming you're working on dev branch for SUT
+        SUT_BRANCH_MAIN = 'main' // <--- Added: Define your main branch
         QA_BRANCH = 'dev' // Assuming your QA repo also has a dev branch
 
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
@@ -53,7 +54,7 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment (SUT)') { // Renamed for clarity
+        stage('Setup Python Environment (SUT)') {
             steps {
                 script {
                     echo "Setting up Python virtual environment and installing dependencies for SUT..."
@@ -66,7 +67,7 @@ pipeline {
             }
         }
 
-        stage('Setup NodeJS and Newman (SUT)') { // Renamed for clarity
+        stage('Setup NodeJS and Newman (SUT)') {
             steps {
                 script {
                     echo "Installing Newman and Allure reporter..."
@@ -76,18 +77,17 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests (SUT)') { // Renamed for clarity
+        stage('Run Unit Tests (SUT)') {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
                     dir('sut-code/my_learning_platform') {
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths from the root of the Jenkins workspace
                         def unitTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/unit-tests"
                         def unitTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_unit_report.xml"
 
                         sh "rm -rf ${unitTestAllureResultsDir}"
                         sh "mkdir -p ${unitTestAllureResultsDir}"
-                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
+                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
 
                         sh '''#!/bin/bash
                             # Check if the core app directory exists
@@ -100,12 +100,11 @@ pipeline {
             }
         }
 
-        stage('Run Integration Tests (SUT)') { // Renamed for clarity
+        stage('Run Integration Tests (SUT)') {
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
                     dir('sut-code/my_learning_platform') {
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
                         def integrationTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/integration-tests"
                         def integrationTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_integration_report.xml"
 
@@ -124,21 +123,20 @@ pipeline {
             }
         }
 
-        stage('Run API Tests (SUT)') { // Renamed for clarity
+        stage('Run API Tests (SUT)') {
             steps {
                 script {
                     echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
                     sleep(120) // Keep your sleep for now as a temporary measure
 
-                    // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
                     def newmanAllureResultsAbsoluteDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/api-tests"
                     def newmanJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_api_report.xml"
 
                     sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
                     sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
-                    sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
+                    sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
 
-                    dir("sut-code/${API_TESTS_DIR}") { // `API_TESTS_DIR` is an environment variable
+                    dir("sut-code/${API_TESTS_DIR}") {
                         sh """#!/bin/bash
                             echo "Current directory: \$(pwd)"
                             echo "Files in directory:"
@@ -171,7 +169,6 @@ pipeline {
 
         stage('Build and Deploy SUT to Staging (via Render)') {
             when {
-                // This condition means it will run if previous stages were successful or skipped (e.g. initial build)
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
@@ -190,21 +187,21 @@ pipeline {
             }
         }
 
-        // --- FIXED: Integrated QA Stages (from your old 'Jenkinsfile.qa_tests') ---
+        // --- Integrated QA Stages ---
         stage('Checkout QA Test Code') {
             steps {
-                script { // <--- ADDED THIS SCRIPT BLOCK
+                script {
                     echo "Checking out QA repository: ${QA_REPO}, branch: ${QA_BRANCH}"
                     dir('qa-code') { // Checkout into a dedicated directory
                         git branch: QA_BRANCH, credentialsId: GIT_CREDENTIAL_ID, url: QA_REPO
                     }
-                } // <--- END OF SCRIPT BLOCK
+                }
             }
         }
 
         stage('Setup Python Environment (QA)') {
             steps {
-                script { // <--- Ensure script block is here too if it was missing
+                script {
                     echo "Setting up Python virtual environment and installing dependencies for QA tests..."
                     dir('qa-code') {
                         sh 'python3 -m venv ./.venv'
@@ -216,16 +213,15 @@ pipeline {
 
         stage('Run QA Tests against Staging') {
             steps {
-                script { // <--- Ensure script block is here too if it was missing
+                script {
                     echo "Running Selenium tests against Staging URL: ${STAGING_URL}"
                     dir('qa-code') {
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
                         def qaTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/qa-tests"
                         def qaTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/qa_report.xml"
 
                         sh "rm -rf ${qaTestAllureResultsDir}"
                         sh "mkdir -p ${qaTestAllureResultsDir}"
-                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
+                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
 
                         sh """#!/bin/bash
                             . ./.venv/bin/activate
@@ -235,18 +231,18 @@ pipeline {
                 }
             }
         }
-         // --- NEW: Simplified Live Deployment Stage (relies on Git push) ---
-        stage('Merge Dev to Main & Push (and Trigger Live Deploy)') { // Renamed for clarity
+
+        // --- THIS IS THE **ONLY** STAGE FOR LIVE DEPLOYMENT AND MERGE ---
+        // It assumes Render's live service deploys automatically on 'main' branch pushes.
+        stage('Merge Dev to Main & Trigger Live Deploy') {
             when {
-                // This condition ensures this critical stage only runs if the entire pipeline is successful
+                // This critical stage only runs if the entire pipeline's result is SUCCESS
                 expression { currentBuild.result == 'SUCCESS' }
             }
             steps {
                 script {
                     dir('sut-code') {
                         echo "Checking out SUT Main branch for merge operation..."
-                        // Ensure env.SUT_BRANCH_MAIN is defined, e.g., in your environment block:
-                        // SUT_BRANCH_MAIN = 'main'
                         git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
 
                         echo "Configuring Git user for the merge commit..."
@@ -259,7 +255,7 @@ pipeline {
                         echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
                         sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
 
-                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This will trigger Render live deploy."
+                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This push will trigger Render live deploy."
                         withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
                             sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
                         }
@@ -267,33 +263,12 @@ pipeline {
 
                         // OPTIONAL: Add a sleep or polling here if Render deployment takes time
                         // and you want to ensure it's "mostly done" before the build completes.
-                        // However, the main purpose of this stage is the push.
                         // sleep(60)
                     }
                 }
             }
         }
-
-        // --- NEW: Integrated Live Deployment Stage (from your old 'SUT-Deploy-Live' job) ---
-        stage('Trigger SUT Live Deployment (if all tests pass)') {
-            when {
-                // This condition ensures deployment to live only happens if the entire pipeline is successful
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    echo "All tests passed. Triggering live deployment to ${LIVE_URL}."
-                    // --- ADD YOUR ACTUAL LIVE DEPLOYMENT LOGIC HERE ---
-                    // Example using a Render Deploy Hook (you'll need to create this credential in Jenkins)
-                    withCredentials([string(credentialsId: 'ENDER_LIVE_DEPLOY_HOOK', variable: 'ENDER_LIVE_DEPLOY_HOOK_URL')]) { // Assuming a different hook for live
-                        sh "curl -X POST ${ENDER_LIVE_DEPLOY_HOOK_URL}"
-                        echo "Render live deployment triggered via Deploy Hook."
-                    }
-                }
-            }
-        }
-      
-    }
+    } // End of the 'stages' block
 
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
@@ -385,7 +360,5 @@ pipeline {
             // --- NEW FIX: deleteDir() is the absolute LAST thing to happen in 'always' ---
             deleteDir()
         }
-    }
+    } // End of the 'pipeline' block
 }
-        // The success, unstable, failure, aborted blocks are no longer needed here
-        // as their logic has been moved into the 'always' block for correct timin
