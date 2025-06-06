@@ -173,7 +173,6 @@ pipeline {
         }
     }
 }
-
         stage('Trigger QA Tests against Staging') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
