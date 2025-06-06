@@ -255,6 +255,7 @@ pipeline {
             }
         }
         stage('Merge Dev to Main & Push') {
+            echo "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM " ${currentBuild.result}
             when {
                 expression { currentBuild.result == 'SUCCESS' }
             }
