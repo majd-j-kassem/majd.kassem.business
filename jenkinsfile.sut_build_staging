@@ -124,41 +124,55 @@ pipeline {
         }
 
         stage('Run API Tests') {
-            steps {
-                script {
-                    echo "Running Postman API tests with Newman and generating Allure results..."
-                    sleep(120)
-                    // Define the full absolute path for Newman's Allure results
-                    def newmanAllureResultsAbsoluteDir = "${pwd()}/${ALLURE_RESULTS_ROOT}/api-tests"
+    steps {
+        script {
+            echo "Running Postman API tests with Newman and generating Allure results..."
+            sleep(120) // Keep your sleep for now
 
-                    // Clean and create directory structure using the absolute path
-                    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
-                    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
+            // Define the full absolute path for Newman's Allure results
+            def newmanAllureResultsAbsoluteDir = "${pwd()}/${ALLURE_RESULTS_ROOT}/api-tests"
 
-                    dir("sut-code/${env.API_TESTS_DIR}") {
-                        sh """#!/bin/bash
-                            echo "Current directory: \$(pwd)"
-                            echo "Files in directory:"
-                            ls -la
+            // Clean and create directory structure using the absolute path
+            sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
+            sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
 
-                            if [ ! -f "5_jun_env.json" ]; then
-                                echo "ERROR: Environment file 5_jun_env.json not found!"
-                                exit 1
-                            fi
+            dir("sut-code/${env.API_TESTS_DIR}") {
+                sh """#!/bin/bash
+                    echo "Current directory: \$(pwd)"
+                    echo "Files in directory:"
+                    ls -la
 
-                            # Pass the STAGING_URL from Jenkins environment to Newman's 'baseUrl' variable
-                            newman run 5_jun_api.json \\
-                                --folder "test_1" \\
-                                -e 5_jun_env.json \\
-                                --reporters cli,htmlextra,allure \\
-                                --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
-                                --env-var "baseUrl=${env.STAGING_URL}"
-                        """
-                    }
-                }
+                    if [ ! -f "5_jun_env.json" ]; then
+                        echo "ERROR: Environment file 5_jun_env.json not found!"
+                        exit 1
+                    fi
+
+                    # --- DEBUG LINE (optional, but good for verification) ---
+                    echo "--- STAGING_URL from Jenkins environment: ${env.STAGING_URL} ---"
+                    # --- END DEBUG LINE ---
+
+                    # --------------------------------------------------------------------------------
+                    #  PUT THE NEWMAN_BASE_URL LOGIC HERE!
+                    # --------------------------------------------------------------------------------
+                    NEWMAN_BASE_URL="${env.STAGING_URL}"
+                    if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
+                        NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
+                    fi
+                    echo "--- Newman Base URL after processing: \$NEWMAN_BASE_URL ---" # Add this to confirm the change
+                    # --------------------------------------------------------------------------------
+
+                    newman run 5_jun_api.json \\
+                        --folder "test_1" \\
+                        -e 5_jun_env.json \\
+                        --reporters cli,htmlextra,allure \\
+                        --reporter-htmlextra-export newman-report.html \\
+                        --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
+                        --env-var "baseUrl=\${NEWMAN_BASE_URL}" # Use the processed variable here
+                """
             }
         }
+    }
+}
 
         stage('Trigger QA Tests against Staging') {
             when {
