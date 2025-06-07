@@ -74,16 +74,26 @@ pipeline {
             }
         }
 
-        stage('Setup NodeJS and Newman (SUT)') { // Renamed for clarity
-            steps {
-                script {
-                    echo "Installing Newman and Allure reporter..."
-                    // This installs globally to the agent's environment where the build runs
-                    sh 'npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest'
-                    
-                }
-            }
+        stage('Setup NodeJS and Newman (SUT)') {
+    steps {
+        script {
+            echo "Installing Newman and Allure reporter..."
+            sh '''
+                # Clear npm cache (optional, but good for troubleshooting)
+                npm cache clean --force
+
+                # Remove the existing global node_modules directory for Newman/Allure
+                # This ensures a clean slate for the installation
+                rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman
+                rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-allure
+                rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-htmlextra
+
+                # Now perform the global install
+                npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest
+            '''
         }
+    }
+}
 
         stage('Run Unit Tests (SUT)') {
             steps {
