@@ -237,42 +237,80 @@ pipeline {
         }
          // --- NEW: Simplified Live Deployment Stage (relies on Git push) ---
         stage('Merge Dev to Main & Push (and Trigger Live Deploy)') { // Renamed for clarity
-            when {
-                // This condition ensures this critical stage only runs if the entire pipeline is successful
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    dir('sut-code') {
-                        echo "Checking out SUT Main branch for merge operation..."
-                        // Ensure env.SUT_BRANCH_MAIN is defined, e.g., in your environment block:
-                        // SUT_BRANCH_MAIN = 'main'
-                        git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
+    when {
+        // This condition ensures this critical stage only runs if the entire pipeline is successful
+        expression { currentBuild.result == 'SUCCESS' }
+    }
+    steps {
+        script {
+            dir('sut-code') {
+                echo "Checking out SUT Main branch for merge operation..."
+                // Ensure env.SUT_BRANCH_MAIN is defined, e.g., in your environment block:
+                // SUT_BRANCH_MAIN = 'main'
+                git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
 
-                        echo "Configuring Git user for the merge commit..."
-                        sh "git config user.email 'jenkins@example.com'"
-                        sh "git config user.name 'Jenkins CI Automation'"
+                echo "Configuring Git user for the merge commit..."
+                sh "git config user.email 'jenkins@example.com'"
+                sh "git config user.name 'Jenkins CI Automation'"
 
-                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
-                        sh "git fetch origin ${env.SUT_BRANCH_DEV}" // Fetch the dev branch as well
+                echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
+                sh "git fetch origin ${env.SUT_BRANCH_DEV}" // Fetch the dev branch as well
 
-                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
-                        sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
+                echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
+                // Use '--no-edit' to prevent Git from opening an editor for the merge commit message.
+                // `--no-ff` ensures a merge commit is always created, useful for history.
+                sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
 
-                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This will trigger Render live deploy."
-                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
+                echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This will trigger Render live deploy."
+                withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                    sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
+                }
+                echo "SUT Main branch updated. Render will now deploy to live."
+
+                // --- START Smart Wait Implementation for Live Deployment ---
+                def maxAttempts = 20 // Max number of times to check (e.g., 20 * 15 seconds = 5 minutes)
+                def retryDelaySeconds = 15 // Seconds to wait between checks
+                def healthCheckUrl = "${env.SUT_LIVE_URL}/health/" // Use the LIVE URL here!
+                                                                  // Ensure env.SUT_LIVE_URL is defined, e.g., in your environment block.
+                                                                  // Ensure your Django app exposes '/health/' endpoint on live.
+                def attempts = 0
+                def serviceHealthy = false
+
+                echo "Starting smart wait for live service at ${healthCheckUrl} to become healthy..."
+
+                while (attempts < maxAttempts && !serviceHealthy) {
+                    attempts++
+                    echo "Attempt ${attempts}/${maxAttempts}: Checking live service health..."
+                    try {
+                        // Use curl with -s (silent), -o /dev/null (discard output), -w "%{http_code}" (write HTTP code)
+                        def httpCode = sh(
+                            script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}",
+                            returnStdout: true
+                        ).trim()
+
+                        echo "Received HTTP status code: ${httpCode}"
+
+                        if (httpCode == '200') {
+                            serviceHealthy = true
+                            echo "Live service at ${healthCheckUrl} is healthy!"
+                        } else {
+                            echo "Live service not yet healthy. Retrying in ${retryDelaySeconds} seconds..."
+                            sleep retryDelaySeconds
                         }
-                        echo "SUT Main branch updated. Render will now deploy to live."
-
-                        // OPTIONAL: Add a sleep or polling here if Render deployment takes time
-                        // and you want to ensure it's "mostly done" before the build completes.
-                        // However, the main purpose of this stage is the push.
-                        // sleep(60)
+                    } catch (e) {
+                        echo "Error checking health: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
+                        sleep retryDelaySeconds
                     }
                 }
-            }
-        }
+
+                if (!serviceHealthy) {
+                    error "Live service at ${healthCheckUrl} did not become healthy within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
+                }
+                // --- END Smart Wait Implementation ---
+            } // End of dir('sut-code')
+        } // End of script block
+    } // End of steps block
+} // End of stage block
 
         // --- NEW: Integrated Live Deployment Stage (from your old 'SUT-Deploy-Live' job) ---
         stage('Trigger SUT Live Deployment (if all tests pass)') {
