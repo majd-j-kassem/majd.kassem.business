@@ -20,6 +20,8 @@ pipeline {
         DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings' // Specific to SUT
         SUT_BRANCH_DEV = 'dev' // Assuming you're working on dev branch for SUT
         QA_BRANCH = 'dev' // Assuming your QA repo also has a dev branch
+
+        STAGING_TARGET_BRANCH = 'dev'
         SUT_BRANCH_MAIN = 'main'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
 
@@ -152,7 +154,7 @@ pipeline {
                             "commit": "${currentCommitSha}"
                         }
                         """
-                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${TARGET_BRANCH}..."
+                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${STAGING_TARGET_BRANCH}..."
 
                         def deployResponse
                         try {
