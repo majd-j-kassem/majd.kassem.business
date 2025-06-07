@@ -86,35 +86,27 @@ pipeline {
         }
 
         stage('Run Unit Tests (SUT)') {
-    steps {
-        script {
-            echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
-            dir('my_learning_platform') { // All commands here run relative to my_learning_platform
-                sh '''
-                    bash -c "
-                        # Activate the virtual environment BEFORE running pytest
-                        source .venv/bin/activate
+            steps {
+                script {
+                    echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
+                    dir('my_learning_platform') {
+                        sh '''
+                            bash -c "
+                                source .venv/bin/activate
 
-                        # Clean previous Allure results and create report directories
-                        # It's better to make paths relative to the workspace for clarity,
-                        # but absolute paths work if they're correct.
-                        # Let's use workspace for consistency in reporting stages too.
-                        rm -rf ${WORKSPACE}/allure-results/unit-tests
-                        mkdir -p ${WORKSPACE}/allure-results/unit-tests
-                        mkdir -p ${WORKSPACE}/junit-reports
+                                rm -rf ${WORKSPACE}/allure-results/unit-tests
+                                mkdir -p ${WORKSPACE}/allure-results/unit-tests
+                                mkdir -p ${WORKSPACE}/junit-reports
 
-                        # Run pytest with Allure and JUnit XML reporting
-                        # Ensure your test discovery pattern is correct.
-                        # Example: pytest tests/
-                        pytest --alluredir=${WORKSPACE}/allure-results/unit-tests \\
-                               --junitxml=${WORKSPACE}/junit-reports/unit_tests.xml \\
-                               my_learning_platform_core # Or your specific test path/app name like 'tests/'
-                    "
-                '''
+                                # Removed 'my_learning_platform_core' to rely on pytest.ini's testpaths
+                                pytest --alluredir=${WORKSPACE}/allure-results/unit-tests \\
+                                    --junitxml=${WORKSPACE}/junit-reports/unit_tests.xml
+                            "
+                        '''
+                    }
+                }
             }
         }
-    }
-}
         
         stage('Run Integration Tests (SUT)') { // Renamed for clarity
             steps {
