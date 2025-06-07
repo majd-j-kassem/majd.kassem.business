@@ -123,7 +123,7 @@ pipeline {
             }
         }
     }
-
+}
         
         stage('Run Integration Tests (SUT)') { // Renamed for clarity
             steps {
