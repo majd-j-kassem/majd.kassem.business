@@ -71,7 +71,8 @@ pipeline {
                 script {
                     echo "Installing Newman and Allure reporter..."
                     // This installs globally to the agent's environment where the build runs
-                    sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra'
+                    sh 'npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest'
+                    
                 }
             }
         }
