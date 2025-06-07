@@ -130,45 +130,45 @@ pipeline {
         }
 
         stage('Build and Deploy SUT to Staging (via Render)') {
-            
             when {
-                // This condition means it will run if previous stages were successful or skipped (e.g. initial build)
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
             }
             steps {
                 script {
-                    // We now use the Render API Token instead of the deploy hook URL
                     withCredentials([string(credentialsId: 'RENDER_API_TOKEN_DEV', variable: 'RENDER_AUTH_TOKEN')]) {
                         echo "Authenticating with Render API for deployment..."
 
-                        // --- START Render API Deployment Trigger ---
-                        // Get the current commit SHA from the Jenkins workspace.
-                        // This ensures we deploy the exact version built by the pipeline.
                         def currentCommitSha = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
                         echo "Current commit SHA for deployment: ${currentCommitSha}"
 
-                        // Construct the JSON payload for the Render Deploy API
+                        // Define the payload as a multi-line string
                         def deployPayload = """
-                        {
-                            "clearCache": true,
-                            "commit": "${currentCommitSha}"
-                        }
-                        """
-                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${STAGING_TARGET_BRANCH}..."
+{
+    "clearCache": true,
+    "commit": "${currentCommitSha}"
+}
+"""
+                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${TARGET_BRANCH}..."
 
                         def deployResponse
                         try {
-                            // Send the POST request to Render's API to trigger a deployment
+                            // Write the JSON payload to a temporary file
+                            writeFile(file: 'render_payload.json', text: deployPayload)
+
+                            // Use the temporary file with curl -d @filename
                             deployResponse = sh(
-                                script: "curl -s -X POST -H 'Authorization: Bearer ${RENDER_AUTH_TOKEN}' -H 'Content-Type: application/json' -d '${deployPayload}' https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys",
+                                script: "curl -s -X POST -H 'Authorization: Bearer ${RENDER_AUTH_TOKEN}' -H 'Content-Type: application/json' -d @render_payload.json https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys",
                                 returnStdout: true
                             ).trim()
                             echo "Render Deploy API Raw Response: ${deployResponse}"
+
+                            // Clean up the temporary file
+                            sh(script: "rm render_payload.json")
+
                         } catch (e) {
                             error "Failed to trigger Render deployment via API: ${e.getMessage()}"
                         }
 
-                        // Parse the response to get the unique deployment ID
                         def deployId
                         try {
                             def jsonResponse = readJSON(text: deployResponse)
@@ -180,11 +180,9 @@ pipeline {
                         } catch (e) {
                             error "Failed to parse Render Deploy API response or get deployment ID: ${e.getMessage()}. Response: ${deployResponse}"
                         }
-                        // --- END Render API Deployment Trigger ---
 
-                        // --- START Smart Wait Implementation for Staging Deployment via Render API ---
-                        def maxAttempts = 60 // Max attempts (e.g., 60 * 15 seconds = 15 minutes total wait)
-                        def retryDelaySeconds = 15 // Seconds to wait between checks
+                        def maxAttempts = 60
+                        def retryDelaySeconds = 15
                         def attempts = 0
                         def serviceLive = false
 
@@ -194,7 +192,6 @@ pipeline {
                             attempts++
                             echo "Attempt ${attempts}/${maxAttempts}: Checking Render deployment status for ID: ${deployId}..."
                             try {
-                                // Query the status of the specific deployment using its ID
                                 def deployStatusJson = sh(
                                     script: "curl -s -H 'Authorization: Bearer ${RENDER_AUTH_TOKEN}' https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys/${deployId}",
                                     returnStdout: true
@@ -221,13 +218,9 @@ pipeline {
                         if (!serviceLive) {
                             error "Render deployment (ID: ${deployId}) did not become live within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
                         }
-                        // --- END Smart Wait Implementation ---
 
-                        // --- Optional: Final Public Health Check (Good for sanity) ---
-                        // After Render confirms the deployment is 'live', a final public check confirms
-                        // that the application is also reachable and responding on its public URL.
                         echo "Running final public health check on ${STAGING_URL}/health/ to confirm connectivity..."
-                        def publicHealthCheckAttempts = 5 // Fewer attempts needed as Render API already confirmed 'live'
+                        def publicHealthCheckAttempts = 5
                         def publicServiceHealthy = false
                         def currentPublicAttempt = 0
                         while (currentPublicAttempt < publicHealthCheckAttempts && !publicServiceHealthy) {
@@ -253,10 +246,9 @@ pipeline {
                         if (!publicServiceHealthy) {
                             error "Public health check on ${STAGING_URL}/health/ failed even after Render API reported live. This might indicate an issue with the service's public exposure."
                         }
-
-                    } // End of withCredentials block
-                } // End of script block
-            } // End of steps block
+                    }
+                }
+            }
         }
     }
         
