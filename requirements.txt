@@ -60,7 +60,7 @@ django-crispy-forms==2.4
 django-extra-views==0.15.0
 django-formtools==2.5.1
 django-haystack==3.3.0
-django-health-check==3.19.0
+django-health-check
 django-jazzmin==3.0.1
 django-oscar==4.0
 django-phonenumber-field==8.1.0
