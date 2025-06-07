@@ -40,6 +40,10 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'utils', 
+    'health_check',
+    'health_check.db',  # Checks database connection
+    'health_check.cache', # Checks cache connection
+    'health_check.storage', # Checks file storage
 ]
 AUTH_USER_MODEL = 'accounts.CustomUser'
 SITE_ID = 1

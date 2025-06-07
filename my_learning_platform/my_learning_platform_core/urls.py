@@ -26,8 +26,9 @@ urlpatterns = [
     # Main API URLs (Keep this if 'accounts.api_urls' defines your REST API endpoints)
     path('api/', include('accounts.api_urls')),
     
-   
-    path('health/', health_check, name='health_check'),
+    path('health/', include('health_check.urls')), # Or path('ht/', include('health_check.urls')),
+
+    #path('health/', health_check, name='health_check'),
     
 
 ]
