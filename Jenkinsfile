@@ -145,7 +145,7 @@ pipeline {
                         def deployPayload = """
                             {
                                 "clearCache": true,
-                                "commit": "${currentCommitSha}"
+                                "commitId": "${currentCommitSha}"
                             }
                         """
                         echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${STAGING_TARGET_BRANCH}..."
