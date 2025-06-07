@@ -89,7 +89,7 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
-                    dir('sut-code/my_learning_platform') {
+                    dir('my_learning_platform') {
                         // CORRECTED PATHS: Use WORKSPACE directly for absolute paths from the root of the Jenkins workspace
                         def unitTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/unit-tests"
                         def unitTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_unit_report.xml"
