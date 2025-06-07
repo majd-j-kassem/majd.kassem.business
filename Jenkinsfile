@@ -100,29 +100,7 @@ pipeline {
             }
         }
 
-        stage('Run Integration Tests (SUT)') { // Renamed for clarity
-            steps {
-                script {
-                    echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') {
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                        def integrationTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/integration-tests"
-                        def integrationTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_integration_report.xml"
-
-                        sh "rm -rf ${integrationTestAllureResultsDir}"
-                        sh "mkdir -p ${integrationTestAllureResultsDir}"
-                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
-
-                        sh '''#!/bin/bash
-                            source ../.venv/bin/activate
-                            pytest accounts/tests/integration \\
-                                --alluredir=''' + integrationTestAllureResultsDir + ''' \\
-                                --junitxml=''' + integrationTestJunitReportFile + '''
-                        '''
-                    }
-                }
-            }
-        }
+       
         stage('Build and Deploy SUT to Staging (via Render)') {
             when {
                 // This condition means it will run if previous stages were successful or skipped (e.g. initial build)
@@ -178,6 +156,29 @@ pipeline {
                     } // End of withCredentials block
                 } // End of script block
             } // End of steps block
+        }
+         stage('Run Integration Tests (SUT)') { // Renamed for clarity
+            steps {
+                script {
+                    echo "Running Django integration tests with pytest and generating Allure results..."
+                    dir('sut-code/my_learning_platform') {
+                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
+                        def integrationTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/integration-tests"
+                        def integrationTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_integration_report.xml"
+
+                        sh "rm -rf ${integrationTestAllureResultsDir}"
+                        sh "mkdir -p ${integrationTestAllureResultsDir}"
+                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
+
+                        sh '''#!/bin/bash
+                            source ../.venv/bin/activate
+                            pytest accounts/tests/integration \\
+                                --alluredir=''' + integrationTestAllureResultsDir + ''' \\
+                                --junitxml=''' + integrationTestJunitReportFile + '''
+                        '''
+                    }
+                }
+            }
         }
         stage('Run API Tests (SUT)') { // Renamed for clarity
             steps {
