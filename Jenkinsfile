@@ -155,7 +155,7 @@ pipeline {
         script {
             withCredentials([
                 string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'RENDER_DEPLOY_HOOK_URL'),
-                string(credentialsId: 'RENDER_API_KEY', variable: 'RENDER_AUTH_TOKEN') // Your Render API Key
+                string(credentialsId: 'RENDER_API_TOKEN_DEV', variable: 'RENDER_AUTH_TOKEN') // Your Render API Key
             ]) {
                 echo "Triggering Render deployment for ${env.STAGING_URL}..."
 
