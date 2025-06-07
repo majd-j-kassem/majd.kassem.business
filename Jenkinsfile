@@ -244,7 +244,7 @@ pipeline {
                             }
                         }
                         if (!publicServiceHealthy) {
-                            error "Public health check on ${STAGING_URL}/health/ failed even after Render API reported live. This might indicate an issue with the service's public exposure."
+                            error "Public hlealth check on ${STAGING_URL}/health/ failed even after Render API reported live. This might indicate an issue with the service's public exposure."
                         }
                     }
                 }
