@@ -135,127 +135,18 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'RENDER_API_TOKEN_DEV', variable: 'RENDER_AUTH_TOKEN')]) {
-                        echo "Authenticating with Render API for deployment..."
-
-                        def currentCommitSha = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-                        echo "Current commit SHA for deployment: ${currentCommitSha}"
-
-                        // Define the payload as a multi-line string
-                        def deployPayload = """
-                            {
-                                "clearCache": true,
-                                "commitId": "${currentCommitSha}"
-                            }
-                        """
-                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${STAGING_TARGET_BRANCH}..."
-
-                        def deployResponse
-                        try {
-                            // Write the JSON payload to a temporary file
-                            writeFile(file: 'render_payload.json', text: deployPayload)
-                            //=============================
-                            echo "Content of render_payload.json:"
-                            sh "cat render_payload.json"
-                            //===============================
-
-                            // Use the temporary file with curl -d @filename
-                            deployResponse = sh(
-                                script: "curl -s -X POST -H 'Authorization: Bearer ${RENDER_AUTH_TOKEN}' -H 'Content-Type: application/json' -d @render_payload.json https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys",
-                                returnStdout: true
-                            ).trim()
-                            echo "Render Deploy API Raw Response: ${deployResponse}"
-
-                            // Clean up the temporary file
-                            sh(script: "rm render_payload.json")
-
-                        } catch (e) {
-                            error "Failed to trigger Render deployment via API: ${e.getMessage()}"
-                        }
-
-                        def deployId
-                        try {
-                            def jsonResponse = readJSON(text: deployResponse)
-                            deployId = jsonResponse.id
-                            if (!deployId) {
-                                error "Render Deploy API did not return a deployment ID. Response: ${deployResponse}"
-                            }
-                            echo "Render deployment triggered. New Deployment ID: ${deployId}"
-                        } catch (e) {
-                            error "Failed to parse Render Deploy API response or get deployment ID: ${e.getMessage()}. Response: ${deployResponse}"
-                        }
-
-                        def maxAttempts = 60
-                        def retryDelaySeconds = 15
-                        def attempts = 0
-                        def serviceLive = false
-
-                        echo "Starting smart wait for Render deployment (ID: ${deployId}) to become live..."
-
-                        while (attempts < maxAttempts && !serviceLive) {
-                            attempts++
-                            echo "Attempt ${attempts}/${maxAttempts}: Checking Render deployment status for ID: ${deployId}..."
-                            try {
-                                def deployStatusJson = sh(
-                                    script: "curl -s -H 'Authorization: Bearer ${RENDER_AUTH_TOKEN}' https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys/${deployId}",
-                                    returnStdout: true
-                                ).trim()
-
-                                def status = readJSON(text: deployStatusJson).status
-                                echo "Deployment status for ID ${deployId}: ${status}"
-
-                                if (status == 'live') {
-                                    serviceLive = true
-                                    echo "Render deployment (ID: ${deployId}) is live and healthy!"
-                                } else if (status == 'failed' || status == 'canceled' || status == 'build_failed') {
-                                    error "Render deployment (ID: ${deployId}) failed with status: ${status}. Failing pipeline."
-                                } else {
-                                    echo "Deployment not yet live. Current status: ${status}. Retrying in ${retryDelaySeconds} seconds..."
-                                    sleep retryDelaySeconds
-                                }
-                            } catch (e) {
-                                echo "Error checking deployment status for ID ${deployId}: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
-                                sleep retryDelaySeconds
-                            }
-                        }
-
-                        if (!serviceLive) {
-                            error "Render deployment (ID: ${deployId}) did not become live within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
-                        }
-
-                        echo "Running final public health check on ${STAGING_URL}/health/ to confirm connectivity..."
-                        def publicHealthCheckAttempts = 5
-                        def publicServiceHealthy = false
-                        def currentPublicAttempt = 0
-                        while (currentPublicAttempt < publicHealthCheckAttempts && !publicServiceHealthy) {
-                            currentPublicAttempt++
-                            try {
-                                def httpCode = sh(
-                                    script: "curl -s -o /dev/null -w '%{http_code}' ${STAGING_URL}/health/",
-                                    returnStdout: true
-                                ).trim()
-                                echo "Public health check HTTP status: ${httpCode}"
-                                if (httpCode == '200') {
-                                    publicServiceHealthy = true
-                                    echo "Public health check passed for ${STAGING_URL}/health/."
-                                } else {
-                                    echo "Public health check failed. HTTP Code: ${httpCode}. Retrying in ${retryDelaySeconds} seconds..."
-                                    sleep retryDelaySeconds
-                                }
-                            } catch (e) {
-                                echo "Error during public health check: ${e.getMessage()}. Retrying..."
-                                sleep retryDelaySeconds
-                            }
-                        }
-                        if (!publicServiceHealthy) {
-                            error "Public hlealth check on ${STAGING_URL}/health/ failed even after Render API reported live. This might indicate an issue with the service's public exposure."
-                        }
+                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
+                            echo "Triggering Render deployment for ${env.STAGING_URL}..."
+                            // 2. TRIGGER THE DEPLOYMENT USING CURL AND THE DEPLOY HOOK URL
+                            //    - This is the command that initiates a new build/deploy on Render
+                            sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
+                            echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
+                            
                     }
                 }
             }
         }
     }
-        
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
         always {
