@@ -11,8 +11,8 @@ pipeline {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
         QA_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business_qa.git'
 
-        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Your Render dev URL
-        LIVE_URL = 'https://majd-kassem-business.onrender.com/' // Your Render live URL
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com' // Your Render dev URL
+        LIVE_URL = 'https://majd-kassem-business.onrender.com' // Your Render live URL
 
         // Ensure a single credential ID variable is used for all Git checkouts
         GIT_CREDENTIAL_ID = 'git_id'
