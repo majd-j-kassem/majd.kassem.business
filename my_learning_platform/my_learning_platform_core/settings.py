@@ -21,6 +21,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'a-default-secret-key-for-development-
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS_STRING = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STRING.split(',') if host.strip()]
+
+
+FORMS_URLFIELD_ASSUME_HTTPS = True
+
 # Application definition
 INSTALLED_APPS = [
     'jazzmin', 
