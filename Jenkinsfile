@@ -147,114 +147,61 @@ pipeline {
                 }
             }
             stage('Build and Deploy SUT to Staging (via Render)') {
-    when {
-        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-    }
-    steps {
-        script {
-            withCredentials([
-                string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'Render_Deploy_Hook_URL'),
-                string(credentialsId: 'RENDER_API_TOKEN_DEV', variable: 'RENDER_AUTH_TOKEN') // Use your actual credential ID here
-            ]) {
-                echo "Triggering Render deployment for ${env.STAGING_URL}..."
+            tools {
+                // Assuming you have tools defined here, e.g.,
+                // NodeJS 'NodeJS_24'
+                // Python 'Python3.10'
+                // Add any tools required for this stage if they aren't global
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'RENDER_DEPLOY_HOOK_URL', variable: 'RENDER_DEPLOY_HOOK_URL')]) {
+                        echo "Triggering Render deployment for ${env.STAGING_URL}..."
 
-                // --- 1. CAPTURING THE deployId ---
-                // We need to execute curl and capture its output to parse the deployId.
-                // Adding -v for verbose output to help debug connection issues.
-                // Using a more robust way to capture output and status to avoid premature errors.
-                
-                def deployResponse = ''
-                def curlExitStatus = 0
+                        def deployResponse = ''
+                        def curlExitStatus = -1 // Initialize with a non-zero value
 
-                try {
-                    // Use a shell script block for the curl command to better control output and errors.
-                    // IMPORTANT: To address the "insecure Groovy String interpolation" warning,
-                    // pass the secret directly into the `sh` block as a variable (less susceptible to misinterpretation).
-                    def curlResult = sh(script: """
-                        curl -v -X POST "${RENDER_DEPLOY_HOOK_URL}"
-                    """, returnStdout: true, returnStatus: true, encoding: 'UTF-8') // Explicitly set encoding
-
-                    deployResponse = curlResult.stdout.trim()
-                    curlExitStatus = curlResult.status
-
-                    echo "Curl Command Exit Status: ${curlExitStatus}"
-                    echo "Curl Response Output (masked hook URL content):"
-                    // Print the response, but be careful not to reveal the full hook URL itself if it's part of the response.
-                    // For now, let's just print the raw response to debug.
-                    echo "${deployResponse}"
-
-                } catch (Exception e) {
-                    echo "Error executing curl command to trigger Render deployment: ${e.message}"
-                    error "Pipeline failed during Render deploy hook execution. Check Jenkins connectivity and Render service status."
-                }
-
-                // Check if curl itself reported an error (non-zero exit status)
-                if (curlExitStatus != 0) {
-                    error "Render deploy hook `curl` command failed with exit status ${curlExitStatus}. Full response: ${deployResponse}"
-                }
-
-                // Parse the JSON response to get the deploy ID
-                def matcher = deployResponse =~ /"id":"([a-zA-Z0-9]+)"/
-                def deployId
-                if (matcher.find()) {
-                    deployId = matcher.group(1)
-                    echo "Render deployment triggered. Captured Deploy ID: ${deployId}"
-                } else {
-                    // If parsing fails, it might be that Render didn't return the expected JSON (e.g., an error page)
-                    error "Failed to parse deploy ID from Render response. Response might be an error page or unexpected format: ${deployResponse}"
-                }
-
-                echo "Waiting for Render deployment ${deployId} to become live..."
-
-                // --- 2. POLLING RENDER'S API USING THE deployId ---
-                def maxPollRetries = 60    // Max attempts to check (60 attempts * 10 seconds = 10 minutes total wait)
-                def pollDelaySeconds = 10  // Delay between each poll attempt
-                def currentPollRetry = 0
-                def deployStatus = 'pending' // Initialize status
-
-                timeout(time: 15, unit: 'MINUTES') { // Set an overall timeout for this polling loop
-                    while (currentPollRetry < maxPollRetries && deployStatus != 'live' && deployStatus != 'failed' && deployStatus != 'update_failed') { // Added update_failed
-                        echo "Polling attempt ${currentPollRetry + 1}/${maxPollRetries}: Checking status of deploy ${deployId}..."
                         try {
-                            def statusResponse = sh(
-                                script: "curl -sS -H \"Authorization: Bearer ${RENDER_AUTH_TOKEN}\" \"https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys/${deployId}\"",
-                                returnStdout: true,
-                                returnStatus: true // Also capture status for API calls
-                            ).stdout.trim() // Just get stdout for parsing
+                            // Execute curl command and capture both stdout and status
+                            def curlResult = sh(script: """
+                                curl -v -X POST "${RENDER_DEPLOY_HOOK_URL}"
+                            """, returnStdout: true, returnStatus: true, encoding: 'UTF-8')
 
-                            def statusMatcher = statusResponse =~ /"status":"([a-zA-Z_]+)"/ // Updated regex to include underscore for statuses like 'update_failed'
-                            if (statusMatcher.find()) {
-                                deployStatus = statusMatcher.group(1)
-                                echo "Current deploy status for ${deployId}: ${deployStatus}"
-                            } else {
-                                echo "Could not parse status from API response: ${statusResponse}"
-                                deployStatus = 'unknown' // Set to unknown to force another retry
+                            deployResponse = curlResult.stdout.trim()
+                            curlExitStatus = curlResult.status
+
+                            echo "Curl Command Exit Status: ${curlExitStatus}"
+                            echo "Full Curl Response Output (from stdout):"
+                            echo "${deployResponse}" // This will now show the actual 44-byte response from Render
+
+                            // Check if the curl command itself failed (non-zero exit status)
+                            if (curlExitStatus != 0) {
+                                error "Curl command failed with exit status ${curlExitStatus}. Render deploy hook might be incorrect or unreachable."
                             }
 
-                            if (deployStatus == 'live') {
-                                echo "Deployment ${deployId} is LIVE! Continuing pipeline."
-                            } else if (deployStatus == 'failed' || deployStatus == 'update_failed') {
-                                error "Deployment ${deployId} FAILED on Render. Aborting pipeline."
+                            // --- IMPORTANT: Adapt this part based on the actual 44-byte response from Render ---
+                            // Since Render returned 'text/plain' and not JSON, we cannot parse 'deployId'.
+                            // You need to inspect the 'deployResponse' (the 44 bytes) to understand what it means.
+
+                            // Example: If the 44-byte response is simply "Deployment initiated successfully."
+                            if (deployResponse.contains("Deployment initiated successfully.")) {
+                                echo "Render deploy hook successfully acknowledged the deployment initiation."
+                                // At this point, you can't get a 'deployId' directly from this response.
+                                // You might need to rely on Render's dashboard or API to check the deployment status
+                                // using the service ID if you need to poll for completion.
                             } else {
-                                echo "Deployment is ${deployStatus}. Retrying in ${pollDelaySeconds} seconds..."
-                                sleep pollDelaySeconds
+                                // If the response is unexpected or doesn't confirm initiation
+                                error "Render deploy hook returned an unexpected response: '${deployResponse}'. Please check Render service settings."
                             }
+
                         } catch (Exception e) {
-                            echo "Error polling Render API for deploy ${deployId}: ${e.message}. Retrying in ${pollDelaySeconds} seconds..."
-                            sleep pollDelaySeconds
-                            deployStatus = 'error' // Force retry on curl errors
+                            echo "Error executing curl command to trigger Render deployment: ${e.message}"
+                            error "Pipeline failed during Render deploy hook execution. Check Jenkins connectivity, Render service status, or the exact format of the deploy hook URL."
                         }
-                        currentPollRetry++
                     }
-                }
-
-                if (deployStatus != 'live') {
-                    error "Render deployment ${deployId} did not become live within the allotted time or retries. Final status: ${deployStatus}. Aborting pipeline."
                 }
             }
         }
-    }
-}
            
         
 
