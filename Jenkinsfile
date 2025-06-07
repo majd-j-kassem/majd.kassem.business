@@ -95,35 +95,28 @@ pipeline {
     }
 }
 
-       stage('Run Integration Tests (SUT)') {
-    steps {
-        script {
-            echo "Running Django integration tests with pytest and generating Allure results..."
-            // Change this 'dir' to match where your .venv was created
-            // and where your integration tests are expected to be found by pytest.
-            // If your integration tests are under 'my_learning_platform/accounts/tests/integration',
-            // then staying in 'my_learning_platform' is correct.
-            dir('my_learning_platform') {
-                sh '''
-                    # Activate the virtual environment from its correct location
-                    source .venv/bin/activate
+        stage('Run Unit Tests (SUT)') {
+            steps {
+                script {
+                    echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
+                    dir('my_learning_platform') {
+                        sh '''
+                            bash -c "
+                                source .venv/bin/activate
 
-                    # Clean previous Allure results and create report directories
-                    rm -rf ${WORKSPACE}/allure-results/integration-tests
-                    mkdir -p ${WORKSPACE}/allure-results/integration-tests
-                    mkdir -p ${WORKSPACE}/junit-reports # Re-creating or ensuring this exists
+                                rm -rf ${WORKSPACE}/allure-results/unit-tests
+                                mkdir -p ${WORKSPACE}/allure-results/unit-tests
+                                mkdir -p ${WORKSPACE}/junit-reports
 
-                    # Run pytest specifically for integration tests
-                    # Adjust 'accounts/tests/integration' to the actual path of your integration tests
-                    # relative to the 'my_learning_platform' directory.
-                    pytest --alluredir=${WORKSPACE}/allure-results/integration-tests \\
-                           --junitxml=${WORKSPACE}/junit-reports/integration_tests.xml \\
-                           accounts/tests/integration # Example path, adjust as needed
-                '''
+                                # Removed 'my_learning_platform_core' to rely on pytest.ini's testpaths
+                                pytest --alluredir=${WORKSPACE}/allure-results/unit-tests \\
+                                    --junitxml=${WORKSPACE}/junit-reports/unit_tests.xml
+                            "
+                        '''
+                    }
+                }
             }
         }
-    }
-}
         
         stage('Run Integration Tests (SUT)') { // Renamed for clarity
             steps {
