@@ -139,7 +139,7 @@ pipeline {
                         sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
 
                         sh '''#!/bin/bash
-                            source ../.venv/bin/activate
+                            source .venv/bin/activate
                             pytest accounts/tests/integration \\
                                 --alluredir=''' + integrationTestAllureResultsDir + ''' \\
                                 --junitxml=''' + integrationTestJunitReportFile + '''
