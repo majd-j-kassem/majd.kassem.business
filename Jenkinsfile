@@ -34,96 +34,96 @@ pipeline {
     }
 
     stages {
-        stage('Test NodeJS Tool') {
-            steps {
-                script {
-                    echo "Attempting to use NodeJS tool..."
-                    sh 'node -v' // Check if node command is available
-                    sh 'npm -v'  // Check if npm command is available
-                }
-            }
-        }
-
-        stage('Checkout SUT Dev') {
-            steps {
-                script {
-                    echo "Checking out SUT repository: ${SUT_REPO}, branch: ${SUT_BRANCH_DEV}"
-                    dir('sut-code') { // Checkout into a dedicated directory
-                        git branch: SUT_BRANCH_DEV, credentialsId: GIT_CREDENTIAL_ID, url: SUT_REPO
+            stage('Test NodeJS Tool') {
+                steps {
+                    script {
+                        echo "Attempting to use NodeJS tool..."
+                        sh 'node -v' // Check if node command is available
+                        sh 'npm -v'  // Check if npm command is available
                     }
                 }
             }
-        }
 
-        stage('Setup Python Environment (SUT)') { // Renamed for clarity
-            steps {
-                script {
-                    echo "Setting up Python virtual environment and installing dependencies for SUT..."
-                    dir('my_learning_platform') {
-                       
+            stage('Checkout SUT Dev') {
+                steps {
+                    script {
+                        echo "Checking out SUT repository: ${SUT_REPO}, branch: ${SUT_BRANCH_DEV}"
+                        dir('sut-code') { // Checkout into a dedicated directory
+                            git branch: SUT_BRANCH_DEV, credentialsId: GIT_CREDENTIAL_ID, url: SUT_REPO
+                        }
+                    }
+                }
+            }
+
+            stage('Setup Python Environment (SUT)') { // Renamed for clarity
+                steps {
+                    script {
+                        echo "Setting up Python virtual environment and installing dependencies for SUT..."
+                        dir('my_learning_platform') {
+                        
+                            sh '''
+                            bash -c "
+                                python3 -m venv .venv
+                                source .venv/bin/activate
+                                pip install --upgrade pip
+                                pip install -r requirements.txt
+                        "
+                    '''
+                        }
+                    }
+                }
+            }
+
+            stage('Setup NodeJS and Newman (SUT)') {
+                steps {
+                    script {
+                        echo "Installing Newman and Allure reporter..."
                         sh '''
-                        bash -c "
-                            python3 -m venv .venv
-                            source .venv/bin/activate
-                            pip install --upgrade pip
-                            pip install -r requirements.txt
-                    "
-                '''
+                            # Clear npm cache (optional, but good for troubleshooting)
+                            npm cache clean --force
+
+                            # Remove the existing global node_modules directory for Newman/Allure
+                            # This ensures a clean slate for the installation
+                            rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman
+                            rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-allure
+                            rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-htmlextra
+
+                            # Now perform the global install
+                            npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest
+                        '''
                     }
                 }
             }
-        }
-
-        stage('Setup NodeJS and Newman (SUT)') {
-    steps {
-        script {
-            echo "Installing Newman and Allure reporter..."
-            sh '''
-                # Clear npm cache (optional, but good for troubleshooting)
-                npm cache clean --force
-
-                # Remove the existing global node_modules directory for Newman/Allure
-                # This ensures a clean slate for the installation
-                rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman
-                rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-allure
-                rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-htmlextra
-
-                # Now perform the global install
-                npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest
-            '''
-        }
-    }
-}
 
         stage('Run Integration Tests (SUT)') {
-    steps {
-        script {
-            echo "Running Django integration tests with pytest and generating Allure results..."
-            // Change this 'dir' to match where your .venv was created
-            // and where your integration tests are expected to be found by pytest.
-            // If your integration tests are under 'my_learning_platform/accounts/tests/integration',
-            // then staying in 'my_learning_platform' is correct.
-            dir('my_learning_platform') {
-                sh '''
-                    # Activate the virtual environment from its correct location
-                    source .venv/bin/activate
+            steps {
+                script {
+                    echo "Running Django integration tests with pytest and generating Allure results..."
+                    // Change this 'dir' to match where your .venv was created
+                    // and where your integration tests are expected to be found by pytest.
+                    // If your integration tests are under 'my_learning_platform/accounts/tests/integration',
+                    // then staying in 'my_learning_platform' is correct.
+                    dir('my_learning_platform') {
+                        sh '''
+                            # Activate the virtual environment from its correct location
+                            source .venv/bin/activate
 
-                    # Clean previous Allure results and create report directories
-                    rm -rf ${WORKSPACE}/allure-results/integration-tests
-                    mkdir -p ${WORKSPACE}/allure-results/integration-tests
-                    mkdir -p ${WORKSPACE}/junit-reports # Re-creating or ensuring this exists
+                            # Clean previous Allure results and create report directories
+                            rm -rf ${WORKSPACE}/allure-results/integration-tests
+                            mkdir -p ${WORKSPACE}/allure-results/integration-tests
+                            mkdir -p ${WORKSPACE}/junit-reports # Re-creating or ensuring this exists
 
-                    # Run pytest specifically for integration tests
-                    # Adjust 'accounts/tests/integration' to the actual path of your integration tests
-                    # relative to the 'my_learning_platform' directory.
-                    pytest --alluredir=${WORKSPACE}/allure-results/integration-tests \\
-                           --junitxml=${WORKSPACE}/junit-reports/integration_tests.xml \\
-                           accounts/tests/integration # Example path, adjust as needed
-                '''
+                            # Run pytest specifically for integration tests
+                            # Adjust 'accounts/tests/integration' to the actual path of your integration tests
+                            # relative to the 'my_learning_platform' directory.
+                            pytest --alluredir=${WORKSPACE}/allure-results/integration-tests \\
+                                --junitxml=${WORKSPACE}/junit-reports/integration_tests.xml \\
+                                accounts/tests/integration # Example path, adjust as needed
+                        '''
+                    }
+                }
             }
         }
-    }
-}
         
         stage('Run Integration Tests (SUT)') { // Renamed for clarity
             steps {
@@ -167,18 +167,18 @@ pipeline {
             }
         }
         stage('Run API Tests (SUT)') { // Renamed for clarity
-                steps {
-                    script {
-                        echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-                        sleep(120) // Keep your sleep for now as a temporary measure
+            steps {
+                script {
+                    echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
+                    sleep(120) // Keep your sleep for now as a temporary measure
 
                         // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                        def newmanAllureResultsAbsoluteDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/api-tests"
-                        def newmanJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_api_report.xml"
+                    def newmanAllureResultsAbsoluteDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/api-tests"
+                    def newmanJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_api_report.xml"
 
-                        sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
-                        sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
-                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
+                    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
+                    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
+                    sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
 
                         dir("sut-code/${API_TESTS_DIR}") { // `API_TESTS_DIR` is an environment variable
                             sh """#!/bin/bash
@@ -211,6 +211,7 @@ pipeline {
                 }
             }
     }
+    
     
 
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
