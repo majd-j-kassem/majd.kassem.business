@@ -153,52 +153,87 @@ pipeline {
     }
     steps {
         script {
-            withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
+            withCredentials([
+                string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'RENDER_DEPLOY_HOOK_URL'),
+                string(credentialsId: 'RENDER_API_KEY', variable: 'RENDER_AUTH_TOKEN') // Your Render API Key
+            ]) {
                 echo "Triggering Render deployment for ${env.STAGING_URL}..."
-                sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
-                echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
 
-                // Define the health check endpoint
-                def healthCheckUrl = "${STAGING_URL}/health/" // Adjust if your endpoint is different
+                // --- 1. CAPTURING THE deployId ---
+                // Execute the deploy hook and capture the standard output, which contains the deployId.
+                // Render's deploy hook returns a JSON object like: {"deploy":{"id":"dep-..."}}
+                def deployResponse = sh(script: "curl -s -X POST ${RENDER_DEPLOY_HOOK_URL}", returnStdout: true).trim()
+                
+                // Use a regular expression to extract the 'id' value from the JSON response.
+                def matcher = deployResponse =~ /"id":"([a-zA-Z0-9]+)"/
+                def deployId // Declare the variable to hold the extracted ID
+                if (matcher.find()) {
+                    deployId = matcher.group(1) // The first captured group is the ID
+                    echo "Render deployment triggered. Captured Deploy ID: ${deployId}"
+                } else {
+                    // If we can't find the deploy ID, something is wrong, so fail the pipeline.
+                    error "Failed to parse deploy ID from Render response: ${deployResponse}"
+                }
 
-                // --- SMART HEALTH CHECK POLLING ---
-                def maxRetries = 15 // Max attempts to check (e.g., 15 * 10 seconds = 150 seconds)
-                def retryDelaySeconds = 10 // Delay between attempts
-                def currentRetry = 0
-                def serviceHealthy = false
+                echo "Waiting for Render deployment ${deployId} to become live..."
 
-                timeout(time: 5, unit: 'MINUTES') { // Max 5 minutes for health check
-                    while (currentRetry < maxRetries && !serviceHealthy) {
-                        echo "Attempt ${currentRetry + 1}/${maxRetries}: Checking service health at ${healthCheckUrl}..."
+                // --- 2. POLLING RENDER'S API USING THE deployId ---
+                def maxPollRetries = 60    // Max attempts to check (60 attempts * 10 seconds = 10 minutes total wait)
+                def pollDelaySeconds = 10  // Delay between each poll attempt
+                def currentPollRetry = 0
+                def deployStatus = 'pending' // Initialize status
+
+                timeout(time: 15, unit: 'MINUTES') { // Set an overall timeout for this polling loop
+                    while (currentPollRetry < maxPollRetries && deployStatus != 'live' && deployStatus != 'failed') {
+                        echo "Polling attempt ${currentPollRetry + 1}/${maxPollRetries}: Checking status of deploy ${deployId}..."
                         try {
-                            // Use curl -s -o /dev/null -w "%{http_code}" to get only the HTTP status code
-                            // -f (fail) added for robustness; it makes curl return an error if the server returns 4xx/5xx
-                            def statusCode = sh(script: "curl -s -o /dev/null -w '%{http_code}' -f ${healthCheckUrl}", returnStdout: true).trim()
-                            echo "HTTP Status Code: ${statusCode}"
+                            // Make an authenticated GET request to Render's API for this specific deployId
+                            // -H "Authorization: Bearer <API_KEY>" is for authentication
+                            // -s (silent) and -S (show errors if silent fails)
+                            def statusResponse = sh(
+                                script: "curl -sS -H \"Authorization: Bearer ${RENDER_AUTH_TOKEN}\" \"https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys/${deployId}\"",
+                                returnStdout: true
+                            ).trim()
 
-                            if (statusCode == '200') {
-                                serviceHealthy = true
-                                echo "Service is healthy! Continuing pipeline."
+                            // Parse the JSON response for the 'status' field (e.g., "status":"live", "status":"building")
+                            def statusMatcher = statusResponse =~ /"status":"([a-zA-Z_]+)"/ // Updated regex to include underscore for statuses like 'update_failed'
+                            if (statusMatcher.find()) {
+                                deployStatus = statusMatcher.group(1)
+                                echo "Current deploy status for ${deployId}: ${deployStatus}"
                             } else {
-                                echo "Service returned status ${statusCode}. Retrying in ${retryDelaySeconds} seconds..."
-                                sleep retryDelaySeconds
+                                echo "Could not parse status from API response: ${statusResponse}"
+                                deployStatus = 'unknown' // Set to unknown to force another retry
+                            }
+
+                            if (deployStatus == 'live') {
+                                echo "Deployment ${deployId} is LIVE! Continuing pipeline."
+                            } else if (deployStatus == 'failed' || deployStatus == 'update_failed') { // Handle various failure states
+                                error "Deployment ${deployId} FAILED on Render. Aborting pipeline."
+                            } else {
+                                echo "Deployment is ${deployStatus}. Retrying in ${pollDelaySeconds} seconds..."
+                                sleep pollDelaySeconds
                             }
                         } catch (Exception e) {
-                            echo "Health check failed (curl error or non-200 status): ${e.message}. Retrying in ${retryDelaySeconds} seconds..."
-                            sleep retryDelaySeconds
+                            echo "Error polling Render API for deploy ${deployId}: ${e.message}. Retrying in ${pollDelaySeconds} seconds..."
+                            sleep pollDelaySeconds
+                            deployStatus = 'error' // Force retry on curl errors
                         }
-                        currentRetry++
+                        currentPollRetry++
                     }
                 }
 
-                if (!serviceHealthy) {
-                    error "Service did not become healthy within the allotted time or retries. Aborting pipeline."
+                // Final check after the loop (in case timeout expired or max retries reached)
+                if (deployStatus != 'live') {
+                    error "Render deployment ${deployId} did not become live within the allotted time or retries. Final status: ${deployStatus}. Aborting pipeline."
                 }
-                // --- END SMART HEALTH CHECK POLLING ---
             }
         }
     }
 }
+
+// *** IMPORTANT: After this, your 'Run API Tests (SUT)' stage
+//    should no longer have the `sleep(120)` as the pipeline
+//    will only reach that point once the new deployment is confirmed 'live'. ***
         stage('Run API Tests (SUT)') { // Renamed for clarity
             steps {
                 script {
