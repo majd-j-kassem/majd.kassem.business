@@ -255,6 +255,7 @@ pipeline {
                 } // End of script block
             } // End of steps block
         }
+    }
         
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
