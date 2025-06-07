@@ -146,7 +146,53 @@ pipeline {
                 }
             }
         }
+        stage('Run API Tests (SUT)') { // Renamed for clarity
+                steps {
+                    script {
+                        echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
+                        sleep(120) // Keep your sleep for now as a temporary measure
+
+                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
+                        def newmanAllureResultsAbsoluteDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/api-tests"
+                        def newmanJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_api_report.xml"
+
+                        sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
+                        sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
+                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
+
+                        dir("sut-code/${API_TESTS_DIR}") { // `API_TESTS_DIR` is an environment variable
+                            sh """#!/bin/bash
+                                echo "Current directory: \$(pwd)"
+                                echo "Files in directory:"
+                                ls -la
+
+                                if [ ! -f "5_jun_env.json" ]; then
+                                    echo "ERROR: Environment file 5_jun_env.json not found!"
+                                    exit 1
+                                fi
+
+                                NEWMAN_BASE_URL="${STAGING_URL}"
+                                if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
+                                    NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
+                                fi
+                                echo "--- Newman Base URL after processing: \$NEWMAN_BASE_URL ---"
+
+                                newman run 5_jun_api.json \\
+                                    --folder "test_1" \\
+                                    -e 5_jun_env.json \\
+                                    --reporters cli,htmlextra,allure,junit \\
+                                    --reporter-htmlextra-export newman-report.html \\
+                                    --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
+                                    --reporter-junit-export ${newmanJunitReportFile} \\
+                                    --env-var "baseUrl=\${NEWMAN_BASE_URL}"
+                            """
+                        }
+                    }
+                }
+            }
     }
+    
+
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
         always {
