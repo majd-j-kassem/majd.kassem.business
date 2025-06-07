@@ -26,7 +26,7 @@ pipeline {
         // Global report directories (relative to Jenkins WORKSPACE root)
         ALLURE_ROOT_DIR = 'allure-results'
         JUNIT_ROOT_DIR = 'junit-reports'
-
+        RENDER_SERVICE_ID_DEV = 'srv-d0pau63e5dus73dkco6g'
         // QA_JOB_NAME and LIVE_DEPLOY_JOB_NAME are no longer needed as separate jobs are integrated
         // QA_ALLURE_RESULTS_ROOT and QA_JUNIT_RESULTS_ROOT are no longer needed as they are sub-directories
     }
@@ -103,7 +103,7 @@ pipeline {
 
        
         
-         stage('Run Integration Tests (SUT)') { // Renamed for clarity
+        stage('Run Integration Tests (SUT)') { // Renamed for clarity
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
@@ -134,221 +134,128 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
-                        echo "Triggering Render deployment for ${STAGING_URL}..."
-                        sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
-                        echo "Render deployment triggered via Deploy Hook."
+                    // We now use the Render API Token instead of the deploy hook URL
+                    withCredentials([string(credentialsId: 'RENDER_API_TOKEN_DEV', variable: 'RENDER_AUTH_TOKEN')]) {
+                        echo "Authenticating with Render API for deployment..."
 
-                        // --- START Smart Wait Implementation for Staging Deployment ---
-                        def maxAttempts = 20 // Max number of times to check (e.g., 20 * 15 seconds = 5 minutes)
+                        // --- START Render API Deployment Trigger ---
+                        // Get the current commit SHA from the Jenkins workspace.
+                        // This ensures we deploy the exact version built by the pipeline.
+                        def currentCommitSha = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                        echo "Current commit SHA for deployment: ${currentCommitSha}"
+
+                        // Construct the JSON payload for the Render Deploy API
+                        def deployPayload = """
+                        {
+                            "clearCache": true,
+                            "commit": "${currentCommitSha}"
+                        }
+                        """
+                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${TARGET_BRANCH}..."
+
+                        def deployResponse
+                        try {
+                            // Send the POST request to Render's API to trigger a deployment
+                            deployResponse = sh(
+                                script: "curl -s -X POST -H 'Authorization: Bearer ${RENDER_AUTH_TOKEN}' -H 'Content-Type: application/json' -d '${deployPayload}' https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys",
+                                returnStdout: true
+                            ).trim()
+                            echo "Render Deploy API Raw Response: ${deployResponse}"
+                        } catch (e) {
+                            error "Failed to trigger Render deployment via API: ${e.getMessage()}"
+                        }
+
+                        // Parse the response to get the unique deployment ID
+                        def deployId
+                        try {
+                            def jsonResponse = readJSON(text: deployResponse)
+                            deployId = jsonResponse.id
+                            if (!deployId) {
+                                error "Render Deploy API did not return a deployment ID. Response: ${deployResponse}"
+                            }
+                            echo "Render deployment triggered. New Deployment ID: ${deployId}"
+                        } catch (e) {
+                            error "Failed to parse Render Deploy API response or get deployment ID: ${e.getMessage()}. Response: ${deployResponse}"
+                        }
+                        // --- END Render API Deployment Trigger ---
+
+                        // --- START Smart Wait Implementation for Staging Deployment via Render API ---
+                        def maxAttempts = 60 // Max attempts (e.g., 60 * 15 seconds = 15 minutes total wait)
                         def retryDelaySeconds = 15 // Seconds to wait between checks
-                        def healthCheckUrl = "${STAGING_URL}/health/" // Use the STAGING URL here!
-                                                                    // Ensure STAGING_URL is defined in your environment block.
-                                                               // Ensure your Django app exposes '/health/' endpoint on staging.
                         def attempts = 0
-                        def serviceHealthy = false
+                        def serviceLive = false
 
-                        echo "Starting smart wait for staging service at ${healthCheckUrl} to become healthy..."
+                        echo "Starting smart wait for Render deployment (ID: ${deployId}) to become live..."
 
-                        while (attempts < maxAttempts && !serviceHealthy) {
+                        while (attempts < maxAttempts && !serviceLive) {
                             attempts++
-                            echo "Attempt ${attempts}/${maxAttempts}: Checking staging service health..."
+                            echo "Attempt ${attempts}/${maxAttempts}: Checking Render deployment status for ID: ${deployId}..."
                             try {
-                                // Use curl with -s (silent), -o /dev/null (discard output), -w "%{http_code}" (write HTTP code)
-                                def httpCode = sh(
-                                    script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}",
+                                // Query the status of the specific deployment using its ID
+                                def deployStatusJson = sh(
+                                    script: "curl -s -H 'Authorization: Bearer ${RENDER_AUTH_TOKEN}' https://api.render.com/v1/services/${RENDER_SERVICE_ID_DEV}/deploys/${deployId}",
                                     returnStdout: true
                                 ).trim()
 
-                                echo "Received HTTP status code: ${httpCode}"
+                                def status = readJSON(text: deployStatusJson).status
+                                echo "Deployment status for ID ${deployId}: ${status}"
 
-                                if (httpCode == '200') {
-                                    serviceHealthy = true
-                                    echo "Staging service at ${healthCheckUrl} is healthy!"
+                                if (status == 'live') {
+                                    serviceLive = true
+                                    echo "Render deployment (ID: ${deployId}) is live and healthy!"
+                                } else if (status == 'failed' || status == 'canceled' || status == 'build_failed') {
+                                    error "Render deployment (ID: ${deployId}) failed with status: ${status}. Failing pipeline."
                                 } else {
-                                    echo "Staging service not yet healthy. Retrying in ${retryDelaySeconds} seconds..."
+                                    echo "Deployment not yet live. Current status: ${status}. Retrying in ${retryDelaySeconds} seconds..."
                                     sleep retryDelaySeconds
                                 }
                             } catch (e) {
-                                echo "Error checking health: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
+                                echo "Error checking deployment status for ID ${deployId}: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
                                 sleep retryDelaySeconds
                             }
                         }
 
-                        if (!serviceHealthy) {
-                            error "Staging service at ${healthCheckUrl} did not become healthy within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
+                        if (!serviceLive) {
+                            error "Render deployment (ID: ${deployId}) did not become live within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
                         }
                         // --- END Smart Wait Implementation ---
+
+                        // --- Optional: Final Public Health Check (Good for sanity) ---
+                        // After Render confirms the deployment is 'live', a final public check confirms
+                        // that the application is also reachable and responding on its public URL.
+                        echo "Running final public health check on ${STAGING_URL}/health/ to confirm connectivity..."
+                        def publicHealthCheckAttempts = 5 // Fewer attempts needed as Render API already confirmed 'live'
+                        def publicServiceHealthy = false
+                        def currentPublicAttempt = 0
+                        while (currentPublicAttempt < publicHealthCheckAttempts && !publicServiceHealthy) {
+                            currentPublicAttempt++
+                            try {
+                                def httpCode = sh(
+                                    script: "curl -s -o /dev/null -w '%{http_code}' ${STAGING_URL}/health/",
+                                    returnStdout: true
+                                ).trim()
+                                echo "Public health check HTTP status: ${httpCode}"
+                                if (httpCode == '200') {
+                                    publicServiceHealthy = true
+                                    echo "Public health check passed for ${STAGING_URL}/health/."
+                                } else {
+                                    echo "Public health check failed. HTTP Code: ${httpCode}. Retrying in ${retryDelaySeconds} seconds..."
+                                    sleep retryDelaySeconds
+                                }
+                            } catch (e) {
+                                echo "Error during public health check: ${e.getMessage()}. Retrying..."
+                                sleep retryDelaySeconds
+                            }
+                        }
+                        if (!publicServiceHealthy) {
+                            error "Public health check on ${STAGING_URL}/health/ failed even after Render API reported live. This might indicate an issue with the service's public exposure."
+                        }
+
                     } // End of withCredentials block
                 } // End of script block
             } // End of steps block
         }
-        stage('Run API Tests (SUT)') { // Renamed for clarity
-            steps {
-                script {
-                    echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-                     // The comment "Keep your sleep for now as a temporary measure" can be removed as the sleep is gone and smart wait is in place
-
-                    // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                    def newmanAllureResultsAbsoluteDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/api-tests"
-                    def newmanJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_api_report.xml"
-
-                    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
-                    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
-                    sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
-
-                    dir("sut-code/${API_TESTS_DIR}") { // `API_TESTS_DIR` is an environment variable
-                        sh """#!/bin/bash
-                            echo "Current directory: \$(pwd)"
-                            echo "Files in directory:"
-                            ls -la
-
-                            if [ ! -f "5_jun_env.json" ]; then
-                                echo "ERROR: Environment file 5_jun_env.json not found!"
-                                exit 1
-                            fi
-
-                            NEWMAN_BASE_URL="${STAGING_URL}"
-                            if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
-                                NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
-                            fi
-                            echo "--- Newman Base URL after processing: \$NEWMAN_BASE_URL ---"
-
-                            newman run 5_jun_api.json \\
-                                --folder "test_1" \\
-                                -e 5_jun_env.json \\
-                                --reporters cli,htmlextra,allure,junit \\
-                                --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
-                                --reporter-junit-export ${newmanJunitReportFile} \\
-                                --env-var "baseUrl=\${NEWMAN_BASE_URL}"
-                        """
-                    }
-                }
-            }
-        }
-
-        // --- Integrated QA Stages (from your old 'Jenkinsfile.qa_tests') ---
-        stage('Checkout QA Test Code') {
-            steps {
-                script {
-                    echo "Checking out QA repository: ${QA_REPO}, branch: ${QA_BRANCH}"
-                    dir('qa-code') { // Checkout into a dedicated directory
-                        git branch: QA_BRANCH, credentialsId: GIT_CREDENTIAL_ID, url: QA_REPO
-                    }
-                }
-            }
-        }
-
-        stage('Setup Python Environment (QA)') {
-            steps {
-                script {
-                    echo "Setting up Python virtual environment and installing dependencies for QA tests..."
-                    dir('qa-code') {
-                        sh 'python3 -m venv ./.venv'
-                        sh 'bash -c ". ./.venv/bin/activate && pip install --no-cache-dir -r requirements.txt"'
-                    }
-                }
-            }
-        }
-
-        stage('Run QA Tests against Staging') {
-            steps {
-                script {
-                    echo "Running Selenium tests against Staging URL: ${STAGING_URL}"
-                    dir('qa-code') {
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                        def qaTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/qa-tests"
-                        def qaTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/qa_report.xml"
-
-                        sh "rm -rf ${qaTestAllureResultsDir}"
-                        sh "mkdir -p ${qaTestAllureResultsDir}"
-                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
-
-                        sh """#!/bin/bash
-                            . ./.venv/bin/activate
-                            pytest src/tests/teachers/test_teacher_signup.py --alluredir=${qaTestAllureResultsDir} --junitxml=${qaTestJunitReportFile} --browser chrome-headless --baseurl ${STAGING_URL}
-                        """
-                    }
-                }
-            }
-        }
-
-        // --- Simplified Live Deployment Stage (relies on Git push) ---
-        stage('Merge Dev to Main & Push (and Trigger Live Deploy)') { // Renamed for clarity
-            when {
-                // This condition ensures this critical stage only runs if the entire pipeline is successful
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    dir('sut-code') {
-                        echo "Checking out SUT Main branch for merge operation..."
-                        git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
-
-                        echo "Configuring Git user for the merge commit..."
-                        sh "git config user.email 'jenkins@example.com'"
-                        sh "git config user.name 'Jenkins CI Automation'"
-
-                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
-                        sh "git fetch origin ${env.SUT_BRANCH_DEV}" // Fetch the dev branch as well
-
-                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
-                        // Use '--no-edit' to prevent Git from opening an editor for the merge commit message.
-                        // `--no-ff` ensures a merge commit is always created, useful for history.
-                        sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
-
-                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This will trigger Render live deploy."
-                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
-                        }
-                        echo "SUT Main branch updated. Render will now deploy to live."
-
-                        // --- START Smart Wait Implementation for Live Deployment ---
-                        def maxAttempts = 20 // Max number of times to check (e.g., 20 * 15 seconds = 5 minutes)
-                        def retryDelaySeconds = 15 // Seconds to wait between checks
-                        // --- FIX: Corrected variable name from SUT_LIVE_URL to LIVE_URL ---
-                        def healthCheckUrl = "${env.LIVE_URL}/health/" // Use the LIVE URL here!
-                        def attempts = 0
-                        def serviceHealthy = false
-
-                        echo "Starting smart wait for live service at ${healthCheckUrl} to become healthy..."
-
-                        while (attempts < maxAttempts && !serviceHealthy) {
-                            attempts++
-                            echo "Attempt ${attempts}/${maxAttempts}: Checking live service health..."
-                            try {
-                                // Use curl with -s (silent), -o /dev/null (discard output), -w "%{http_code}" (write HTTP code)
-                                def httpCode = sh(
-                                    script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}",
-                                    returnStdout: true
-                                ).trim()
-
-                                echo "Received HTTP status code: ${httpCode}"
-
-                                if (httpCode == '200') {
-                                    serviceHealthy = true
-                                    echo "Live service at ${healthCheckUrl} is healthy!"
-                                } else {
-                                    echo "Live service not yet healthy. Retrying in ${retryDelaySeconds} seconds..."
-                                    sleep retryDelaySeconds
-                                }
-                            } catch (e) {
-                                echo "Error checking health: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
-                                sleep retryDelaySeconds
-                            }
-                        }
-
-                        if (!serviceHealthy) {
-                            error "Live service at ${healthCheckUrl} did not become healthy within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
-                        }
-                        // --- END Smart Wait Implementation ---
-                    } // End of dir('sut-code')
-                } // End of script block
-            } // End of steps block
-        } // End of stage block
-    }
-
+        
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
         always {
