@@ -148,20 +148,69 @@ pipeline {
             }
 
         stage('Build and Deploy SUT to Staging (via Render)') {
-            when {
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
-                            echo "Triggering Render deployment for ${env.STAGING_URL}..."
-                            sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
-                            echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
-                            
+    when {
+        expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+    }
+    steps {
+        script {
+            withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
+                echo "Triggering Render deployment for ${env.STAGING_URL}..."
+                sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
+                echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
+
+                // Define the health check endpoint
+                def healthCheckUrl = "${STAGING_URL}/health/" // Adjust if your endpoint is different
+
+                // --- SMART HEALTH CHECK POLLING ---
+                def maxRetries = 15 // Max attempts to check (e.g., 15 * 10 seconds = 150 seconds)
+                def retryDelaySeconds = 10 // Delay between attempts
+                def currentRetry = 0
+                def serviceHealthy = false
+
+                timeout(time: 5, unit: 'MINUTES') { // Max 5 minutes for health check
+                    while (currentRetry < maxRetries && !serviceHealthy) {
+                        echo "Attempt ${currentRetry + 1}/${maxRetries}: Checking service health at ${healthCheckUrl}..."
+                        try {
+                            // Use curl -s -o /dev/null -w "%{http_code}" to get only the HTTP status code
+                            // -f (fail) added for robustness; it makes curl return an error if the server returns 4xx/5xx
+                            def statusCode = sh(script: "curl -s -o /dev/null -w '%{http_code}' -f ${healthCheckUrl}", returnStdout: true).trim()
+                            echo "HTTP Status Code: ${statusCode}"
+
+                            if (statusCode == '200') {
+                                serviceHealthy = true
+                                echo "Service is healthy! Continuing pipeline."
+                            } else {
+                                echo "Service returned status ${statusCode}. Retrying in ${retryDelaySeconds} seconds..."
+                                sleep retryDelaySeconds
+                            }
+                        } catch (Exception e) {
+                            echo "Health check failed (curl error or non-200 status): ${e.message}. Retrying in ${retryDelaySeconds} seconds..."
+                            sleep retryDelaySeconds
+                        }
+                        currentRetry++
                     }
                 }
+
+                if (!serviceHealthy) {
+                    error "Service did not become healthy within the allotted time or retries. Aborting pipeline."
+                }
+                // --- END SMART HEALTH CHECK POLLING ---
             }
         }
+    }
+}
+
+// ... your 'Run API Tests (SUT)' stage now no longer needs the sleep(120)
+stage('Run API Tests (SUT)') {
+    steps {
+        script {
+            echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
+            // sleep(120) // REMOVE THIS LINE! It's no longer needed.
+
+            // ... rest of your API tests stage ...
+        }
+    }
+}
         stage('Run API Tests (SUT)') { // Renamed for clarity
             steps {
                 script {
