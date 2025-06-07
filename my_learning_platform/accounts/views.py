@@ -799,8 +799,3 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return self.request.user
     
-def health_check(request):
-    """
-    A simple health check view that returns HTTP 200 OK.
-    """
-    return HttpResponse(status=200)

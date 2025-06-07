@@ -10,7 +10,8 @@ from my_learning_platform.accounts.views import health_check
 
 # API Documentation URLs (These are typically kept in the project's urls.py)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-
+def health_check(request):
+    return HttpResponse("OK", status=200)
 urlpatterns = [
     path('admin/login/', auth_views.LoginView.as_view(template_name='admin/login.html'), name='admin_login'), # Optional: if you have a custom admin login template
     path('admin/logout/', auth_views.LogoutView.as_view(next_page='/admin/'), name='admin_logout'), # <--- THIS IS THE KEY LINE
@@ -25,6 +26,8 @@ urlpatterns = [
 
     # Main API URLs (Keep this if 'accounts.api_urls' defines your REST API endpoints)
     path('api/', include('accounts.api_urls')),
+    
+   
      path('health/', health_check, name='health_check'),
     
 
