@@ -4,6 +4,8 @@ pipeline {
     tools {
         // Define NodeJS tool globally for the pipeline
         nodejs 'NodeJS_24'
+        // Assuming Allure Commandline is also defined globally
+        // tool name: 'Allure_2.34.0', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
     }
 
     environment {
@@ -29,8 +31,6 @@ pipeline {
         ALLURE_ROOT_DIR = 'allure-results'
         JUNIT_ROOT_DIR = 'junit-reports'
         RENDER_SERVICE_ID_DEV = 'srv-d0pau63e5dus73dkco6g'
-        // QA_JOB_NAME and LIVE_DEPLOY_JOB_NAME are no longer needed as separate jobs are integrated
-        // QA_ALLURE_RESULTS_ROOT and QA_JUNIT_RESULTS_ROOT are no longer needed as they are sub-directories
     }
 
     stages {
@@ -55,20 +55,20 @@ pipeline {
                 }
             }
 
-            stage('Setup Python Environment (SUT)') { // Renamed for clarity
+            stage('Setup Python Environment (SUT)') {
                 steps {
                     script {
                         echo "Setting up Python virtual environment and installing dependencies for SUT..."
-                        dir('my_learning_platform') {
-                        
+                        // CRITICAL CHANGE: Create the .venv inside sut-code/my_learning_platform
+                        dir('sut-code/my_learning_platform') { // This aligns all Python steps
                             sh '''
                             bash -c "
                                 python3 -m venv .venv
                                 source .venv/bin/activate
                                 pip install --upgrade pip
                                 pip install -r requirements.txt
-                        "
-                    '''
+                            "
+                            '''
                         }
                     }
                 }
@@ -95,59 +95,57 @@ pipeline {
                 }
             }
 
-        stage('Run Integration Tests (SUT)') {
-            steps {
-                script {
-                    echo "Running Django integration tests with pytest and generating Allure results..."
-                    // Change this 'dir' to match where your .venv was created
-                    // and where your integration tests are expected to be found by pytest.
-                    // If your integration tests are under 'my_learning_platform/accounts/tests/integration',
-                    // then staying in 'my_learning_platform' is correct.
-                    dir('my_learning_platform') {
-                        sh '''
-                            # Activate the virtual environment from its correct location
-                            source .venv/bin/activate
+            stage('Run Unit Tests (SUT)') { // Renamed for clarity and consistency
+                steps {
+                    script {
+                        echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
+                        // CRITICAL CHANGE: Run unit tests from sut-code/my_learning_platform
+                        dir('sut-code/my_learning_platform') {
+                            // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
+                            def unitTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/unit-tests"
+                            def unitTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_unit_report.xml"
 
-                            # Clean previous Allure results and create report directories
-                            rm -rf ${WORKSPACE}/allure-results/integration-tests
-                            mkdir -p ${WORKSPACE}/allure-results/integration-tests
-                            mkdir -p ${WORKSPACE}/junit-reports # Re-creating or ensuring this exists
+                            sh "rm -rf ${unitTestAllureResultsDir}"
+                            sh "mkdir -p ${unitTestAllureResultsDir}"
+                            sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
 
-                            # Run pytest specifically for integration tests
-                            # Adjust 'accounts/tests/integration' to the actual path of your integration tests
-                            # relative to the 'my_learning_platform' directory.
-                            pytest --alluredir=${WORKSPACE}/allure-results/integration-tests \\
-                                --junitxml=${WORKSPACE}/junit-reports/integration_tests.xml \\
-                                accounts/tests/integration # Example path, adjust as needed
-                        '''
+                            sh '''#!/bin/bash
+                                source .venv/bin/activate
+                                pytest \\
+                                    --alluredir=''' + unitTestAllureResultsDir + ''' \\
+                                    --junitxml=''' + unitTestJunitReportFile + '''
+                                # No specific path needed if pytest.ini testpaths are correct,
+                                # otherwise, specify e.g., accounts/tests/unit
+                            '''
+                        }
                     }
                 }
             }
-        }
-        
-        stage('Run Integration Tests (SUT)') { // Renamed for clarity
-            steps {
-                script {
-                    echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') {
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                        def integrationTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/integration-tests"
-                        def integrationTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_integration_report.xml"
 
-                        sh "rm -rf ${integrationTestAllureResultsDir}"
-                        sh "mkdir -p ${integrationTestAllureResultsDir}"
-                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
+            // Kept the SECOND definition of 'Run Integration Tests (SUT)' as it was more correct
+            stage('Run Integration Tests (SUT)') {
+                steps {
+                    script {
+                        echo "Running Django integration tests with pytest and generating Allure results..."
+                        dir('sut-code/my_learning_platform') {
+                            // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
+                            def integrationTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/integration-tests"
+                            def integrationTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_integration_report.xml"
 
-                        sh '''#!/bin/bash
-                            source .venv/bin/activate
-                            pytest accounts/tests/integration \\
-                                --alluredir=''' + integrationTestAllureResultsDir + ''' \\
-                                --junitxml=''' + integrationTestJunitReportFile + '''
-                        '''
+                            sh "rm -rf ${integrationTestAllureResultsDir}"
+                            sh "mkdir -p ${integrationTestAllureResultsDir}"
+                            sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
+
+                            sh '''#!/bin/bash
+                                source .venv/bin/activate
+                                pytest accounts/tests/integration \\
+                                    --alluredir=''' + integrationTestAllureResultsDir + ''' \\
+                                    --junitxml=''' + integrationTestJunitReportFile + '''
+                            '''
+                        }
                     }
                 }
             }
-        }
 
         stage('Build and Deploy SUT to Staging (via Render)') {
             when {
@@ -157,8 +155,6 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
                             echo "Triggering Render deployment for ${env.STAGING_URL}..."
-                            // 2. TRIGGER THE DEPLOYMENT USING CURL AND THE DEPLOY HOOK URL
-                            //    - This is the command that initiates a new build/deploy on Render
                             sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
                             echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
                             
@@ -212,8 +208,6 @@ pipeline {
             }
     }
     
-    
-
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
     post {
         always {
@@ -232,8 +226,8 @@ pipeline {
                         [path: "${ALLURE_ROOT_DIR}/unit-tests"],
                         [path: "${ALLURE_ROOT_DIR}/integration-tests"],
                         [path: "${ALLURE_ROOT_DIR}/api-tests"], // Ensure this path matches the one used in Newman
-                        // Path for QA tests
-                        [path: "${ALLURE_ROOT_DIR}/qa-tests"]
+                        // Path for QA tests (if applicable, uncomment if you add a QA test stage)
+                        // [path: "${ALLURE_ROOT_DIR}/qa-tests"]
                     ]
                 )
                 echo "Consolidated Allure Report should be available via the link on the build page."
