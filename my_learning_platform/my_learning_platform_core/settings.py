@@ -15,8 +15,7 @@ if os.path.exists(BASE_DIR / '.env'):
         load_dotenv(BASE_DIR / '.env')
     except ImportError:
         pass
-
-# Security
+ 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'a-default-secret-key-for-development-only-replace-this-in-prod')
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS_STRING = os.environ.get('ALLOWED_HOSTS', '')
