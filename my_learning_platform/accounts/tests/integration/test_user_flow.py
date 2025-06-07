@@ -3,6 +3,8 @@ from accounts.forms import UserRegistrationForm, ProfileForm
 
 from django.contrib.auth import get_user_model
 from decimal import Decimal
+from accounts.models import Profile
+
 
 User = get_user_model()
 
