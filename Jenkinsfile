@@ -61,7 +61,6 @@ pipeline {
                     echo "Setting up Python virtual environment and installing dependencies for SUT..."
                     dir('my_learning_platform') {
                        sh '''
-                            cd my_learning_platform
                             python3 -m venv .venv
                             source .venv/bin/activate
                             pip install --upgrade pip
