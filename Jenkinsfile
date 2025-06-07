@@ -199,18 +199,6 @@ pipeline {
         }
     }
 }
-
-// ... your 'Run API Tests (SUT)' stage now no longer needs the sleep(120)
-stage('Run API Tests (SUT)') {
-    steps {
-        script {
-            echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-            // sleep(120) // REMOVE THIS LINE! It's no longer needed.
-
-            // ... rest of your API tests stage ...
-        }
-    }
-}
         stage('Run API Tests (SUT)') { // Renamed for clarity
             steps {
                 script {
