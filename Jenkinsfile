@@ -60,11 +60,13 @@ pipeline {
                 script {
                     echo "Setting up Python virtual environment and installing dependencies for SUT..."
                     dir('my_learning_platform') {
-                        sh '''
+                       sh '''
+                            cd my_learning_platform
                             python3 -m venv .venv
                             source .venv/bin/activate
                             pip install --upgrade pip
                             pip install -r requirements.txt
+                            python manage.py collectstatic --noinput # Example of another command that benefits from venv
                         '''
                     }
                 }
