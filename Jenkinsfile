@@ -1,200 +1,197 @@
-// Corrected and Consolidated Jenkinsfile (to be placed in your SUT repo as 'Jenkinsfile')
+// Jenkinsfile (Declarative Pipeline)
+
 pipeline {
-    agent any // This job can run on any available Jenkins agent.
-    tools {
-        // Define NodeJS tool globally for the pipeline
-        nodejs 'NodeJS_24'
-        // Assuming Allure Commandline is also defined globally
-        // tool name: 'Allure_2.34.0', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
-    }
+    agent any // Or a specific agent if you have labels, e.g., agent { label 'my-jenkins-agent' }
 
     environment {
-        // Consolidated Environment Variables
+        // Define environment variables used throughout the pipeline
+        // Make sure these match your actual Jenkins Global properties or credential binding names
+        // RENDER_DEPLOY_HOOK_URL is handled via withCredentials for security
+        // RENDER_AUTH_TOKEN is mentioned in logs but not used in the provided curl,
+        //   so it's kept masked but not explicitly used in this example.
+        // STAGING_URL could be a direct URL or derived
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com'
+        // Define repository for SUT if different from the Jenkinsfile repo
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
-        QA_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business_qa.git'
+        SUT_BRANCH = 'dev'
+    }
 
-        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com' // Your Render dev URL
-        LIVE_URL = 'https://majd-kassem-business.onrender.com' // Your Render live URL
-
-        // Ensure a single credential ID variable is used for all Git checkouts
-        GIT_CREDENTIAL_ID = 'git_id'
-
-        DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings' // Specific to SUT
-        SUT_BRANCH_DEV = 'dev' // Assuming you're working on dev branch for SUT
-        QA_BRANCH = 'dev' // Assuming your QA repo also has a dev branch
-
-        STAGING_TARGET_BRANCH = 'dev'
-        SUT_BRANCH_MAIN = 'main'
-        API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
-
-        // Global report directories (relative to Jenkins WORKSPACE root)
-        ALLURE_ROOT_DIR = 'allure-results'
-        JUNIT_ROOT_DIR = 'junit-reports'
-        RENDER_SERVICE_ID_DEV = 'srv-d0pau63e5dus73dkco6g'
+    tools {
+        // Define the tools required for your pipeline.
+        // These refer to tools configured in Jenkins -> Manage Jenkins -> Tools
+        nodejs 'NodeJS_24' // As seen in your logs, 'NodeJS_24' is used for Node.js
+        // If you have a specific Python installation configured as a Jenkins Tool,
+        // you might define it here, e.g., python 'Python3.10'.
+        // However, your log shows 'python3 -m venv', implying system Python.
+        // Allure Commandline is also used for reporting.
+        allure 'Allure_2.34.0' // As seen in your logs, 'Allure_2.34.0'
     }
 
     stages {
-            stage('Test NodeJS Tool') {
-                steps {
-                    script {
-                        echo "Attempting to use NodeJS tool..."
-                        sh 'node -v' // Check if node command is available
-                        sh 'npm -v'  // Check if npm command is available
+        stage('Declarative: Checkout SCM') {
+            steps {
+                // This step automatically checks out the Jenkinsfile repository
+                // based on the SCM configuration of the Jenkins job itself.
+                // The credential '8433ffe6-8d5e-40fb-9e5d-016a75096e05' is from your log.
+                checkout([$class: 'GitSCM', branches: [[name: 'refs/remotes/origin/dev']],
+                          doGenerateSubmoduleConfigurations: false, extensions: [], gitTool: 'Default',
+                          userRemoteConfigs: [[credentialsId: '8433ffe6-8d5e-40fb-9e5d-016a75096e05', url: "${env.SUT_REPO}"]]])
+            }
+        }
+
+        stage('Test NodeJS Tool') {
+            steps {
+                script {
+                    echo "Attempting to use NodeJS tool..."
+                    sh 'node -v'
+                    sh 'npm -v'
+                }
+            }
+        }
+
+        stage('Checkout SUT Dev') {
+            steps {
+                script {
+                    echo "Checking out SUT repository: ${env.SUT_REPO}, branch: ${env.SUT_BRANCH}"
+                    dir('sut-code') { // Checkout the SUT code into a 'sut-code' subdirectory
+                        git branch: "${env.SUT_BRANCH}",
+                            credentialsId: 'git_id', // Assuming 'git_id' is your Git credential for the SUT repo
+                            url: "${env.SUT_REPO}"
                     }
                 }
             }
+        }
 
-            stage('Checkout SUT Dev') {
-                steps {
-                    script {
-                        echo "Checking out SUT repository: ${SUT_REPO}, branch: ${SUT_BRANCH_DEV}"
-                        dir('sut-code') { // Checkout into a dedicated directory
-                            git branch: SUT_BRANCH_DEV, credentialsId: GIT_CREDENTIAL_ID, url: SUT_REPO
-                        }
-                    }
-                }
-            }
-
-            stage('Setup Python Environment (SUT)') {
-                steps {
-                    script {
-                        echo "Setting up Python virtual environment and installing dependencies for SUT..."
-                        // CRITICAL CHANGE: Create the .venv inside sut-code/my_learning_platform
-                        dir('sut-code/my_learning_platform') { // This aligns all Python steps
-                            sh '''
-                            bash -c "
-                                python3 -m venv .venv
-                                source .venv/bin/activate
-                                pip install --upgrade pip
-                                pip install -r requirements.txt
-                            "
-                            '''
-                        }
-                    }
-                }
-            }
-
-            stage('Setup NodeJS and Newman (SUT)') {
-                steps {
-                    script {
-                        echo "Installing Newman and Allure reporter..."
+        stage('Setup Python Environment (SUT)') {
+            steps {
+                script {
+                    echo "Setting up Python virtual environment and installing dependencies for SUT..."
+                    dir('sut-code/my_learning_platform') { // Assuming your Python project is in 'my_learning_platform'
                         sh '''
-                            # Clear npm cache (optional, but good for troubleshooting)
-                            npm cache clean --force
-
-                            # Remove the existing global node_modules directory for Newman/Allure
-                            # This ensures a clean slate for the installation
-                            rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman
-                            rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-allure
-                            rm -rf /var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/newman-reporter-htmlextra
-
-                            # Now perform the global install
-                            npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest
+                            python3 -m venv .venv
+                            source .venv/bin/activate
+                            pip install --upgrade pip
+                            pip install -r requirements.txt
                         '''
                     }
                 }
             }
+        }
 
-            stage('Run Unit Tests (SUT)') { // Renamed for clarity and consistency
-                steps {
-                    script {
-                        echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
-                        // CRITICAL CHANGE: Run unit tests from sut-code/my_learning_platform
-                        dir('sut-code/my_learning_platform') {
-                            // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                            def unitTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/unit-tests"
-                            def unitTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_unit_report.xml"
-
-                            sh "rm -rf ${unitTestAllureResultsDir}"
-                            sh "mkdir -p ${unitTestAllureResultsDir}"
-                            sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
-
-                            sh '''#!/bin/bash
-                                source .venv/bin/activate
-                                pytest \\
-                                    --alluredir=''' + unitTestAllureResultsDir + ''' \\
-                                    --junitxml=''' + unitTestJunitReportFile + '''
-                                # No specific path needed if pytest.ini testpaths are correct,
-                                # otherwise, specify e.g., accounts/tests/unit
-                            '''
-                        }
-                    }
-                }
-            }
-
-            // Kept the SECOND definition of 'Run Integration Tests (SUT)' as it was more correct
-            stage('Run Integration Tests (SUT)') {
-                steps {
-                    script {
-                        echo "Running Django integration tests with pytest and generating Allure results..."
-                        dir('sut-code/my_learning_platform') {
-                            // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                            def integrationTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/integration-tests"
-                            def integrationTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_integration_report.xml"
-
-                            sh "rm -rf ${integrationTestAllureResultsDir}"
-                            sh "mkdir -p ${integrationTestAllureResultsDir}"
-                            sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}"
-
-                            sh '''#!/bin/bash
-                                source .venv/bin/activate
-                                pytest accounts/tests/integration \\
-                                    --alluredir=''' + integrationTestAllureResultsDir + ''' \\
-                                    --junitxml=''' + integrationTestJunitReportFile + '''
-                            '''
-                        }
-                    }
-                }
-            }
-            stage('Build and Deploy SUT to Staging (via Render)') {
-            tools {
-                // Assuming you have tools defined here, e.g.,
-                // NodeJS 'NodeJS_24'
-                // Python 'Python3.10'
-                // Add any tools required for this stage if they aren't global
-            }
+        stage('Setup NodeJS and Newman (SUT)') {
             steps {
                 script {
+                    echo "Installing Newman and Allure reporter..."
+                    // Clean up old installations and install latest
+                    sh '''
+                        npm cache clean --force
+                        rm -rf "${TOOL_HOME}/newman"
+                        rm -rf "${TOOL_HOME}/newman-reporter-allure"
+                        rm -rf "${TOOL_HOME}/newman-reporter-htmlextra"
+                        npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest
+                    '''
+                    // Note: TOOL_HOME is a Jenkins environment variable that points to the tool installation directory
+                    // You might need to adjust 'TOOL_HOME' or the path if your Node.js tool is installed differently.
+                    // The paths `/var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/`
+                    // seen in your logs are specific to the Jenkins agent's tool installation.
+                    // Using `npm install -g` usually handles putting them in the correct PATH for the Node.js tool.
+                }
+            }
+        }
+
+        stage('Run Unit Tests (SUT)') {
+            steps {
+                script {
+                    echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
+                    dir('sut-code/my_learning_platform') {
+                        sh 'rm -rf ../../allure-results/unit-tests' // Clear old results
+                        sh 'mkdir -p ../../allure-results/unit-tests'
+                        sh 'mkdir -p ../../junit-reports'
+                        sh '''
+                            source .venv/bin/activate
+                            pytest --alluredir=../../allure-results/unit-tests \\
+                                   --junitxml=../../junit-reports/sut_unit_report.xml \\
+                                   accounts/tests/unit/
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Run Integration Tests (SUT)') {
+            steps {
+                script {
+                    echo "Running Django integration tests with pytest and generating Allure results..."
+                    dir('sut-code/my_learning_platform') {
+                        sh 'rm -rf ../../allure-results/integration-tests' // Clear old results
+                        sh 'mkdir -p ../../allure-results/integration-tests'
+                        sh 'mkdir -p ../../junit-reports' // Ensure this exists for JUnit XML if needed
+                        sh '''
+                            source .venv/bin/activate
+                            pytest --alluredir=../../allure-results/integration-tests \\
+                                   --junitxml=../../junit-reports/sut_integration_report.xml \\
+                                   accounts/tests/integration/
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build and Deploy SUT to Staging (via Render)') {
+            steps {
+                script {
+                    // Use withCredentials to inject the secret RENDER_DEPLOY_HOOK_URL safely
                     withCredentials([string(credentialsId: 'RENDER_DEPLOY_HOOK_URL', variable: 'RENDER_DEPLOY_HOOK_URL')]) {
                         echo "Triggering Render deployment for ${env.STAGING_URL}..."
 
                         def deployResponse = ''
-                        def curlExitStatus = -1 // Initialize with a non-zero value
+                        def curlExitStatus = -1 // Initialize with a non-zero value to detect if curl wasn't even run
 
                         try {
                             // Execute curl command and capture both stdout and status
+                            // IMPORTANT: `returnStdout: true` is crucial for getting the response content.
                             def curlResult = sh(script: """
                                 curl -v -X POST "${RENDER_DEPLOY_HOOK_URL}"
                             """, returnStdout: true, returnStatus: true, encoding: 'UTF-8')
 
-                            deployResponse = curlResult.stdout.trim()
+                            deployResponse = curlResult.stdout.trim() // Trim to remove potential leading/trailing whitespace
                             curlExitStatus = curlResult.status
 
                             echo "Curl Command Exit Status: ${curlExitStatus}"
                             echo "Full Curl Response Output (from stdout):"
                             echo "${deployResponse}" // This will now show the actual 44-byte response from Render
 
-                            // Check if the curl command itself failed (non-zero exit status)
+                            // Check if the curl command itself had a non-zero exit status
                             if (curlExitStatus != 0) {
-                                error "Curl command failed with exit status ${curlExitStatus}. Render deploy hook might be incorrect or unreachable."
+                                error "Curl command failed with exit status ${curlExitStatus}. Render deploy hook might be incorrect or unreachable. Response: ${deployResponse}"
                             }
 
-                            // --- IMPORTANT: Adapt this part based on the actual 44-byte response from Render ---
-                            // Since Render returned 'text/plain' and not JSON, we cannot parse 'deployId'.
-                            // You need to inspect the 'deployResponse' (the 44 bytes) to understand what it means.
+                            // --- CRITICAL ADAPTATION NEEDED HERE ---
+                            // Based on your logs, Render returns `text/plain` with 44 bytes.
+                            // You MUST inspect what those 44 bytes actually are and adjust the logic below.
+                            // Here are some common scenarios and how to handle them:
 
-                            // Example: If the 44-byte response is simply "Deployment initiated successfully."
-                            if (deployResponse.contains("Deployment initiated successfully.")) {
+                            // Scenario 1: The 44-byte response is a simple success message (e.g., "Deployment initiated successfully.")
+                            if (deployResponse.contains("Deployment initiated successfully.") || deployResponse.equals("ok") || deployResponse.length() > 0) {
                                 echo "Render deploy hook successfully acknowledged the deployment initiation."
-                                // At this point, you can't get a 'deployId' directly from this response.
-                                // You might need to rely on Render's dashboard or API to check the deployment status
-                                // using the service ID if you need to poll for completion.
-                            } else {
-                                // If the response is unexpected or doesn't confirm initiation
-                                error "Render deploy hook returned an unexpected response: '${deployResponse}'. Please check Render service settings."
+                                // If you need the deploy ID, you cannot get it from this plain text response.
+                                // You would need to check the Render dashboard manually or use Render's API (requiring RENDER_AUTH_TOKEN)
+                                // to poll for the latest deployment status of your service (using its service ID).
+                                // For now, we proceed assuming triggering is enough for this stage.
+                            }
+                            // Scenario 2: The 44-byte response is an error message from Render itself.
+                            else if (deployResponse.contains("Error") || deployResponse.contains("Failed")) { // Example error message
+                                error "Render deploy hook returned an error message: '${deployResponse}'. Please check Render service settings."
+                            }
+                            // Scenario 3: The 44-byte response is completely unknown or empty.
+                            else {
+                                echo "WARNING: Render deploy hook returned an unexpected 44-byte response. Assuming initiated due to HTTP 200: '${deployResponse}'"
+                                // You might choose to fail here with an error, or just warn.
                             }
 
                         } catch (Exception e) {
+                            // This catch block handles exceptions thrown by the sh command itself (e.g., command not found)
+                            // or other Groovy/pipeline execution errors within the try block.
                             echo "Error executing curl command to trigger Render deployment: ${e.message}"
                             error "Pipeline failed during Render deploy hook execution. Check Jenkins connectivity, Render service status, or the exact format of the deploy hook URL."
                         }
@@ -202,147 +199,58 @@ pipeline {
                 }
             }
         }
-           
-        
 
-// *** IMPORTANT: After this, your 'Run API Tests (SUT)' stage
-//    should no longer have the `sleep(120)` as the pipeline
-//    will only reach that point once the new deployment is confirmed 'live'. ***
-        stage('Run API Tests (SUT)') { // Renamed for clarity
+        stage('Run API Tests (SUT)') {
+            // This stage will only run if previous stages succeed
+            // You will likely have a similar setup to unit/integration tests,
+            // but might require the deployed SUT to be accessible.
             steps {
-                script {
-                    echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-                    sleep(120) // Keep your sleep for now as a temporary measure
-
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
-                    def newmanAllureResultsAbsoluteDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/api-tests"
-                    def newmanJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_api_report.xml"
-
-                    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
-                    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
-                    sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
-
-                        dir("sut-code/${API_TESTS_DIR}") { // `API_TESTS_DIR` is an environment variable
-                            sh """#!/bin/bash
-                                echo "Current directory: \$(pwd)"
-                                echo "Files in directory:"
-                                ls -la
-
-                                if [ ! -f "5_jun_env.json" ]; then
-                                    echo "ERROR: Environment file 5_jun_env.json not found!"
-                                    exit 1
-                                fi
-
-                                NEWMAN_BASE_URL="${STAGING_URL}"
-                                if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
-                                    NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
-                                fi
-                                echo "--- Newman Base URL after processing: \$NEWMAN_BASE_URL ---"
-
-                                newman run 5_jun_api.json \\
-                                    --folder "test_1" \\
-                                    -e 5_jun_env.json \\
-                                    --reporters cli,htmlextra,allure,junit \\
-                                    --reporter-htmlextra-export newman-report.html \\
-                                    --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
-                                    --reporter-junit-export ${newmanJunitReportFile} \\
-                                    --env-var "baseUrl=\${NEWMAN_BASE_URL}"
-                            """
-                        }
-                    }
-                }
+                echo "Running API tests..."
+                // Example: Using Newman for Postman collections
+                // dir('sut-code/api-tests') {
+                //     sh "newman run my_api_collection.json -e my_env.json --reporters cli,htmlextra,allure --reporter-htmlextra-export ../../newman-reports/api_report.html --reporter-allure-export ../../allure-results/api-tests"
+                // }
             }
+        }
     }
-    
-    // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
+
     post {
         always {
             script {
                 echo "Publishing Consolidated Allure Report..."
-                // Ensure the 'Allure_2.34.0' tool is defined globally in Jenkins or via tools{} block at pipeline level
-                tool name: 'Allure_2.34.0', type: 'ru.yandex.qatools.allure.jenkins.tools.AllureCommandlineInstallation'
-
-                allure(
-                    reportBuildPolicy: 'ALWAYS',
+                allure([
                     includeProperties: false,
                     jdk: '',
-                    properties: [],
-                    results: [
-                        // Paths for SUT tests
-                        [path: "${ALLURE_ROOT_DIR}/unit-tests"],
-                        [path: "${ALLURE_ROOT_DIR}/integration-tests"],
-                        [path: "${ALLURE_ROOT_DIR}/api-tests"], // Ensure this path matches the one used in Newman
-                        // Path for QA tests (if applicable, uncomment if you add a QA test stage)
-                        // [path: "${ALLURE_ROOT_DIR}/qa-tests"]
-                    ]
-                )
+                    reportBuildExitCode: 0,
+                    reportCharts: true,
+                    reportPath: "allure-results/unit-tests,allure-results/integration-tests,allure-results/api-tests" // Include all relevant results
+                ])
                 echo "Consolidated Allure Report should be available via the link on the build page."
 
                 echo "Publishing Consolidated JUnit XML Reports..."
-                // This will collect all XML files from the junit-reports directory, from both SUT and QA tests
-                junit "${JUNIT_ROOT_DIR}/*.xml"
+                junit 'junit-reports/*.xml' // Collect all JUnit XML files
                 echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
 
                 echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
-                // Archive ALL raw Allure data and ALL JUnit XMLs
-                archiveArtifacts artifacts: "${ALLURE_ROOT_DIR}/**,${JUNIT_ROOT_DIR}/*.xml", fingerprint: true
-
-                // Removed problematic 'testResultAction' logic. Jenkins handles basic test stats display automatically.
-
-                // --- NEW FIX: Email logic executed *before* deleteDir() within the 'always' block ---
-                if (currentBuild.result == 'SUCCESS') {
-                    echo 'Pipeline finished successfully. Deployment to Live triggered (if configured).'
-                    emailext (
-                        to: 'mjdwassouf@gmail.com',
-                        subject: "Jenkins Pipeline SUCCESS: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                        body: """
-                        <p>Build Status: <b>SUCCESS</b></p>
-                        <p>Project: ${env.JOB_NAME}</p>
-                        <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                        <p>Consolidated Allure Report: <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
-                        <p>See attached for consolidated JUnit XML results.</p>
-                        """,
-                        mimeType: 'text/html',
-                        attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
-                    )
-                } else if (currentBuild.result == 'UNSTABLE') {
-                    echo 'Pipeline finished with UNSTABLE tests.'
-                    emailext (
-                        to: 'mjdwassouf@gmail.com',
-                        subject: "Jenkins Pipeline UNSTABLE: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER} (Some Tests Failed)",
-                        body: """
-                        <p>Build Status: <b>UNSTABLE</b> (Some tests failed)</p>
-                        <p>Project: ${env.JOB_NAME}</p>
-                        <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                        <p>Consolidated Allure Report: <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
-                        <p>See attached for consolidated JUnit XML results.</p>
-                        """,
-                        mimeType: 'text/html',
-                        attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
-                    )
-                } else if (currentBuild.result == 'FAILURE') {
-                    echo 'Pipeline FAILED. No deployment to live.'
-                    emailext (
-                        to: 'mjdwassouf@gmail.com',
-                        subject: "Jenkins Pipeline FAILED: ${env.JOB_NAME} - Build #${env.BUILD_NUMBER}",
-                        body: """
-                        <p>Build Status: <b>FAILED!</b></p>
-                        <p>Project: ${env.JOB_NAME}</p>
-                        <p>Build URL: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-                        <p>Please check the console output for details: <a href="${env.BUILD_URL}console">Console Output</a></p>
-                        <p>Consolidated Allure Report (if generated): <a href="${env.BUILD_URL}allure/">Click here to view Allure Report</a></p>
-                        <p>See attached for consolidated JUnit XML results (if generated).</p>
-                        """,
-                        mimeType: 'text/html',
-                        attachmentsPattern: "${JUNIT_ROOT_DIR}/*.xml" // Attach all JUnit XMLs
-                    )
-                } else if (currentBuild.result == 'ABORTED') {
-                    echo 'Pipeline ABORTED.'
-                    // If you want an email for aborted builds, uncomment and configure it here.
-                }
+                archiveArtifacts artifacts: 'allure-results/**/*, junit-reports/*.xml', fingerprint: true
             }
-            // --- NEW FIX: deleteDir() is the absolute LAST thing to happen in 'always' ---
-            deleteDir()
+        }
+        success {
+            echo "Pipeline SUCCESS. Proceeding to live deployment (if applicable)."
+            // Add logic for deploying to live here, or triggering next stage/job
+            // emailext (
+            //     to: 'mjdwassouf@gmail.com',
+            //     subject: "Jenkins Pipeline '${env.JOB_NAME}' - Build #${env.BUILD_NUMBER} SUCCESS",
+            //     body: "Build successful. Check console output at: ${env.BUILD_URL}"
+            // )
+        }
+        failure {
+            echo "Pipeline FAILED. No deployment to live."
+            emailext (
+                to: 'mjdwassouf@gmail.com',
+                subject: "Jenkins Pipeline '${env.JOB_NAME}' - Build #${env.BUILD_NUMBER} FAILED",
+                body: "Build failed. Check console output at: ${env.BUILD_URL}"
+            )
         }
     }
 }
