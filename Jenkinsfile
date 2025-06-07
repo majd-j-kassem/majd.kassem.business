@@ -148,7 +148,7 @@ pipeline {
     "commit": "${currentCommitSha}"
 }
 """
-                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${TARGET_BRANCH}..."
+                        echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${STAGING_TARGET_BRANCH}..."
 
                         def deployResponse
                         try {
