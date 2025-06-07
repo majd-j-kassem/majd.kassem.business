@@ -85,30 +85,31 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests (SUT)') { // Renamed for clarity
+        stage('Run Unit Tests (SUT)') {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
-                    dir('my_learning_platform') {
-                        // CORRECTED PATHS: Use WORKSPACE directly for absolute paths from the root of the Jenkins workspace
-                        def unitTestAllureResultsDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/unit-tests"
-                        def unitTestJunitReportFile = "${WORKSPACE}/${JUNIT_ROOT_DIR}/sut_unit_report.xml"
+                    dir('my_learning_platform') { 
+                        sh '''
+                            # Activate the virtual environment BEFORE running pytest
+                            source .venv/bin/activate
 
-                        sh "rm -rf ${unitTestAllureResultsDir}"
-                        sh "mkdir -p ${unitTestAllureResultsDir}"
-                        sh "mkdir -p ${WORKSPACE}/${JUNIT_ROOT_DIR}" // Ensure global JUnit reports directory exists
+                            # Clean previous Allure results and create report directories
+                            rm -rf /var/lib/jenkins/workspace/My_Learning_Platform_CI-CD-Pipeline/allure-results/unit-tests
+                            mkdir -p /var/lib/jenkins/workspace/My_Learning_Platform_CI-CD-Pipeline/allure-results/unit-tests
+                            mkdir -p /var/lib/jenkins/workspace/My_Learning_Platform_CI-CD-Pipeline/junit-reports
 
-                        sh '''#!/bin/bash
-                            # Check if the core app directory exists
-                            [ -d my_learning_platform_core ] && echo "my_learning_platform_core directory found." || echo "Error: my_learning_platform_core directory NOT found."
-                            source ../.venv/bin/activate
-                            pytest accounts/tests/unit --alluredir=''' + unitTestAllureResultsDir + ''' --junitxml=''' + unitTestJunitReportFile + '''
+                            # Run pytest with Allure and JUnit XML reporting
+                            # Ensure your test discovery pattern is correct.
+                            # Assuming tests are in a 'tests' directory or similar, or Django test discovery works.
+                            pytest --alluredir=/var/lib/jenkins/workspace/My_Learning_Platform_CI-CD-Pipeline/allure-results/unit-tests \
+                                --junitxml=/var/lib/jenkins/workspace/My_Learning_Platform_CI-CD-Pipeline/junit-reports/unit_tests.xml \
+                                my_learning_platform_core # Or your specific test path/app name
                         '''
                     }
                 }
             }
         }
-
        
         
         stage('Run Integration Tests (SUT)') { // Renamed for clarity
