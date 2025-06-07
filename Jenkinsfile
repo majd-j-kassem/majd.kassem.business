@@ -59,10 +59,13 @@ pipeline {
             steps {
                 script {
                     echo "Setting up Python virtual environment and installing dependencies for SUT..."
-                    dir('sut-code') {
-                        sh 'python3 -m venv .venv'
-                        sh 'bash -c "source .venv/bin/activate && pip install --upgrade pip"'
-                        sh 'bash -c "source .venv/bin/activate && pip install -r requirements.txt"'
+                    dir('my_learning_platform') {
+                        sh '''
+                            python3 -m venv .venv
+                            source .venv/bin/activate
+                            pip install --upgrade pip
+                            pip install -r requirements.txt
+                        '''
                     }
                 }
             }
