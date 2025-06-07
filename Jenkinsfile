@@ -143,17 +143,21 @@ pipeline {
 
                         // Define the payload as a multi-line string
                         def deployPayload = """
-{
-    "clearCache": true,
-    "commit": "${currentCommitSha}"
-}
-"""
+                            {
+                                "clearCache": true,
+                                "commit": "${currentCommitSha}"
+                            }
+                        """
                         echo "Triggering Render deployment for Service ID: ${RENDER_SERVICE_ID_DEV} on branch ${STAGING_TARGET_BRANCH}..."
 
                         def deployResponse
                         try {
                             // Write the JSON payload to a temporary file
                             writeFile(file: 'render_payload.json', text: deployPayload)
+                            //=============================
+                            echo "Content of render_payload.json:"
+                            sh "cat render_payload.json"
+                            //===============================
 
                             // Use the temporary file with curl -d @filename
                             deployResponse = sh(
