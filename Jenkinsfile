@@ -20,7 +20,7 @@ pipeline {
         DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings' // Specific to SUT
         SUT_BRANCH_DEV = 'dev' // Assuming you're working on dev branch for SUT
         QA_BRANCH = 'dev' // Assuming your QA repo also has a dev branch
-
+        SUT_BRANCH_MAIN = 'main'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
 
         // Global report directories (relative to Jenkins WORKSPACE root)
@@ -123,12 +123,67 @@ pipeline {
                 }
             }
         }
+        stage('Build and Deploy SUT to Staging (via Render)') {
+            when {
+                // This condition means it will run if previous stages were successful or skipped (e.g. initial build)
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
+                        echo "Triggering Render deployment for ${STAGING_URL}..."
+                        sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
+                        echo "Render deployment triggered via Deploy Hook."
 
+                        // --- START Smart Wait Implementation for Staging Deployment ---
+                        def maxAttempts = 20 // Max number of times to check (e.g., 20 * 15 seconds = 5 minutes)
+                        def retryDelaySeconds = 15 // Seconds to wait between checks
+                        def healthCheckUrl = "${STAGING_URL}/health/" // Use the STAGING URL here!
+                                                                    // Ensure STAGING_URL is defined in your environment block.
+                                                               // Ensure your Django app exposes '/health/' endpoint on staging.
+                        def attempts = 0
+                        def serviceHealthy = false
+
+                        echo "Starting smart wait for staging service at ${healthCheckUrl} to become healthy..."
+
+                        while (attempts < maxAttempts && !serviceHealthy) {
+                            attempts++
+                            echo "Attempt ${attempts}/${maxAttempts}: Checking staging service health..."
+                            try {
+                                // Use curl with -s (silent), -o /dev/null (discard output), -w "%{http_code}" (write HTTP code)
+                                def httpCode = sh(
+                                    script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}",
+                                    returnStdout: true
+                                ).trim()
+
+                                echo "Received HTTP status code: ${httpCode}"
+
+                                if (httpCode == '200') {
+                                    serviceHealthy = true
+                                    echo "Staging service at ${healthCheckUrl} is healthy!"
+                                } else {
+                                    echo "Staging service not yet healthy. Retrying in ${retryDelaySeconds} seconds..."
+                                    sleep retryDelaySeconds
+                                }
+                            } catch (e) {
+                                echo "Error checking health: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
+                                sleep retryDelaySeconds
+                            }
+                        }
+
+                        if (!serviceHealthy) {
+                            error "Staging service at ${healthCheckUrl} did not become healthy within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
+                        }
+                        // --- END Smart Wait Implementation ---
+                    } // End of withCredentials block
+                } // End of script block
+            } // End of steps block
+        }
         stage('Run API Tests (SUT)') { // Renamed for clarity
             steps {
                 script {
                     echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-                    sleep(120) // Keep your sleep for now as a temporary measure
+                     // The comment "Keep your sleep for now as a temporary measure" can be removed as the sleep is gone and smart wait is in place
 
                     // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
                     def newmanAllureResultsAbsoluteDir = "${WORKSPACE}/${ALLURE_ROOT_DIR}/api-tests"
@@ -169,42 +224,21 @@ pipeline {
             }
         }
 
-        stage('Build and Deploy SUT to Staging (via Render)') {
-            when {
-                // This condition means it will run if previous stages were successful or skipped (e.g. initial build)
-                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
-            }
+        // --- Integrated QA Stages (from your old 'Jenkinsfile.qa_tests') ---
+        stage('Checkout QA Test Code') {
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
-                            echo "Triggering Render deployment for ${STAGING_URL}..."
-                            sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
-                            echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
-                            // --- IMPORTANT ---
-                            // You need actual logic here to *wait* for Render deployment to complete and be healthy
-                            // before proceeding to QA tests. A simple 'sleep' is a temporary workaround.
-                            // Consider using Render API to poll deployment status.
-                            sleep(120) // Placeholder for waiting for deployment to stabilize
+                    echo "Checking out QA repository: ${QA_REPO}, branch: ${QA_BRANCH}"
+                    dir('qa-code') { // Checkout into a dedicated directory
+                        git branch: QA_BRANCH, credentialsId: GIT_CREDENTIAL_ID, url: QA_REPO
                     }
                 }
             }
         }
 
-        // --- FIXED: Integrated QA Stages (from your old 'Jenkinsfile.qa_tests') ---
-        stage('Checkout QA Test Code') {
-            steps {
-                script { // <--- ADDED THIS SCRIPT BLOCK
-                    echo "Checking out QA repository: ${QA_REPO}, branch: ${QA_BRANCH}"
-                    dir('qa-code') { // Checkout into a dedicated directory
-                        git branch: QA_BRANCH, credentialsId: GIT_CREDENTIAL_ID, url: QA_REPO
-                    }
-                } // <--- END OF SCRIPT BLOCK
-            }
-        }
-
         stage('Setup Python Environment (QA)') {
             steps {
-                script { // <--- Ensure script block is here too if it was missing
+                script {
                     echo "Setting up Python virtual environment and installing dependencies for QA tests..."
                     dir('qa-code') {
                         sh 'python3 -m venv ./.venv'
@@ -216,7 +250,7 @@ pipeline {
 
         stage('Run QA Tests against Staging') {
             steps {
-                script { // <--- Ensure script block is here too if it was missing
+                script {
                     echo "Running Selenium tests against Staging URL: ${STAGING_URL}"
                     dir('qa-code') {
                         // CORRECTED PATHS: Use WORKSPACE directly for absolute paths
@@ -235,102 +269,80 @@ pipeline {
                 }
             }
         }
-         // --- NEW: Simplified Live Deployment Stage (relies on Git push) ---
+
+        // --- Simplified Live Deployment Stage (relies on Git push) ---
         stage('Merge Dev to Main & Push (and Trigger Live Deploy)') { // Renamed for clarity
-    when {
-        // This condition ensures this critical stage only runs if the entire pipeline is successful
-        expression { currentBuild.result == 'SUCCESS' }
-    }
-    steps {
-        script {
-            dir('sut-code') {
-                echo "Checking out SUT Main branch for merge operation..."
-                // Ensure env.SUT_BRANCH_MAIN is defined, e.g., in your environment block:
-                // SUT_BRANCH_MAIN = 'main'
-                git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
-
-                echo "Configuring Git user for the merge commit..."
-                sh "git config user.email 'jenkins@example.com'"
-                sh "git config user.name 'Jenkins CI Automation'"
-
-                echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
-                sh "git fetch origin ${env.SUT_BRANCH_DEV}" // Fetch the dev branch as well
-
-                echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
-                // Use '--no-edit' to prevent Git from opening an editor for the merge commit message.
-                // `--no-ff` ensures a merge commit is always created, useful for history.
-                sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
-
-                echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This will trigger Render live deploy."
-                withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                    sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
-                }
-                echo "SUT Main branch updated. Render will now deploy to live."
-
-                // --- START Smart Wait Implementation for Live Deployment ---
-                def maxAttempts = 20 // Max number of times to check (e.g., 20 * 15 seconds = 5 minutes)
-                def retryDelaySeconds = 15 // Seconds to wait between checks
-                def healthCheckUrl = "${env.SUT_LIVE_URL}/health/" // Use the LIVE URL here!
-                                                                  // Ensure env.SUT_LIVE_URL is defined, e.g., in your environment block.
-                                                                  // Ensure your Django app exposes '/health/' endpoint on live.
-                def attempts = 0
-                def serviceHealthy = false
-
-                echo "Starting smart wait for live service at ${healthCheckUrl} to become healthy..."
-
-                while (attempts < maxAttempts && !serviceHealthy) {
-                    attempts++
-                    echo "Attempt ${attempts}/${maxAttempts}: Checking live service health..."
-                    try {
-                        // Use curl with -s (silent), -o /dev/null (discard output), -w "%{http_code}" (write HTTP code)
-                        def httpCode = sh(
-                            script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}",
-                            returnStdout: true
-                        ).trim()
-
-                        echo "Received HTTP status code: ${httpCode}"
-
-                        if (httpCode == '200') {
-                            serviceHealthy = true
-                            echo "Live service at ${healthCheckUrl} is healthy!"
-                        } else {
-                            echo "Live service not yet healthy. Retrying in ${retryDelaySeconds} seconds..."
-                            sleep retryDelaySeconds
-                        }
-                    } catch (e) {
-                        echo "Error checking health: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
-                        sleep retryDelaySeconds
-                    }
-                }
-
-                if (!serviceHealthy) {
-                    error "Live service at ${healthCheckUrl} did not become healthy within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
-                }
-                // --- END Smart Wait Implementation ---
-            } // End of dir('sut-code')
-        } // End of script block
-    } // End of steps block
-} // End of stage block
-
-        // --- NEW: Integrated Live Deployment Stage (from your old 'SUT-Deploy-Live' job) ---
-        stage('Trigger SUT Live Deployment (if all tests pass)') {
             when {
-                // This condition ensures deployment to live only happens if the entire pipeline is successful
+                // This condition ensures this critical stage only runs if the entire pipeline is successful
                 expression { currentBuild.result == 'SUCCESS' }
             }
             steps {
                 script {
-                    echo "All tests passed. Triggering live deployment to ${LIVE_URL}."
-                    // --- ADD YOUR ACTUAL LIVE DEPLOYMENT LOGIC HERE ---
-                    // Example using a Render Deploy Hook (you'll need to create this credential in Jenkins)
-                    withCredentials([string(credentialsId: 'ENDER_LIVE_DEPLOY_HOOK', variable: 'ENDER_LIVE_DEPLOY_HOOK_URL')]) { // Assuming a different hook for live
-                        sh "curl -X POST ${ENDER_LIVE_DEPLOY_HOOK_URL}"
-                        echo "Render live deployment triggered via Deploy Hook."
-                    }
-                }
-            }
-        }
-      
+                    dir('sut-code') {
+                        echo "Checking out SUT Main branch for merge operation..."
+                        git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
+
+                        echo "Configuring Git user for the merge commit..."
+                        sh "git config user.email 'jenkins@example.com'"
+                        sh "git config user.name 'Jenkins CI Automation'"
+
+                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
+                        sh "git fetch origin ${env.SUT_BRANCH_DEV}" // Fetch the dev branch as well
+
+                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
+                        // Use '--no-edit' to prevent Git from opening an editor for the merge commit message.
+                        // `--no-ff` ensures a merge commit is always created, useful for history.
+                        sh "git merge origin/${env.SUT_BRANCH_DEV} --no-ff --commit --no-edit -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
+
+                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote. This will trigger Render live deploy."
+                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
+                        }
+                        echo "SUT Main branch updated. Render will now deploy to live."
+
+                        // --- START Smart Wait Implementation for Live Deployment ---
+                        def maxAttempts = 20 // Max number of times to check (e.g., 20 * 15 seconds = 5 minutes)
+                        def retryDelaySeconds = 15 // Seconds to wait between checks
+                        // --- FIX: Corrected variable name from SUT_LIVE_URL to LIVE_URL ---
+                        def healthCheckUrl = "${env.LIVE_URL}/health/" // Use the LIVE URL here!
+                        def attempts = 0
+                        def serviceHealthy = false
+
+                        echo "Starting smart wait for live service at ${healthCheckUrl} to become healthy..."
+
+                        while (attempts < maxAttempts && !serviceHealthy) {
+                            attempts++
+                            echo "Attempt ${attempts}/${maxAttempts}: Checking live service health..."
+                            try {
+                                // Use curl with -s (silent), -o /dev/null (discard output), -w "%{http_code}" (write HTTP code)
+                                def httpCode = sh(
+                                    script: "curl -s -o /dev/null -w '%{http_code}' ${healthCheckUrl}",
+                                    returnStdout: true
+                                ).trim()
+
+                                echo "Received HTTP status code: ${httpCode}"
+
+                                if (httpCode == '200') {
+                                    serviceHealthy = true
+                                    echo "Live service at ${healthCheckUrl} is healthy!"
+                                } else {
+                                    echo "Live service not yet healthy. Retrying in ${retryDelaySeconds} seconds..."
+                                    sleep retryDelaySeconds
+                                }
+                            } catch (e) {
+                                echo "Error checking health: ${e.getMessage()}. Retrying in ${retryDelaySeconds} seconds..."
+                                sleep retryDelaySeconds
+                            }
+                        }
+
+                        if (!serviceHealthy) {
+                            error "Live service at ${healthCheckUrl} did not become healthy within ${maxAttempts * retryDelaySeconds} seconds. Failing pipeline."
+                        }
+                        // --- END Smart Wait Implementation ---
+                    } // End of dir('sut-code')
+                } // End of script block
+            } // End of steps block
+        } // End of stage block
     }
 
     // --- CONSOLIDATED AND FIXED POST SECTION (ensuring emails send before deletion) ---
@@ -425,5 +437,3 @@ pipeline {
         }
     }
 }
-        // The success, unstable, failure, aborted blocks are no longer needed here
-        // as their logic has been moved into the 'always' block for correct timin

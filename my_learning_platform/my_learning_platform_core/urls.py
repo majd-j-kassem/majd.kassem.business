@@ -4,7 +4,9 @@ from django.urls import path, include
 from django.conf import settings 
 from django.conf.urls.static import static 
 from django.contrib.auth import views as auth_views
+from django.http import HttpResponse
 
+from my_learning_platform.accounts.views import health_check
 
 # API Documentation URLs (These are typically kept in the project's urls.py)
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -23,6 +25,7 @@ urlpatterns = [
 
     # Main API URLs (Keep this if 'accounts.api_urls' defines your REST API endpoints)
     path('api/', include('accounts.api_urls')),
+     path('health/', health_check, name='health_check'),
     
 
 ]

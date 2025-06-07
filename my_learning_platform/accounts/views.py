@@ -25,6 +25,7 @@ from .models import ContactMessage
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import UpdateView # This should already be there if you're using UpdateView
 # ... other imports (e.g., render, redirect, forms, models)
+from django.http import HttpResponse
 
 # --- Consolidated Form Imports ---
 from .forms import (
@@ -797,3 +798,9 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     # You might have a get_object method if you're updating the current user's profile
     def get_object(self, queryset=None):
         return self.request.user
+    
+def health_check(request):
+    """
+    A simple health check view that returns HTTP 200 OK.
+    """
+    return HttpResponse(status=200)
