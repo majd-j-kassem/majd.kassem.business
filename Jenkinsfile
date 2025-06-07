@@ -219,12 +219,16 @@ pipeline {
             script {
                 echo "Publishing Consolidated Allure Report..."
                 allure([
-                    includeProperties: false,
-                    jdk: '',
-                    reportBuildExitCode: 0,
-                    reportCharts: true,
-                    reportPath: "allure-results/unit-tests,allure-results/integration-tests,allure-results/api-tests" // Include all relevant results
-                ])
+                    // Remove unknown parameters and use 'results' for the paths to raw Allure result directories
+                    results: [
+                        'allure-results/unit-tests',
+                        'allure-results/integration-tests',
+                        // If you uncomment and enable API tests, add its results path here too:
+                        // 'allure-results/api-tests'
+                    ]
+                ]
+                )
+                
                 echo "Consolidated Allure Report should be available via the link on the build page."
 
                 echo "Publishing Consolidated JUnit XML Reports..."
