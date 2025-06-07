@@ -128,7 +128,7 @@ pipeline {
         }
 
         stage('Build and Deploy SUT to Staging (via Render)') {
-            echo "Build and Deploy SUT to Staging (via Render)"
+            
             when {
                 // This condition means it will run if previous stages were successful or skipped (e.g. initial build)
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
