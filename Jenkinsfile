@@ -158,19 +158,17 @@ pipeline {
         stage('Run API Tests') {
             steps {
                 script {
-                    echo "Running Postman API tests with Newman and generating Allure raw results and JUnit reports..."
+                    echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
 
-                    // Define where Newman's ALLURE RAW RESULTS will go (this will be the input for the final Allure report)
-                    def newmanAllureRawResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
-                    // Define where Newman's JUNIT XML report will go
+                    def allureApiResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
                     def apiJunitReportPath = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
 
-                    sh "echo 'Re-initializing API Allure raw results directory: ${newmanAllureRawResultsDir}'"
-                    sh "rm -rf ${newmanAllureRawResultsDir}" // Clean previous raw results
-                    sh "mkdir -p ${newmanAllureRawResultsDir}" // Create directory for raw results
+                    sh "echo 'Re-initializing API Allure results directory: ${allureApiResultsDir}'"
+                    sh "rm -rf ${allureApiResultsDir}"
+                    sh "mkdir -p ${allureApiResultsDir}"
 
                     sh "echo 'Ensuring JUnit results directory exists: ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}'"
-                    sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}" // Create directory for JUnit XML
+                    sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}"
 
                     dir("${env.API_TESTS_DIR}") {
                         def newmanCommand = """#!/bin/bash -el
@@ -188,7 +186,6 @@ pipeline {
                             fi
                             echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
 
-                            # IMPORTANT: JUNIT_REPORT_OUTPUT is used for the Newman JUnit reporter
                             JUNIT_REPORT_OUTPUT="${apiJunitReportPath}"
 
                             echo "JUnit output path for Newman: \${JUNIT_REPORT_OUTPUT}"
@@ -197,10 +194,9 @@ pipeline {
                             newman run 5_jun_api.json \\
                                 --folder "test_1" \\
                                 -e 5_jun_env.json \\
-                                --reporters cli,htmlextra,junit,allure \\
+                                --reporters cli,htmlextra,junit \\
                                 --reporter-htmlextra-export newman-report.html \\
                                 --reporter-junit-export "\${JUNIT_REPORT_OUTPUT}" \\
-                                --reporter-allure-export ../${newmanAllureRawResultsDir} \\ // <<< THIS LINE IS CRUCIAL
                                 --env-var "baseUrl=\${NEWMAN_BASE_URL}"
 
                             echo "Checking contents of JUnit output directory immediately after newman run:"
@@ -209,12 +205,10 @@ pipeline {
                         sh newmanCommand
                     }
 
-                    // REMOVE THIS ENTIRE BLOCK
-                    // This was incorrectly generating an HTML report instead of raw data
-                    // echo "Converting Newman's JUnit report to Allure results..."
-                    // sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${allureApiResultsDir} ${apiJunitReportPath}"
-                    // echo "Checking contents of Allure API results directory after conversion:"
-                    // sh "ls -l ${allureApiResultsDir}"
+                    //echo "Converting Newman's JUnit report to Allure results..."
+                    //sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${allureApiResultsDir} ${apiJunitReportPath}"
+                    //echo "Checking contents of Allure API results directory after conversion:"
+                    //sh "ls -l ${allureApiResultsDir}"
                 }
             }
         }
