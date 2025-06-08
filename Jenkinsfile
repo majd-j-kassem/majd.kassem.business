@@ -74,6 +74,24 @@ pipeline {
                 }
             }
         }
+        stage('Run Unit Tests (SUT)') {
+            steps {
+                script {
+                    echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
+                    dir('my_learning_platform') {
+                        sh 'rm -rf ../allure-results/unit-tests' // Clear old results
+                        sh 'mkdir -p ../allure-results/unit-tests'
+                        sh 'mkdir -p ../junit-reports'
+                        sh '''
+                            source .venv/bin/activate
+                            pytest --alluredir=../allure-results/unit-tests \\
+                                   --junitxml=../junit-reports/sut_unit_report.xml \\
+                                   accounts/tests/unit/
+                        '''
+                    }
+                }
+            }
+        }
 
     }
 
