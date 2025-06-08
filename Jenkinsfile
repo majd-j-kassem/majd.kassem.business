@@ -116,11 +116,11 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
+                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'Render_Deploy_Hook_URL')]) {
                             echo "Triggering Render deployment for ${env.STAGING_URL}..."
                             // 2. TRIGGER THE DEPLOYMENT USING CURL AND THE DEPLOY HOOK URL
                             //    - This is the command that initiates a new build/deploy on Render
-                            sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
+                            sh "curl -X POST ${Render_Deploy_Hook_URL}"
                             echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
                             
                     }
@@ -131,46 +131,28 @@ pipeline {
     }
 
     post {
-        always {
-            script {
-                echo "Publishing Consolidated Allure Report..."
-                allure([
-                    // Remove unknown parameters and use 'results' for the paths to raw Allure result directories
-                    results: [
-                        'allure-results/unit-tests',
-                        'allure-results/integration-tests',
-                        // If you uncomment and enable API tests, add its results path here too:
-                        // 'allure-results/api-tests'
-                    ]
-                ]
-                )
-                
-                echo "Consolidated Allure Report should be available via the link on the build page."
+            always {
+                script {
+                    echo "Publishing Consolidated Allure Report..."
+                    step([$class: 'AllureReportPublisher',
+                        results: [
+                            [path: 'allure-results/unit-tests'],
+                            [path: 'allure-results/integration-tests']
+                        ],
+                        reportBuildExitCode: 0,
+                        reportCharts: true
+                    ])
+                    echo "Consolidated Allure Report should be available via the link on the build page."
 
-                echo "Publishing Consolidated JUnit XML Reports..."
-                junit 'junit-reports/*.xml' // Collect all JUnit XML files
-                echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
+                    echo "Publishing Consolidated JUnit XML Reports..."
+                    junit 'junit-reports/*.xml'
+                    echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
 
-                echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
-                archiveArtifacts artifacts: 'allure-results/**/*, junit-reports/*.xml', fingerprint: true
+                    echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
+                    archiveArtifacts artifacts: 'allure-results/**/*', fingerprint: true
+                    archiveArtifacts artifacts: 'junit-reports/*.xml', fingerprint: true
+                }
             }
+            // ... other post conditions if any
         }
-        success {
-            echo "Pipeline SUCCESS. Proceeding to live deployment (if applicable)."
-            // Add logic for deploying to live here, or triggering next stage/job
-            // emailext (
-            //     to: 'mjdwassouf@gmail.com',
-            //     subject: "Jenkins Pipeline '${env.JOB_NAME}' - Build #${env.BUILD_NUMBER} SUCCESS",
-            //     body: "Build successful. Check console output at: ${env.BUILD_URL}"
-            // )
-        }
-        failure {
-            echo "Pipeline FAILED. No deployment to live."
-            emailext (
-                to: 'mjdwassouf@gmail.com',
-                subject: "Jenkins Pipeline '${env.JOB_NAME}' - Build #${env.BUILD_NUMBER} FAILED",
-                body: "Build failed. Check console output at: ${env.BUILD_URL}"
-            )
-        }
-    }
 }
