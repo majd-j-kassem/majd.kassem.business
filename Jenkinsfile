@@ -253,10 +253,10 @@ pipeline {
                             # Pass STAGING_URL to your tests. Adjust '--base-url' if your tests use a different argument.
                             # Ensure 'tests/' is the correct path to your test files within the QA repo.
                             pytest --alluredir=../${qaAllureOutputDir} \\
-                                   --junitxml=../${qaJunitReportFile} \\
-                                   --browser chrome-headless \\
-                                   --baseurl \"${params.STAGING_URL_PARAM}\" \\
-                                   src/tests/teachers/test_teacher_signup.py
+                                --junitxml=../${qaJunitReportFile} \\
+                                --browser chrome-headless \\
+                                --baseurl \"${params.STAGING_URL_PARAM}\" \\
+                                src/tests/teachers/test_teacher_signup.py
                         """
                     }
 
