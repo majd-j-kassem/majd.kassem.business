@@ -264,21 +264,22 @@ pipeline {
    post {
     always {
         script {
-            echo "---" // Separator for better readability in console output
+            echo "---"
             echo "Starting Post-Build Actions..."
             echo "---"
 
-            // Publish Consolidated Allure Report
             echo "Publishing Consolidated Allure Report..."
             try {
-                step([$class: 'AllureReportPublisher',
+                // Use the simpler 'allure' step syntax
+                allure([
                     results: [
-                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
-                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
-                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"]
+                        "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests",
+                        "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests",
+                        "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
                     ],
-                    reportBuildExitCode: 0,
-                    reportCharts: true
+                    // Remove deprecated/problematic parameters if you encounter further errors
+                    // reportBuildExitCode: false, // These parameters were deprecated
+                    // reportCharts: false         // Removed as they might cause issues if plugin version is old
                 ])
                 echo "Consolidated Allure Report should be available via the link on the build page."
             } catch (Exception e) {
@@ -287,10 +288,9 @@ pipeline {
 
             echo "---"
 
-            // Publish Consolidated JUnit XML Reports
+            // ... (rest of your post actions like JUnit and archiveArtifacts) ...
             echo "Publishing Consolidated JUnit XML Reports..."
             try {
-                // Updated path to include TEST_RESULT_ROOT
                 junit "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml"
                 echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
             } catch (Exception e) {
@@ -299,10 +299,8 @@ pipeline {
 
             echo "---"
 
-            // Archive Allure raw results and all JUnit XMLs as build artifacts
             echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
             try {
-                // Updated paths to include TEST_RESULT_ROOT
                 archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/**/*", fingerprint: true
                 archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml", fingerprint: true
                 echo "Test artifacts archived successfully."
@@ -315,6 +313,5 @@ pipeline {
             echo "---"
         }
     }
-    // ... other post conditions if any (e.g., success, failure, unstable)
 }
 }
