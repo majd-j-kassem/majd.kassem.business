@@ -60,8 +60,8 @@ pipeline {
             steps {
                 script {
                     echo "Setting up Python virtual environment and installing dependencies for SUT..."
-                    dir('sut-code/my_learning_platform') { // Assuming your Python project is in 'my_learning_platform'
-                        sh '''
+                    dir('my_learning_platform') { // Assuming your Python project is in 'my_learning_platform'
+                        sh '''#!/bin/bash -el
                             python3 -m venv .venv
                             source .venv/bin/activate
                             pip install --upgrade pip
