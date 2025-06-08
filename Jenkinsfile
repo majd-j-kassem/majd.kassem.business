@@ -192,9 +192,11 @@ stage('Run API Tests') {
                     echo "5_jun_env.json found."
 
                     NEWMAN_BASE_URL="${env.STAGING_URL}"
-                    if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
-                        NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
-                    fi
+                    case "\$NEWMAN_BASE_URL" in
+                        */) # if it ends with /
+                            NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
+                            ;;
+                    esac
                     echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
 
                     ALLURE_NEWMAN_EXPORT_PATH="${allureApiResultsDir}"
