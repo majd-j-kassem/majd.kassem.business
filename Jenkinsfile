@@ -1,119 +1,140 @@
+// Jenkinsfile (Declarative Pipeline)
+
 pipeline {
-    agent any // This means the entire pipeline runs on any available Jenkins agent.
+    agent any // Or a specific agent if you have labels, e.g., agent { label 'my-jenkins-agent' }
+
+    parameters {
+        string(name: 'STAGING_URL_PARAM', defaultValue: 'https://majd-kassem-business-dev.onrender.com', description: 'URL of the SUT staging environment')
+    }
 
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
-        QA_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business_qa.git'
         SUT_BRANCH_DEV = 'dev'
-        SUT_BRANCH_MAIN = 'main'
-        QA_BRANCH = 'dev' // Make sure this matches your QA repo branch name
-        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/'
-        LIVE_URL = 'https://majd-kassem-business.onrender.com/'
-        // Define the name for your custom QA test runner Docker image
-        QA_TEST_RUNNER_IMAGE = 'my-qa-test-runner:latest'
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com' // Ensure this is your actual Render dev URL
+        // QA_JOB_NAME = 'QA-Tests-Staging' // REMOVED: Not triggering an external job
+        GIT_CREDENTIAL_ID = 'git_id' // Unified Git credential for both repos
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings'
+
+        // Define Allure results directory relative to workspace root
+        ALLURE_RESULTS_ROOT = 'allure-results'
+        TEST_RESULT_ROOT = 'test-result'
+        JUNIT_REPORTS_ROOT = 'junit-result'
+        API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
+
+        QA_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business_qa.git'
+        QA_BRANCH = 'dev'
+        // LIVE_DEPLOY_JOB_NAME = 'SUT-Deploy-Live' // Keep if you use it elsewhere
+
+        // Define QA-specific result directories (they will be inside TEST_RESULT_ROOT)
+        QA_ALLURE_SUBDIR = 'qa-selenium-allure' // e.g., test-result/allure-results/qa-selenium-allure
+        QA_JUNIT_SUBDIR = 'qa-selenium-junit'   // e.g., test-result/junit-result/qa-selenium-junit
+
+        // Add explicit credential binding for Render deploy hook for clarity and security
+        // Ensure 'RENDER_DEV_DEPLOY_HOOK' is configured in Jenkins Credentials as a 'Secret Text'
+        RENDER_DEPLOY_HOOK_URL = credentials('RENDER_DEV_DEPLOY_HOOK')
+        SUT_BRANCH_MAIN = 'main' // Make sure this is 'main' or whatever your production branch is called
+        // You also need RENDER_DEPLOY_HOOK_URL if you're using it l
+    }
+
+    tools {
+        // IMPORTANT: Ensure these tool names match exactly what you've configured in Jenkins
+        nodejs 'NodeJS_24'
+        allure 'Allure_2.34.0'
+        // If you manage Python through Jenkins Tools, add it here, e.g.:
+        // python 'Python_3.13' // Example, replace with your Python tool name if applicable
     }
 
     stages {
-        stage('Checkout SUT Dev') {
-            steps {
-                git branch: env.SUT_BRANCH_DEV, credentialsId: 'git_id', url: env.SUT_REPO
-            }
-        }
 
-        stage('Build and Deploy SUT to Staging') {
+
+        stage('Merge Dev to Main & Push') {
             steps {
                 script {
-                    echo "SUT automatically deployed to staging by Render on commit to ${env.SUT_BRANCH_DEV}"
-                    // Wait for Render to finish deploying. You might adjust this based on Render's typical deployment time.
-                    sleep 30
-                }
-            }
-        }
-
-        stage('Checkout QA Main') {
-            steps {
-                dir('qa-project') {
-                    git branch: env.QA_BRANCH, credentialsId: 'git_id', url: env.QA_REPO
-                }
-            }
-        }
-
-        // --- NEW STAGE: Build the custom QA Docker Image ---
-        stage('Build QA Runner Image') {
-            agent any // This stage runs on the main Jenkins agent (your jenkins-server container)
-            steps {
-                script {
-                    dir('qa-project') {
-                        echo "Building Docker image: ${env.QA_TEST_RUNNER_IMAGE}"
-                        // Use the full path to the docker executable
-                        sh "/usr/bin/docker build -t ${env.QA_TEST_RUNNER_IMAGE} ."
-                    }
-                }
-            }
-        }
-
-        stage('Run QA Tests against Staging') {
-            agent {
-                // Use the custom image that now includes Docker CLI
-                docker {
-                    image env.QA_TEST_RUNNER_IMAGE
-                    // CRITICAL: Mount the host's Docker socket into this QA runner container
-                    // This allows the Docker client *inside* this QA container to talk to the *host's* Docker daemon
-                    args "-v /var/run/docker.sock:/var/run/docker.sock -u root" // Keep -u root for now, or ensure seluser can use docker
-                }
-            }
-            steps {
-                // Ensure commands run from the correct directory within the agent container
-                // The custom Dockerfile sets WORKDIR /app and copies project files there.
-                // So, adjust paths relative to /app.
-                script {
-                    echo "Running QA tests using Docker image: ${env.QA_TEST_RUNNER_IMAGE}"
-                    // Check if docker command is available
-                    sh "which docker"
-                    sh "docker --version"
-                    // Test Docker connection
-                    sh "docker ps -a"
-
-                    // Install Python requirements (if not already installed in the image)
-                    // If you added `COPY requirements.txt .` and `RUN pip install` in your Dockerfile,
-                    // these lines might be redundant unless you want to re-install.
-                    // Assuming `requirements.txt` is at `/app/requirements.txt` in the container.
-                    sh '/opt/venv/bin/pip install --no-cache-dir -r requirements.txt'
-
-                    // Your pytest command. Ensure your QA project has 'pytest' installed via requirements.txt.
-                    // Assuming your tests are in '/app/src/tests' within the container.
-                    sh "pytest src/tests --browser chrome-headless --base-url ${env.STAGING_URL}"
-                }
-            }
-        }
-
-        stage('Update SUT Main and Deploy to Live') {
-            when {
-                expression { currentBuild.result == 'SUCCESS' }
-            }
-            steps {
-                script {
-                    // Checkout SUT repo again to ensure we're on the correct state for merging.
-                    // This 'git_id' should be the same as used in other git steps.
-                    dir('sut-main-repo') { // Create a separate directory to avoid conflicts with 'qa-project'
-                        git branch: env.SUT_BRANCH_MAIN, credentialsId: 'git_id', url: env.SUT_REPO
+                    def mergeDir = 'sut-main-for-deploy'
+                    dir(mergeDir) {
+                        echo "Configuring Git user for the merge commit..."
                         sh "git config user.email 'jenkins@example.com'"
-                        sh "git config user.name 'Jenkins'"
-                        sh "git merge ${env.SUT_BRANCH_DEV} -m 'Merge dev to main after successful QA tests'"
-                        sh "git push origin ${env.SUT_BRANCH_MAIN}"
-                        echo "SUT Main branch updated and deployed to live by Render."
+                        sh "git config user.name 'Jenkins CI Automation'"
+
+                        // Pull main to ensure it's up-to-date before merging dev
+                        echo "Pulling latest ${env.SUT_BRANCH_MAIN} to ensure it's up-to-date..."
+                        sh "git pull origin ${env.SUT_BRANCH_MAIN}"
+
+                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
+                        sh "git fetch origin ${env.SUT_BRANCH_DEV}"
+
+                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
+                        // Use --no-ff (no fast-forward) to always create a merge commit, even if it could be fast-forwarded.
+                        // This keeps a clear history of merges.
+                        sh "git merge --no-ff origin/${env.SUT_BRANCH_DEV} -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
+
+                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote (triggers Render live deploy)..."
+                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            // Use the username and password variables in the URL for authentication
+                            // Make sure 'majd-j-kassem/majd.kassem.business.git' is your exact repository path
+                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
+                        }
+                        echo "SUT Main branch updated. Render will now deploy to live."
                     }
                 }
             }
         }
-    }
+
+
+    } // End of stages block
 
     post {
-        failure {
-            echo 'Pipeline failed. No deployment to live.'
-        }
-        success {
-            echo 'Pipeline succeeded. Live deployment triggered.'
+        always {
+            script {
+                echo "---"
+                echo "Starting Post-Build Actions..."
+                echo "---"
+
+                echo "Publishing Consolidated Allure Report..."
+                try {
+                    allure([
+                        includeProperties: false,
+                        jdk: '', // Leave empty if not using a specific JDK for Allure generation
+                        results: [
+                            [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
+                            [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
+                            [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"],
+                            // --- ADD QA ALLURE RESULTS HERE ---
+                            [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/${QA_ALLURE_SUBDIR}"]
+                        ]
+                    ])
+                    echo "Consolidated Allure Report should be available via the link on the build page."
+                } catch (Exception e) {
+                    echo "WARNING: Failed to publish Allure Report: ${e.getMessage()}"
+                }
+
+                echo "---"
+
+                echo "Publishing Consolidated JUnit XML Reports..."
+                try {
+                    // Collect all JUnit XML files from all subdirectories
+                    junit "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/**/*.xml"
+                    echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
+                } catch (Exception e) {
+                    echo "WARNING: Failed to publish JUnit Reports: ${e.getMessage()}"
+                }
+
+                echo "---"
+
+                echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
+                try {
+                    // Archive all Allure raw results and all JUnit XMLs
+                    archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/**/*", fingerprint: true
+                    archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/**/*.xml", fingerprint: true
+                    echo "Test artifacts archived successfully."
+                } catch (Exception e) {
+                    echo "WARNING: Failed to archive build artifacts: ${e.getMessage()}"
+                }
+
+                echo "---"
+                echo "Post-Build Actions Completed."
+                echo "---"
+            }
         }
     }
 }

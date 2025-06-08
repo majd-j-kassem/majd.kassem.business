@@ -8,6 +8,7 @@ __pycache__/
 # Virtual environment
 .venv/
 venv/
+my_learning_platform/.venv
 
 # Database files (if you're using SQLite)
 my_learning_platform/db.sqlite3
@@ -34,3 +35,7 @@ dist/
 coverage.xml
 htmlcov/
 reports/
+images
+course_thumbnails
+
+allure*

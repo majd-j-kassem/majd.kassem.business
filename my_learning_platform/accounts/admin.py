@@ -1,14 +1,9 @@
-# accounts/admin.py
-
 from django.contrib import admin, messages
 from django.utils.html import format_html
 from django.urls import reverse, path
 from django.utils import timezone
-# Removed TemplateResponse, JsonResponse, and json as they are not needed for direct form submission
-# from django.template.response import TemplateResponse
-# from django.http import HttpResponseRedirect, JsonResponse
-# import json
 from django.shortcuts import get_object_or_404
+from decimal import Decimal # Ensure Decimal is imported for commission percentage handling
 
 from .models import ContactMessage
 from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse, AllowedCard
@@ -97,8 +92,6 @@ class CustomUserAdmin(admin.ModelAdmin):
 # --- Custom Admin for Profile: The Core Changes ---
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    # CRITICAL: This tells Django to use our custom template for the profile change page.
-    # You MUST create this file at 'your_project_root/templates/admin/accounts/profile/change_form.html'
     change_form_template = 'accounts/change_form.html'
 
     list_display = (
@@ -113,8 +106,6 @@ class ProfileAdmin(admin.ModelAdmin):
         'full_name_en',
         'full_name_ar',
         'phone_number',
-        # REMOVED: 'approval_actions_button' from list_display as actions are now on the detail page
-        # and no longer rely on separate pop-up views from the list.
     )
     list_filter = (
         'is_teacher_application_pending',
@@ -134,13 +125,13 @@ class ProfileAdmin(admin.ModelAdmin):
         }),
         ('Teacher Professional Details', {
             'fields': ('experience_years', 'university', 'graduation_year', 'major', 'full_name_en', 'full_name_ar'),
-            'classes': ('collapse',),
+            'classes': ('collapse',)
         }),
         ('Teacher Application Status', {
             'fields': (
                 'is_teacher_application_pending',
                 'is_teacher_approved',
-                'commission_percentage', # This field is now managed by get_readonly_fields
+                'commission_percentage',
                 'approved_by',
                 'approval_date',
                 'rejected_by',
@@ -150,59 +141,39 @@ class ProfileAdmin(admin.ModelAdmin):
         }),
     )
     raw_id_fields = ('user', 'approved_by', 'rejected_by')
-    # --- Conditional Readonly Fields ---
-    # This method dynamically determines which fields are read-only based on the object's state.
+
     def get_readonly_fields(self, request, obj=None):
-        # Fields that are always read-only
         read_only_fields = (
-            'user', # Prevent changing the user linked to the profile
-            'is_teacher_approved', # Managed by our custom actions, not direct editing
+            'user',
+            'is_teacher_approved',
             'approved_by',
             'approval_date',
             'rejected_by',
             'rejection_date',
         )
 
-        # If we are adding a new object (obj is None), commission_percentage and rejection_reason
-        # are not applicable yet, so make them read-only.
-        if obj is None:
-            return read_only_fields + ('commission_percentage', 'rejection_reason',)
+        if obj is None: # Adding a new object
+            return read_only_fields + ('commission_percentage', 'rejection_reason', 'is_teacher_application_pending',)
 
-        # If it's an existing object (editing) and it's a teacher profile
+        # For existing teacher profiles
         if obj.user.user_type == 'teacher':
-            if obj.is_teacher_approved:
-                # If the teacher is already approved, make commission_percentage and rejection_reason read-only.
-                # You can still modify commission_percentage for an approved teacher by editing it and
-                # just clicking the standard 'Save' button (which doesn't trigger the 'action' logic).
-                return read_only_fields + ('rejection_reason',) # Commission is editable for approved if not explicitly read-only here
-            else:
-                # If it's a pending teacher application, commission_percentage should be editable
-                # (to set it during approval) and rejection_reason should also be editable (for rejection).
-                # So, we do NOT add them to readonly_fields here.
+            if obj.is_teacher_approved: # Teacher is currently approved
+                return read_only_fields + ('rejection_reason', 'is_teacher_application_pending',)
+            else: # Teacher is pending OR deactivated (is_teacher_approved is False)
+                # commission_percentage and rejection_reason should be editable for these states
                 return read_only_fields
-        else:
-            # For non-teacher profiles, commission_percentage and rejection_reason are not relevant
-            # and should always be read-only.
-            return read_only_fields + ('commission_percentage', 'rejection_reason',)
+        else: # Not a teacher profile
+            return read_only_fields + ('commission_percentage', 'rejection_reason', 'is_teacher_application_pending',)
 
 
-    # KEY CHANGE: Remove batch actions to hide the dropdown and "Go" button
     actions = []
 
-    # REMOVED: The batch approval/rejection methods are no longer relevant
-    # since we're handling approval/rejection on the detail page directly.
-    # def approve_teacher_applications_batch(self, request, queryset): ...
-    # def reject_teacher_applications_batch(self, request, queryset): ...
-
-
-    # --- Utility methods for list_display ---
+    # --- Utility methods for list_display (KEEP AS IS) ---
     def username_link(self, obj):
-        # This link now points to the Profile change page directly.
-        # This is more intuitive for managing profile-specific details.
         link = reverse("admin:{}_{}_change".format(self.model._meta.app_label, self.model._meta.model_name), args=[obj.id])
         return format_html('<a href="%s">%s</a>' % (link, obj.user.username))
     username_link.short_description = 'User'
-    username_link.admin_order_field = 'user__username' # Allows sorting by username
+    username_link.admin_order_field = 'user__username'
 
     def user_type_display(self, obj):
         return obj.user.get_user_type_display()
@@ -217,104 +188,86 @@ class ProfileAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request).select_related('user', 'approved_by', 'rejected_by')
         return qs
 
-    # REMOVED: Custom URLs for pop-up approval and rejection are no longer needed
-    # as the logic is now handled by save_model on the standard form submission.
-    def get_urls(self):
-        return super().get_urls()
 
-    # REMOVED: approval_actions_button is removed from list_display and therefore this method
-    # is no longer needed.
-    # def approval_actions_button(self, obj): ...
-
-    # REMOVED: process_approve_commission and process_reject_application methods are removed
-    # as their functionality is now integrated into the save_model method.
-    # def process_approve_commission(self, request, object_id): ...
-    # def process_reject_application(self, request, object_id): ...
-
-
-    # --- OVERRIDE save_model TO HANDLE APPROVAL/REJECTION LOGIC ---
+    # --- OVERRIDE save_model TO HANDLE APPROVAL/REJECTION/DEACTIVATION LOGIC ---
     def save_model(self, request, obj, form, change):
-        # CORRECTED: Check for the button names directly in request.POST
         is_approve_button_pressed = '_approve_teacher' in request.POST
-        is_reject_button_pressed = '_reject_teacher' in request.POST
+        is_reject_button_pressed = '_reject_teacher' in request.POST # Ensure this is correct
+
+        # Removed is_activate_button_pressed as it's no longer used
 
         # Apply this custom logic only if the profile belongs to a teacher
         if obj.user.user_type == 'teacher':
-            if is_approve_button_pressed and not obj.is_teacher_approved:
-                # Get the commission percentage from the submitted form data
-                commission_percentage = form.cleaned_data.get('commission_percentage')
 
-                # Server-side validation for commission_percentage
+            # --- Handle APPROVAL for PENDING or DEACTIVATED teacher ---
+            # This condition now covers both initial pending and a deactivated teacher
+            if is_approve_button_pressed and not obj.is_teacher_approved:
+                commission_percentage = form.cleaned_data.get('commission_percentage')
                 if commission_percentage is None or not (0 <= commission_percentage <= 100):
                     messages.error(request, "Commission percentage must be between 0 and 100 to approve.")
-                    return # IMPORTANT: Do NOT call super().save_model() here
+                    return # Stop processing, prevent save
 
-                # If the application is not pending, warn the admin but allow saving other profile changes.
-                if not obj.is_teacher_application_pending:
-                    messages.warning(request, "This application is no longer pending, but status will be changed to approved.")
-
-                # Update profile fields for approval
                 obj.is_teacher_approved = True
-                obj.is_teacher_application_pending = False
+                obj.is_teacher_application_pending = False # No longer pending
                 obj.approved_by = request.user
                 obj.approval_date = timezone.now()
                 obj.rejected_by = None
                 obj.rejection_date = None
                 obj.rejection_reason = None
-                obj.commission_percentage = commission_percentage # Apply the commission from the form
-
+                obj.commission_percentage = commission_percentage
                 messages.success(request, f"Teacher '{obj.user.username}' approved with {commission_percentage}% commission.")
-                obj.save() # Explicitly save the object with changes here
-                return # Crucial: Return here to prevent super().save_model from saving again
+                obj.save()
+                return
 
+            # --- Handle REJECTION for PENDING or DEACTIVATED teacher ---
+            # This condition now covers both initial pending and a deactivated teacher
             elif is_reject_button_pressed and not obj.is_teacher_approved:
-                # Get the rejection reason from the submitted form data
                 rejection_reason = form.cleaned_data.get('rejection_reason')
-
-                # Server-side validation for rejection reason
                 if not rejection_reason or rejection_reason.strip() == '':
                     messages.error(request, "Rejection reason is required to reject the application.")
                     return # DO NOT call super().save_model() here
 
-                # If the application is not pending, warn the admin but allow saving other profile changes.
-                if not obj.is_teacher_application_pending:
-                    messages.warning(request, "This application is no longer pending, but status will be changed to rejected.")
-
-                # Update profile fields for rejection
                 obj.is_teacher_approved = False
-                obj.is_teacher_application_pending = False
+                obj.is_teacher_application_pending = False # No longer pending
                 obj.rejected_by = request.user
                 obj.rejection_date = timezone.now()
                 obj.rejection_reason = rejection_reason
                 obj.approved_by = None
                 obj.approval_date = None
-                obj.commission_percentage = 0.00 # Reset commission on rejection
-
+                obj.commission_percentage = Decimal('0.00') # Reset commission on rejection
                 messages.warning(request, f"Teacher '{obj.user.username}' application rejected.")
-                obj.save() # Explicitly save the object with changes here
-                return # Crucial: Return here to prevent super().save_model from saving again
+                obj.save()
+                return
 
-            # If no specific action button was pressed (e.g., just the general "Save" button was clicked),
-            # or if the teacher is already approved/rejected and the admin just saved general profile info.
-            # This block will now be reached if no special button was pressed, or if the status
-            # doesn't allow for approval/rejection (e.g., already approved).
-            messages.info(request, "Saving general profile updates for this teacher profile.")
+            # --- Handle DEACTIVATION of APPROVED teacher ---
+            # This logic remains the same
+            elif '_deactivate_teacher' in request.POST and obj.is_teacher_approved:
+                rejection_reason = form.cleaned_data.get('rejection_reason')
+                if not rejection_reason or rejection_reason.strip() == '':
+                     rejection_reason = "Deactivated by admin."
+
+                obj.is_teacher_approved = False
+                obj.is_teacher_application_pending = False # Set to false upon deactivation
+                obj.approved_by = None
+                obj.approval_date = None
+                obj.rejected_by = request.user
+                obj.rejection_date = timezone.now()
+                obj.rejection_reason = rejection_reason
+                obj.commission_percentage = Decimal('0.00') # Reset commission to zero upon deactivation
+                messages.warning(request, f"Teacher '{obj.user.username}' has been deactivated.")
+                obj.save()
+                return
+
+            # --- Handle General Save (if no specific button was pressed) ---
+            messages.info(request, "General profile updates for this teacher profile are being saved.")
 
         else:
-            # For non-teacher profiles, just save normally.
             messages.info(request, "Saving general profile updates for non-teacher profile.")
 
-        # Always call the superclass's save_model to persist the object to the database,
-        # UNLESS one of the specific button actions was handled and returned early.
         super().save_model(request, obj, form, change)
 
 
-
-    # --- Media Class: Load our custom JavaScript for direct actions ---
-    
-
-# --- Remaining Admin Classes (No changes needed) ---
-
+# --- Remaining Admin Classes (KEEP AS IS) ---
 @admin.register(CourseCategory)
 class CourseCategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
@@ -332,6 +285,7 @@ class TeacherCourseAdmin(admin.ModelAdmin):
     list_display = (
         'title',
         'teacher_profile_link',
+        'is_published_display',
         'get_categories_display',
         'level',
         'price',
@@ -340,7 +294,7 @@ class TeacherCourseAdmin(admin.ModelAdmin):
         'status',
         'created_at',
         'updated_at',
-        'is_published_display',
+        
     )
     list_filter = (
         'status',

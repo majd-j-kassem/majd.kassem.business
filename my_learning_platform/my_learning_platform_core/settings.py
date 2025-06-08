@@ -22,6 +22,9 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS_STRING = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STRING.split(',') if host.strip()]
 
+
+FORMS_URLFIELD_ASSUME_HTTPS = True
+
 # Application definition
 INSTALLED_APPS = [
     'jazzmin', 
@@ -32,12 +35,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'course.apps.CourseConfig',
     'accounts.apps.AccountsConfig',
     'rest_framework',
     'rest_framework.authtoken',
     'drf_spectacular',
-    'utils',
+    'utils', 
+    'health_check',
+    'health_check.db',  # Checks database connection
+    'health_check.cache', # Checks cache connection
+    'health_check.storage', # Checks file storage
 ]
 AUTH_USER_MODEL = 'accounts.CustomUser'
 SITE_ID = 1
@@ -57,7 +63,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-ROOT_URLCONF = 'auth_system.urls'
+ROOT_URLCONF = 'my_learning_platform_core.urls'
 
 TEMPLATES = [
     {
@@ -76,7 +82,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'auth_system.wsgi.application'
+WSGI_APPLICATION = 'my_learning_platform_core.wsgi.application'
 
 # Database
 DATABASES = {

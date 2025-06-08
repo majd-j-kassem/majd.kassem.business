@@ -3,6 +3,7 @@
 import secrets
 import string
 import logging
+from .forms import ProfileForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import login, authenticate, logout, get_user_model
@@ -21,6 +22,10 @@ from decimal import Decimal
 # --- Consolidated Model Imports ---
 from .models import CustomUser, Profile, TeacherCourse, CourseCategory, CourseLevel, EnrolledCourse, AllowedCard
 from .models import ContactMessage
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import UpdateView # This should already be there if you're using UpdateView
+# ... other imports (e.g., render, redirect, forms, models)
+from django.http import HttpResponse
 
 # --- Consolidated Form Imports ---
 from .forms import (
@@ -780,3 +785,17 @@ def edit_teacher_course(request, course_id):
     # You can reuse add_teacher_course.html or create a new template if needed.
     # For now, let's assume you'll use add_teacher_course.html with slight modifications if necessary.
     return render(request, 'accounts/add_teacher_course.html', context) # Reusing the add template for simplicity
+
+
+
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    form_class = ProfileForm
+    model = CustomUser # Or your specific user model
+    form_class = ProfileForm 
+    template_name = 'accounts/profile_update.html'
+    success_url = '/some-success-url/' # Or reverse_lazy('some:url_name')
+
+    # You might have a get_object method if you're updating the current user's profile
+    def get_object(self, queryset=None):
+        return self.request.user
+    

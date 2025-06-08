@@ -1,0 +1,171 @@
+{
+	"id": "b895797d-9ad8-4e38-8e08-15b4b2488d46",
+	"name": "my_automation_proposal-DEV",
+	"values": [
+		{
+			"key": "baseUrl",
+			"value": "https://majd-kassem-business-dev.onrender.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "teacherUsername",
+			"value": "teacher2_API",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "teacherEmail",
+			"value": "teacher2@example.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "teacherPassword",
+			"value": "strongpass",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "teacherAuthToken",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "teacherProfileId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "studentUsername",
+			"value": "studentuser1",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "studentEmail",
+			"value": "student1@example.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "studentPassword",
+			"value": "securepass",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "studentAuthToken",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "adminUsername",
+			"value": "admin",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "adminEmail",
+			"value": "admin@example.com",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "adminPassword",
+			"value": "adminPassword",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "adminAuthToken",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "createdCourseId",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "timestamp",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "username",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "password",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "clientAuthToken",
+			"value": "",
+			"type": "secret",
+			"enabled": true
+		},
+		{
+			"key": "currentLoginUsername",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "currentLoginPassword",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "studentAccessToken",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "teacherAccessToken",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "studentProfileId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "registeredTeacherUserId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "registeredTeacherProfileId",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2025-06-06T05:59:32.483Z",
+	"_postman_exported_using": "Postman/11.48.3"
+}

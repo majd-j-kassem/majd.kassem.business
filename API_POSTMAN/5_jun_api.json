@@ -1,0 +1,2450 @@
+{
+	"info": {
+		"_postman_id": "fe3c9235-47a0-420b-bcfe-299a8bb25689",
+		"name": "Your API Documentation",
+		"description": "API description",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17108926"
+	},
+	"item": [
+		{
+			"name": "api",
+			"item": [
+				{
+					"name": "admin",
+					"item": [
+						{
+							"name": "teacher-applications",
+							"item": [
+								{
+									"name": "{id}",
+									"item": [
+										{
+											"name": "status",
+											"item": [
+												{
+													"name": "admin teacher applications status update",
+													"request": {
+														"auth": {
+															"type": "apikey",
+															"apikey": [
+																{
+																	"key": "key",
+																	"value": "Authorization",
+																	"type": "string"
+																},
+																{
+																	"key": "value",
+																	"value": "{{apiKey}}",
+																	"type": "string"
+																},
+																{
+																	"key": "in",
+																	"value": "header",
+																	"type": "string"
+																}
+															]
+														},
+														"method": "PUT",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"profile_picture\": \"https://wpynEDRDWMBQtoG.xspDgkbwdYpIJBqma\",\n  \"bio\": \"reprehenderit laboris\",\n  \"full_name_en\": \"Duis consectetur mollit\",\n  \"full_name_ar\": \"sed qui sunt\",\n  \"phone_number\": \"sit veli\",\n  \"experience_years\": 625532820231602200,\n  \"university\": \"irure ad Duis\",\n  \"graduation_year\": 3685578765648888000,\n  \"major\": \"occaecat nisi\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/api/admin/teacher-applications/:id/status/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"api",
+																"admin",
+																"teacher-applications",
+																":id",
+																"status",
+																""
+															],
+															"variable": [
+																{
+																	"key": "id",
+																	"value": "61061361",
+																	"description": "(Required) "
+																}
+															]
+														},
+														"description": "API endpoint for administrators to approve or reject a specific teacher application.\nExpected data: {\"action\": \"approve\"} or {\"action\": \"reject\", \"rejection_reason\": \"...\"}"
+													},
+													"response": [
+														{
+															"name": "Untitled Example",
+															"originalRequest": {
+																"method": "PUT",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Accept",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "<API Key>",
+																		"description": "Added as a part of security scheme: apikey"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"profile_picture\": \"https://wpynEDRDWMBQtoG.xspDgkbwdYpIJBqma\",\n  \"bio\": \"reprehenderit laboris\",\n  \"full_name_en\": \"Duis consectetur mollit\",\n  \"full_name_ar\": \"sed qui sunt\",\n  \"phone_number\": \"sit veli\",\n  \"experience_years\": 625532820231602200,\n  \"university\": \"irure ad Duis\",\n  \"graduation_year\": 3685578765648888000,\n  \"major\": \"occaecat nisi\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/api/admin/teacher-applications/:id/status/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"api",
+																		"admin",
+																		"teacher-applications",
+																		":id",
+																		"status",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "id"
+																		}
+																	]
+																}
+															},
+															"status": "OK",
+															"code": 200,
+															"_postman_previewlanguage": "json",
+															"header": [
+																{
+																	"key": "Content-Type",
+																	"value": "application/json"
+																}
+															],
+															"cookie": [],
+															"body": "{\n  \"commission_percentage\": \"-523\",\n  \"email\": \"MpQvrN3sJ3Lp@tDsxJjWyghbMqMRcqAbVNQMjFTzqLNk.knd\",\n  \"is_teacher_application_pending\": true,\n  \"is_teacher_approved\": false,\n  \"user_type\": \"ut ea ullamco\",\n  \"username\": \"veniam\",\n  \"profile_picture\": \"https://XplHirBwUl.cckmyUjO\",\n  \"bio\": \"Excepteur ipsum Lorem id\",\n  \"full_name_en\": \"elit labore\",\n  \"full_name_ar\": \"ut adipisicing\",\n  \"phone_number\": \"amet \",\n  \"experience_years\": 7279332805206692000,\n  \"university\": \"minim ipsum cupidatat\",\n  \"graduation_year\": 4799950359778636000,\n  \"major\": \"proident Lorem id sint inci\"\n}"
+														}
+													]
+												},
+												{
+													"name": "admin teacher applications status partial update",
+													"request": {
+														"auth": {
+															"type": "apikey",
+															"apikey": [
+																{
+																	"key": "key",
+																	"value": "Authorization",
+																	"type": "string"
+																},
+																{
+																	"key": "value",
+																	"value": "{{apiKey}}",
+																	"type": "string"
+																},
+																{
+																	"key": "in",
+																	"value": "header",
+																	"type": "string"
+																}
+															]
+														},
+														"method": "PATCH",
+														"header": [
+															{
+																"key": "Content-Type",
+																"value": "application/json"
+															},
+															{
+																"key": "Accept",
+																"value": "application/json"
+															}
+														],
+														"body": {
+															"mode": "raw",
+															"raw": "{\n  \"profile_picture\": \"https://NdQTfpMIp.pcyM0nuzMJk,Y+DpgU9pOu,4Ld1rz.cN67Syv8srTl5,HopuGp5k3FtU\",\n  \"bio\": \"et\",\n  \"full_name_en\": \"velit commodo labore exercitation\",\n  \"full_name_ar\": \"ea sit officia fugiat\",\n  \"phone_number\": \"irure do in\",\n  \"experience_years\": -6721462030369386000,\n  \"university\": \"aute\",\n  \"graduation_year\": -93370202439389180,\n  \"major\": \"amet nulla\"\n}",
+															"options": {
+																"raw": {
+																	"headerFamily": "json",
+																	"language": "json"
+																}
+															}
+														},
+														"url": {
+															"raw": "{{baseUrl}}/api/admin/teacher-applications/:id/status/",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"api",
+																"admin",
+																"teacher-applications",
+																":id",
+																"status",
+																""
+															],
+															"variable": [
+																{
+																	"key": "id",
+																	"value": "61061361",
+																	"description": "(Required) "
+																}
+															]
+														},
+														"description": "API endpoint for administrators to approve or reject a specific teacher application.\nExpected data: {\"action\": \"approve\"} or {\"action\": \"reject\", \"rejection_reason\": \"...\"}"
+													},
+													"response": [
+														{
+															"name": "Untitled Example",
+															"originalRequest": {
+																"method": "PATCH",
+																"header": [
+																	{
+																		"key": "Content-Type",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Accept",
+																		"value": "application/json"
+																	},
+																	{
+																		"key": "Authorization",
+																		"value": "<API Key>",
+																		"description": "Added as a part of security scheme: apikey"
+																	}
+																],
+																"body": {
+																	"mode": "raw",
+																	"raw": "{\n  \"profile_picture\": \"https://NdQTfpMIp.pcyM0nuzMJk,Y+DpgU9pOu,4Ld1rz.cN67Syv8srTl5,HopuGp5k3FtU\",\n  \"bio\": \"et\",\n  \"full_name_en\": \"velit commodo labore exercitation\",\n  \"full_name_ar\": \"ea sit officia fugiat\",\n  \"phone_number\": \"irure do in\",\n  \"experience_years\": -6721462030369386000,\n  \"university\": \"aute\",\n  \"graduation_year\": -93370202439389180,\n  \"major\": \"amet nulla\"\n}",
+																	"options": {
+																		"raw": {
+																			"headerFamily": "json",
+																			"language": "json"
+																		}
+																	}
+																},
+																"url": {
+																	"raw": "{{baseUrl}}/api/admin/teacher-applications/:id/status/",
+																	"host": [
+																		"{{baseUrl}}"
+																	],
+																	"path": [
+																		"api",
+																		"admin",
+																		"teacher-applications",
+																		":id",
+																		"status",
+																		""
+																	],
+																	"variable": [
+																		{
+																			"key": "id"
+																		}
+																	]
+																}
+															},
+															"status": "OK",
+															"code": 200,
+															"_postman_previewlanguage": "json",
+															"header": [
+																{
+																	"key": "Content-Type",
+																	"value": "application/json"
+																}
+															],
+															"cookie": [],
+															"body": "{\n  \"commission_percentage\": \"-523\",\n  \"email\": \"MpQvrN3sJ3Lp@tDsxJjWyghbMqMRcqAbVNQMjFTzqLNk.knd\",\n  \"is_teacher_application_pending\": true,\n  \"is_teacher_approved\": false,\n  \"user_type\": \"ut ea ullamco\",\n  \"username\": \"veniam\",\n  \"profile_picture\": \"https://XplHirBwUl.cckmyUjO\",\n  \"bio\": \"Excepteur ipsum Lorem id\",\n  \"full_name_en\": \"elit labore\",\n  \"full_name_ar\": \"ut adipisicing\",\n  \"phone_number\": \"amet \",\n  \"experience_years\": 7279332805206692000,\n  \"university\": \"minim ipsum cupidatat\",\n  \"graduation_year\": 4799950359778636000,\n  \"major\": \"proident Lorem id sint inci\"\n}"
+														}
+													]
+												}
+											]
+										}
+									]
+								},
+								{
+									"name": "admin teacher applications list",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/admin/teacher-applications/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"admin",
+												"teacher-applications",
+												""
+											]
+										},
+										"description": "API endpoint for administrators to list teacher applications that are pending approval."
+									},
+									"response": [
+										{
+											"name": "Untitled Example",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/admin/teacher-applications/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"admin",
+														"teacher-applications",
+														""
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "[\n  {\n    \"commission_percentage\": \"-038.3\",\n    \"email\": \"wQlhtZR1z@faJIPaYeLuavusrCoIlnHRjcTQuhE.uvv\",\n    \"is_teacher_application_pending\": false,\n    \"is_teacher_approved\": true,\n    \"user_type\": \"Excepteur do culpa laborum\",\n    \"username\": \"enim fugiat\",\n    \"profile_picture\": \"https://yIEFERY.rnomhoXg1\",\n    \"bio\": \"ipsum in\",\n    \"full_name_en\": \"aute dolor velit veniam\",\n    \"full_name_ar\": \"commodo anim\",\n    \"phone_number\": \"do sunt ull\",\n    \"experience_years\": 888886013751222300,\n    \"university\": \"Duis do dolore consequat\",\n    \"graduation_year\": 8361338244347998000,\n    \"major\": \"anim pariatur\"\n  },\n  {\n    \"commission_percentage\": \"-903\",\n    \"email\": \"m80O1iUc@ntDcOvgivjiuTtXTdJuVYbKZGcaFY.be\",\n    \"is_teacher_application_pending\": false,\n    \"is_teacher_approved\": true,\n    \"user_type\": \"fugiat quis\",\n    \"username\": \"aute pariatur occaecat\",\n    \"profile_picture\": \"http://jsZfCPsFssPisIzMzaDbmBLInubvxE.qcwpMrvyp2gKyrr.uHuHHXrzc1qTQqWsCd6sde.lGcMMDv5fm\",\n    \"bio\": \"in sunt labore ullamco\",\n    \"full_name_en\": \"irure minim\",\n    \"full_name_ar\": \"elit ut\",\n    \"phone_number\": \"aliquip \",\n    \"experience_years\": -6189205661423751000,\n    \"university\": \"sint magna\",\n    \"graduation_year\": -7467733315434828000,\n    \"major\": \"laborum non\"\n  }\n]"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "categories",
+					"item": [
+						{
+							"name": "categories list",
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										},
+										{
+											"key": "value",
+											"value": "{{apiKey}}",
+											"type": "string"
+										},
+										{
+											"key": "in",
+											"value": "header",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/categories/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"categories",
+										""
+									]
+								},
+								"description": "API endpoint to list all available course categories.\nAccessible to any user (authenticated or not)."
+							},
+							"response": [
+								{
+									"name": "Untitled Example",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/categories/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"categories",
+												""
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "[\n  {\n    \"id\": 59932378,\n    \"name\": \"amet nulla non id fugiat\"\n  },\n  {\n    \"id\": -3777604,\n    \"name\": \"minim\"\n  }\n]"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "courses",
+					"item": [
+						{
+							"name": "{id}",
+							"item": [
+								{
+									"name": "courses retrieve",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/courses/:id/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"courses",
+												":id",
+												""
+											],
+											"variable": [
+												{
+													"key": "id",
+													"value": "61061361",
+													"description": "(Required) "
+												}
+											]
+										},
+										"description": "API endpoint for teachers to retrieve, update, or delete their specific courses.\nAdmins can also perform these actions on any course."
+									},
+									"response": [
+										{
+											"name": "Untitled Example",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/courses/:id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"courses",
+														":id",
+														""
+													],
+													"variable": [
+														{
+															"key": "id"
+														}
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"categories\": [\n    {\n      \"id\": 35744099,\n      \"name\": \"proident dolore\"\n    },\n    {\n      \"id\": -33757812,\n      \"name\": \"amet labore exercitation in nisi\"\n    }\n  ],\n  \"created_at\": \"1995-11-19T00:14:07.675Z\",\n  \"description\": \"magna\",\n  \"id\": 11371692,\n  \"level\": {\n    \"id\": 96534585,\n    \"name\": \"sed ut tempor\"\n  },\n  \"price\": \".0\",\n  \"status\": \"approved\",\n  \"title\": \"ut Excepteur\",\n  \"updated_at\": \"1961-09-03T02:25:18.744Z\",\n  \"course_picture\": \"http://LAZJUCkL.vcUjoNrh40b+N\",\n  \"video_trailer_url\": \"http://bnRnxxMbDIOngbQMwSh.wzXeO3VS61Y5jD+sd+mPd0WPr.5YuaAqqUmNcTrLFO2CGq+XvdK\",\n  \"language\": \"es\",\n  \"featured\": true\n}"
+										}
+									]
+								},
+								{
+									"name": "courses update",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"category_ids\": [\n    -99644398,\n    -66224620\n  ],\n  \"description\": \"amet ut Duis\",\n  \"level\": {\n    \"name\": \"in elit\",\n    \"id\": 45847622.67143616\n  },\n  \"level_id\": -85060020,\n  \"price\": \"-25107\",\n  \"status\": \"pending\",\n  \"title\": \"ut laboris anim voluptate\",\n  \"course_picture\": \"http://XwZBFpxWCRKKFspPN.niiIeY7kIBujx33trBWxoyx-qudiuDrLVLSkMJu-BFn\",\n  \"video_trailer_url\": \"https://CUDxiCyjncgWizVxGcVezwCf.ynb2KCCcoiRJ1sIn4cKcqNl816o\",\n  \"language\": \"es\",\n  \"featured\": false\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/courses/:id/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"courses",
+												":id",
+												""
+											],
+											"variable": [
+												{
+													"key": "id",
+													"value": "61061361",
+													"description": "(Required) "
+												}
+											]
+										},
+										"description": "API endpoint for teachers to retrieve, update, or delete their specific courses.\nAdmins can also perform these actions on any course."
+									},
+									"response": [
+										{
+											"name": "Untitled Example",
+											"originalRequest": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"category_ids\": [\n    -99644398,\n    -66224620\n  ],\n  \"description\": \"amet ut Duis\",\n  \"level\": {\n    \"name\": \"in elit\",\n    \"id\": 45847622.67143616\n  },\n  \"level_id\": -85060020,\n  \"price\": \"-25107\",\n  \"status\": \"pending\",\n  \"title\": \"ut laboris anim voluptate\",\n  \"course_picture\": \"http://XwZBFpxWCRKKFspPN.niiIeY7kIBujx33trBWxoyx-qudiuDrLVLSkMJu-BFn\",\n  \"video_trailer_url\": \"https://CUDxiCyjncgWizVxGcVezwCf.ynb2KCCcoiRJ1sIn4cKcqNl816o\",\n  \"language\": \"es\",\n  \"featured\": false\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/api/courses/:id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"courses",
+														":id",
+														""
+													],
+													"variable": [
+														{
+															"key": "id"
+														}
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"categories\": [\n    {\n      \"id\": 35744099,\n      \"name\": \"proident dolore\"\n    },\n    {\n      \"id\": -33757812,\n      \"name\": \"amet labore exercitation in nisi\"\n    }\n  ],\n  \"created_at\": \"1995-11-19T00:14:07.675Z\",\n  \"description\": \"magna\",\n  \"id\": 11371692,\n  \"level\": {\n    \"id\": 96534585,\n    \"name\": \"sed ut tempor\"\n  },\n  \"price\": \".0\",\n  \"status\": \"approved\",\n  \"title\": \"ut Excepteur\",\n  \"updated_at\": \"1961-09-03T02:25:18.744Z\",\n  \"course_picture\": \"http://LAZJUCkL.vcUjoNrh40b+N\",\n  \"video_trailer_url\": \"http://bnRnxxMbDIOngbQMwSh.wzXeO3VS61Y5jD+sd+mPd0WPr.5YuaAqqUmNcTrLFO2CGq+XvdK\",\n  \"language\": \"es\",\n  \"featured\": true\n}"
+										}
+									]
+								},
+								{
+									"name": "courses partial update",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"title\": \"adipisicing eu\",\n  \"description\": \"sunt ut dolore\",\n  \"course_picture\": \"https://yINNtzrKA.ztxYIX6,5jdsB6ymYL8Kli\",\n  \"video_trailer_url\": \"http://zVywHdolfgWs.cjcJ3iPt0Gu\",\n  \"price\": \"34598\",\n  \"language\": \"en\",\n  \"level\": {\n    \"name\": \"ea ad\",\n    \"id\": \"quis tempor aliqua\"\n  },\n  \"featured\": true,\n  \"status\": \"published\",\n  \"category_ids\": [\n    -16594299,\n    -80205451\n  ],\n  \"level_id\": -40367162\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/courses/:id/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"courses",
+												":id",
+												""
+											],
+											"variable": [
+												{
+													"key": "id",
+													"value": "61061361",
+													"description": "(Required) "
+												}
+											]
+										},
+										"description": "API endpoint for teachers to retrieve, update, or delete their specific courses.\nAdmins can also perform these actions on any course."
+									},
+									"response": [
+										{
+											"name": "Untitled Example",
+											"originalRequest": {
+												"method": "PATCH",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"title\": \"adipisicing eu\",\n  \"description\": \"sunt ut dolore\",\n  \"course_picture\": \"https://yINNtzrKA.ztxYIX6,5jdsB6ymYL8Kli\",\n  \"video_trailer_url\": \"http://zVywHdolfgWs.cjcJ3iPt0Gu\",\n  \"price\": \"34598\",\n  \"language\": \"en\",\n  \"level\": {\n    \"name\": \"ea ad\",\n    \"id\": \"quis tempor aliqua\"\n  },\n  \"featured\": true,\n  \"status\": \"published\",\n  \"category_ids\": [\n    -16594299,\n    -80205451\n  ],\n  \"level_id\": -40367162\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/api/courses/:id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"courses",
+														":id",
+														""
+													],
+													"variable": [
+														{
+															"key": "id"
+														}
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"categories\": [\n    {\n      \"id\": 35744099,\n      \"name\": \"proident dolore\"\n    },\n    {\n      \"id\": -33757812,\n      \"name\": \"amet labore exercitation in nisi\"\n    }\n  ],\n  \"created_at\": \"1995-11-19T00:14:07.675Z\",\n  \"description\": \"magna\",\n  \"id\": 11371692,\n  \"level\": {\n    \"id\": 96534585,\n    \"name\": \"sed ut tempor\"\n  },\n  \"price\": \".0\",\n  \"status\": \"approved\",\n  \"title\": \"ut Excepteur\",\n  \"updated_at\": \"1961-09-03T02:25:18.744Z\",\n  \"course_picture\": \"http://LAZJUCkL.vcUjoNrh40b+N\",\n  \"video_trailer_url\": \"http://bnRnxxMbDIOngbQMwSh.wzXeO3VS61Y5jD+sd+mPd0WPr.5YuaAqqUmNcTrLFO2CGq+XvdK\",\n  \"language\": \"es\",\n  \"featured\": true\n}"
+										}
+									]
+								},
+								{
+									"name": "courses destroy",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/api/courses/:id/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"courses",
+												":id",
+												""
+											],
+											"variable": [
+												{
+													"key": "id",
+													"value": "61061361",
+													"description": "(Required) "
+												}
+											]
+										},
+										"description": "API endpoint for teachers to retrieve, update, or delete their specific courses.\nAdmins can also perform these actions on any course."
+									},
+									"response": [
+										{
+											"name": "No response body",
+											"originalRequest": {
+												"method": "DELETE",
+												"header": [
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/courses/:id/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"courses",
+														":id",
+														""
+													],
+													"variable": [
+														{
+															"key": "id"
+														}
+													]
+												}
+											},
+											"status": "No Content",
+											"code": 204,
+											"_postman_previewlanguage": "text",
+											"header": [],
+											"cookie": [],
+											"body": ""
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "courses list",
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										},
+										{
+											"key": "value",
+											"value": "{{apiKey}}",
+											"type": "string"
+										},
+										{
+											"key": "in",
+											"value": "header",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/courses/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"courses",
+										""
+									]
+								},
+								"description": "API endpoint for teachers to list their own courses and create new ones.\nAdmins can list all courses."
+							},
+							"response": [
+								{
+									"name": "Untitled Example",
+									"originalRequest": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/courses/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"courses",
+												""
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "[\n  {\n    \"categories\": [\n      {\n        \"id\": -10389223,\n        \"name\": \"et labore p\"\n      },\n      {\n        \"id\": 34602471,\n        \"name\": \"anim sed commodo do magna\"\n      }\n    ],\n    \"created_at\": \"1987-03-27T22:00:35.901Z\",\n    \"description\": \"adipisicing magna reprehenderit ex\",\n    \"id\": 44144497,\n    \"level\": {\n      \"id\": 19894560,\n      \"name\": \"Duis mollit laborum ipsum\"\n    },\n    \"price\": \"-\",\n    \"status\": \"pending\",\n    \"title\": \"quis\",\n    \"updated_at\": \"1976-02-05T21:13:40.144Z\",\n    \"course_picture\": \"http://fDxbBXlwtZL.qbvZFO+NKNCGnliGEMC4.lAwdpTMJO.JuQCn\",\n    \"video_trailer_url\": \"http://ZSvNoiWJBvAR.gvugyfYT32fk9OgXW9OUoylGNn1GhUV7hOZ9XqKvpaopb6v\",\n    \"language\": \"ar\",\n    \"featured\": true\n  },\n  {\n    \"categories\": [\n      {\n        \"id\": -35734994,\n        \"name\": \"qui labore non\"\n      },\n      {\n        \"id\": 54681649,\n        \"name\": \"exercitation elit ullamco sed enim\"\n      }\n    ],\n    \"created_at\": \"2015-07-16T13:13:35.724Z\",\n    \"description\": \"velit\",\n    \"id\": 40664783,\n    \"level\": {\n      \"id\": -51148864,\n      \"name\": \"laborum Duis ullamco\"\n    },\n    \"price\": \"24293015.89\",\n    \"status\": \"draft\",\n    \"title\": \"quis ipsum tempor\",\n    \"updated_at\": \"2007-10-10T01:29:59.026Z\",\n    \"course_picture\": \"http://QIQIjDHsphwmlCLrN.aoMUJFD1mb6nxEGDQZ1fPOltkn5mNe9GvgzH6\",\n    \"video_trailer_url\": \"https://RIPxjrJD.eujnB2+3YGJUFxNrPyybR8ehV0IzrPHBIRQPFazHF,lzGGGfkBptu,5NSWruGVOM0\",\n    \"language\": \"en\",\n    \"featured\": false\n  }\n]"
+								}
+							]
+						},
+						{
+							"name": "courses create",
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										},
+										{
+											"key": "value",
+											"value": "{{apiKey}}",
+											"type": "string"
+										},
+										{
+											"key": "in",
+											"value": "header",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"category_ids\": [\n    -99644398,\n    -66224620\n  ],\n  \"description\": \"amet ut Duis\",\n  \"level\": {\n    \"name\": \"in elit\",\n    \"id\": 45847622.67143616\n  },\n  \"level_id\": -85060020,\n  \"price\": \"-25107\",\n  \"status\": \"pending\",\n  \"title\": \"ut laboris anim voluptate\",\n  \"course_picture\": \"http://XwZBFpxWCRKKFspPN.niiIeY7kIBujx33trBWxoyx-qudiuDrLVLSkMJu-BFn\",\n  \"video_trailer_url\": \"https://CUDxiCyjncgWizVxGcVezwCf.ynb2KCCcoiRJ1sIn4cKcqNl816o\",\n  \"language\": \"es\",\n  \"featured\": false\n}",
+									"options": {
+										"raw": {
+											"headerFamily": "json",
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/courses/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"courses",
+										""
+									]
+								},
+								"description": "API endpoint for teachers to list their own courses and create new ones.\nAdmins can list all courses."
+							},
+							"response": [
+								{
+									"name": "Untitled Example",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"category_ids\": [\n    -99644398,\n    -66224620\n  ],\n  \"description\": \"amet ut Duis\",\n  \"level\": {\n    \"name\": \"in elit\",\n    \"id\": 45847622.67143616\n  },\n  \"level_id\": -85060020,\n  \"price\": \"-25107\",\n  \"status\": \"pending\",\n  \"title\": \"ut laboris anim voluptate\",\n  \"course_picture\": \"http://XwZBFpxWCRKKFspPN.niiIeY7kIBujx33trBWxoyx-qudiuDrLVLSkMJu-BFn\",\n  \"video_trailer_url\": \"https://CUDxiCyjncgWizVxGcVezwCf.ynb2KCCcoiRJ1sIn4cKcqNl816o\",\n  \"language\": \"es\",\n  \"featured\": false\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/courses/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"courses",
+												""
+											]
+										}
+									},
+									"status": "Created",
+									"code": 201,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"categories\": [\n    {\n      \"id\": 35744099,\n      \"name\": \"proident dolore\"\n    },\n    {\n      \"id\": -33757812,\n      \"name\": \"amet labore exercitation in nisi\"\n    }\n  ],\n  \"created_at\": \"1995-11-19T00:14:07.675Z\",\n  \"description\": \"magna\",\n  \"id\": 11371692,\n  \"level\": {\n    \"id\": 96534585,\n    \"name\": \"sed ut tempor\"\n  },\n  \"price\": \".0\",\n  \"status\": \"approved\",\n  \"title\": \"ut Excepteur\",\n  \"updated_at\": \"1961-09-03T02:25:18.744Z\",\n  \"course_picture\": \"http://LAZJUCkL.vcUjoNrh40b+N\",\n  \"video_trailer_url\": \"http://bnRnxxMbDIOngbQMwSh.wzXeO3VS61Y5jD+sd+mPd0WPr.5YuaAqqUmNcTrLFO2CGq+XvdK\",\n  \"language\": \"es\",\n  \"featured\": true\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "delete-user",
+					"item": [
+						{
+							"name": "delete user destroy",
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										},
+										{
+											"key": "value",
+											"value": "{{apiKey}}",
+											"type": "string"
+										},
+										{
+											"key": "in",
+											"value": "header",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/delete-user/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"delete-user",
+										""
+									]
+								},
+								"description": "API endpoint for administrators to delete a user by email address.\nIncludes checks to prevent deleting superusers without proper privileges\nand preventing an admin from deleting their own account."
+							},
+							"response": [
+								{
+									"name": "No response body",
+									"originalRequest": {
+										"method": "DELETE",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/delete-user/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"delete-user",
+												""
+											]
+										}
+									},
+									"status": "No Content",
+									"code": 204,
+									"_postman_previewlanguage": "text",
+									"header": [],
+									"cookie": [],
+									"body": ""
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "levels",
+					"item": []
+				},
+				{
+					"name": "login",
+					"item": [
+						{
+							"name": "login create",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Login successful (Status 200 OK)\", function () {",
+											"    pm.response.to.have.status(200);",
+											"    pm.response.to.be.json;",
+											"});",
+											"",
+											"const responseJson = pm.response.json();",
+											"",
+											"pm.test(\"Login response contains access_token and user_type\", function () {",
+											"    pm.expect(responseJson).to.have.property('access_token');",
+											"    pm.expect(responseJson).to.have.property('user_type');",
+											"});",
+											"",
+											"if (responseJson && responseJson.access_token && responseJson.user_type) {",
+											"    const userType = responseJson.user_type;",
+											"    const accessToken = responseJson.access_token;",
+											"",
+											"    if (userType === \"student\") {",
+											"        pm.environment.set(\"studentAccessToken\", accessToken);",
+											"        console.log(\"Login Test: Student Access Token obtained and stored:\", pm.environment.get(\"studentAccessToken\"));",
+											"    } else if (userType === \"teacher\") {",
+											"        pm.environment.set(\"teacherAccessToken\", accessToken);",
+											"        console.log(\"Login Test: Teacher Access Token obtained and stored:\", pm.environment.get(\"teacherAccessToken\"));",
+											"    } else {",
+											"        console.warn(`Login Test: Unknown user_type '${userType}' in login response. Token not stored specifically.`);",
+											"        pm.expect.fail(`Login Test: Unexpected user_type encountered: ${userType}`); // Fail the test if an unexpected user type is returned",
+											"    }",
+											"",
+											"    // Optional: You might also store the current loggedInUserType if useful for later logic",
+											"    pm.environment.set(\"loggedInUserType\", userType);",
+											"",
+											"} else {",
+											"    pm.expect.fail(\"Login failed: access_token or user_type missing from response.\");",
+											"}"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										},
+										{
+											"key": "value",
+											"value": "{{apiKey}}",
+											"type": "string"
+										},
+										{
+											"key": "in",
+											"value": "header",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"{{currentLoginUsername}}\",\n    \"password\": \"{{currentLoginPassword}}\"\n}",
+									"options": {
+										"raw": {
+											"headerFamily": "json",
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/login/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"login",
+										""
+									]
+								},
+								"description": "API endpoint for user login.\nSupports login with either username or email.\nReturns an authentication token upon successful login."
+							},
+							"response": [
+								{
+									"name": "Untitled Example",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											},
+											{
+												"key": "Authorization",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"password\": \"Ut sint pariatur\",\n  \"username_or_email\": \"nulla\"\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/login/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"login",
+												""
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										}
+									],
+									"cookie": [],
+									"body": "{\n  \"username_or_email\": \"veniam ullamco\",\n  \"password\": \"anim mollit nulla do\"\n}"
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "logout",
+					"item": [
+						{
+							"name": "logout create",
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										},
+										{
+											"key": "value",
+											"value": "{{apiKey}}",
+											"type": "string"
+										},
+										{
+											"key": "in",
+											"value": "header",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/logout/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"logout",
+										""
+									]
+								},
+								"description": "API endpoint for user logout.\nDeletes the user's authentication token, effectively logging them out."
+							},
+							"response": [
+								{
+									"name": "No response body",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Authorization",
+												"value": "<API Key>",
+												"description": "Added as a part of security scheme: apikey"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/logout/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"logout",
+												""
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "text",
+									"header": [],
+									"cookie": [],
+									"body": ""
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "me",
+					"item": [
+						{
+							"name": "profile",
+							"item": [
+								{
+									"name": "me profile retrieve",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/api/me/profile/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"me",
+												"profile",
+												""
+											]
+										},
+										"description": "API endpoint for authenticated users to retrieve and update their own profile."
+									},
+									"response": [
+										{
+											"name": "Untitled Example",
+											"originalRequest": {
+												"method": "GET",
+												"header": [
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/api/me/profile/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"me",
+														"profile",
+														""
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"commission_percentage\": \"-523\",\n  \"email\": \"MpQvrN3sJ3Lp@tDsxJjWyghbMqMRcqAbVNQMjFTzqLNk.knd\",\n  \"is_teacher_application_pending\": true,\n  \"is_teacher_approved\": false,\n  \"user_type\": \"ut ea ullamco\",\n  \"username\": \"veniam\",\n  \"profile_picture\": \"https://XplHirBwUl.cckmyUjO\",\n  \"bio\": \"Excepteur ipsum Lorem id\",\n  \"full_name_en\": \"elit labore\",\n  \"full_name_ar\": \"ut adipisicing\",\n  \"phone_number\": \"amet \",\n  \"experience_years\": 7279332805206692000,\n  \"university\": \"minim ipsum cupidatat\",\n  \"graduation_year\": 4799950359778636000,\n  \"major\": \"proident Lorem id sint inci\"\n}"
+										}
+									]
+								},
+								{
+									"name": "me profile update",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"profile_picture\": \"https://wpynEDRDWMBQtoG.xspDgkbwdYpIJBqma\",\n  \"bio\": \"reprehenderit laboris\",\n  \"full_name_en\": \"Duis consectetur mollit\",\n  \"full_name_ar\": \"sed qui sunt\",\n  \"phone_number\": \"sit veli\",\n  \"experience_years\": 625532820231602200,\n  \"university\": \"irure ad Duis\",\n  \"graduation_year\": 3685578765648888000,\n  \"major\": \"occaecat nisi\"\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/me/profile/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"me",
+												"profile",
+												""
+											]
+										},
+										"description": "API endpoint for authenticated users to retrieve and update their own profile."
+									},
+									"response": [
+										{
+											"name": "Untitled Example",
+											"originalRequest": {
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"profile_picture\": \"https://wpynEDRDWMBQtoG.xspDgkbwdYpIJBqma\",\n  \"bio\": \"reprehenderit laboris\",\n  \"full_name_en\": \"Duis consectetur mollit\",\n  \"full_name_ar\": \"sed qui sunt\",\n  \"phone_number\": \"sit veli\",\n  \"experience_years\": 625532820231602200,\n  \"university\": \"irure ad Duis\",\n  \"graduation_year\": 3685578765648888000,\n  \"major\": \"occaecat nisi\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/api/me/profile/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"me",
+														"profile",
+														""
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"commission_percentage\": \"-523\",\n  \"email\": \"MpQvrN3sJ3Lp@tDsxJjWyghbMqMRcqAbVNQMjFTzqLNk.knd\",\n  \"is_teacher_application_pending\": true,\n  \"is_teacher_approved\": false,\n  \"user_type\": \"ut ea ullamco\",\n  \"username\": \"veniam\",\n  \"profile_picture\": \"https://XplHirBwUl.cckmyUjO\",\n  \"bio\": \"Excepteur ipsum Lorem id\",\n  \"full_name_en\": \"elit labore\",\n  \"full_name_ar\": \"ut adipisicing\",\n  \"phone_number\": \"amet \",\n  \"experience_years\": 7279332805206692000,\n  \"university\": \"minim ipsum cupidatat\",\n  \"graduation_year\": 4799950359778636000,\n  \"major\": \"proident Lorem id sint inci\"\n}"
+										}
+									]
+								},
+								{
+									"name": "me profile partial update",
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "key",
+													"value": "Authorization",
+													"type": "string"
+												},
+												{
+													"key": "value",
+													"value": "{{apiKey}}",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PATCH",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json"
+											},
+											{
+												"key": "Accept",
+												"value": "application/json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"profile_picture\": \"https://NdQTfpMIp.pcyM0nuzMJk,Y+DpgU9pOu,4Ld1rz.cN67Syv8srTl5,HopuGp5k3FtU\",\n  \"bio\": \"et\",\n  \"full_name_en\": \"velit commodo labore exercitation\",\n  \"full_name_ar\": \"ea sit officia fugiat\",\n  \"phone_number\": \"irure do in\",\n  \"experience_years\": -6721462030369386000,\n  \"university\": \"aute\",\n  \"graduation_year\": -93370202439389180,\n  \"major\": \"amet nulla\"\n}",
+											"options": {
+												"raw": {
+													"headerFamily": "json",
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/api/me/profile/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"api",
+												"me",
+												"profile",
+												""
+											]
+										},
+										"description": "API endpoint for authenticated users to retrieve and update their own profile."
+									},
+									"response": [
+										{
+											"name": "Untitled Example",
+											"originalRequest": {
+												"method": "PATCH",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													},
+													{
+														"key": "Authorization",
+														"value": "<API Key>",
+														"description": "Added as a part of security scheme: apikey"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"profile_picture\": \"https://NdQTfpMIp.pcyM0nuzMJk,Y+DpgU9pOu,4Ld1rz.cN67Syv8srTl5,HopuGp5k3FtU\",\n  \"bio\": \"et\",\n  \"full_name_en\": \"velit commodo labore exercitation\",\n  \"full_name_ar\": \"ea sit officia fugiat\",\n  \"phone_number\": \"irure do in\",\n  \"experience_years\": -6721462030369386000,\n  \"university\": \"aute\",\n  \"graduation_year\": -93370202439389180,\n  \"major\": \"amet nulla\"\n}",
+													"options": {
+														"raw": {
+															"headerFamily": "json",
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/api/me/profile/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"api",
+														"me",
+														"profile",
+														""
+													]
+												}
+											},
+											"status": "OK",
+											"code": 200,
+											"_postman_previewlanguage": "json",
+											"header": [
+												{
+													"key": "Content-Type",
+													"value": "application/json"
+												}
+											],
+											"cookie": [],
+											"body": "{\n  \"commission_percentage\": \"-523\",\n  \"email\": \"MpQvrN3sJ3Lp@tDsxJjWyghbMqMRcqAbVNQMjFTzqLNk.knd\",\n  \"is_teacher_application_pending\": true,\n  \"is_teacher_approved\": false,\n  \"user_type\": \"ut ea ullamco\",\n  \"username\": \"veniam\",\n  \"profile_picture\": \"https://XplHirBwUl.cckmyUjO\",\n  \"bio\": \"Excepteur ipsum Lorem id\",\n  \"full_name_en\": \"elit labore\",\n  \"full_name_ar\": \"ut adipisicing\",\n  \"phone_number\": \"amet \",\n  \"experience_years\": 7279332805206692000,\n  \"university\": \"minim ipsum cupidatat\",\n  \"graduation_year\": 4799950359778636000,\n  \"major\": \"proident Lorem id sint inci\"\n}"
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "register",
+					"item": [
+						{
+							"name": "student",
+							"item": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "test_1",
+			"item": [
+				{
+					"name": "levels list",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData).to.be.an('array');",
+									"});",
+									"pm.test(\"Each level has 'id' (number) and 'name' (string)\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData).to.be.an('array'); // Ensure it's an array first",
+									"",
+									"    responseData.forEach(level => {",
+									"        pm.expect(level).to.have.property('id');",
+									"        pm.expect(level.id).to.be.a('number');",
+									"        pm.expect(level).to.have.property('name');",
+									"        pm.expect(level.name).to.be.a('string');",
+									"    });",
+									"});",
+									"pm.test(\"Contains expected levels\", function () {",
+									"    const responseData = pm.response.json();",
+									"    const levelNames = responseData.map(level => level.name);",
+									"",
+									"    pm.expect(levelNames).to.include('Easy-Starter');",
+									"    pm.expect(levelNames).to.include('Medium');",
+									"    pm.expect(levelNames).to.include('Advanced');",
+									"    pm.expect(levelNames).to.include('Expert');",
+									"});",
+									"pm.test(\"Response contains at least 4 levels\", function () {",
+									"    const responseData = pm.response.json();",
+									"    pm.expect(responseData.length).to.be.at.least(4); // Adjust 4 based on your minimum expectation",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "key",
+									"value": "Authorization",
+									"type": "string"
+								},
+								{
+									"key": "value",
+									"value": "{{apiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/levels/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"levels",
+								""
+							]
+						},
+						"description": "API endpoint to list all available course levels.\nAccessible to any user (authenticated or not)."
+					},
+					"response": [
+						{
+							"name": "Untitled Example",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "<API Key>",
+										"description": "Added as a part of security scheme: apikey"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/api/levels/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"levels",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n  {\n    \"id\": -49471614,\n    \"name\": \"fugiat paria\"\n  },\n  {\n    \"id\": -41472018,\n    \"name\": \"commodo eu\"\n  }\n]"
+						}
+					]
+				},
+				{
+					"name": "register student create",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate a unique timestamp",
+									"const timestamp = Date.now(); // Gets current time in milliseconds",
+									"",
+									"// Construct unique username and email using the timestamp",
+									"const uniqueUsername = \"student_api_\" + timestamp;",
+									"const uniqueEmail = \"student_api_\" + timestamp + \"@example.com\";",
+									"",
+									"const uniquePassword = \"Pass!\" + timestamp;",
+									"// Set these unique values as environment variables",
+									"pm.environment.set(\"studentUsername\", uniqueUsername);",
+									"pm.environment.set(\"studentEmail\", uniqueEmail);",
+									"pm.environment.set(\"studentPassword\", uniquePassword);",
+									"",
+									"// Optional: Log to Postman Console (View > Show Postman Console)",
+									"console.log(\"Pre-request: teacherUsername set to\", pm.environment.get(\"studentUsername\"));",
+									"console.log(\"Pre-request: studentEmail set to\", pm.environment.get(\"studentEmail\"));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response contains user_type 'student'\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.user_type).to.eql(\"student\");",
+									"});",
+									"",
+									"pm.test(\"Student profile_id is returned and set to environment\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    if (responseJson && responseJson.profile_id) {",
+									"        pm.environment.set(\"studentProfileId\", responseJson.profile_id);",
+									"        console.log(\"Student Profile ID:\", pm.environment.get(\"studentProfileId\"));",
+									"    } else {",
+									"        pm.expect.fail(\"profile_id not found in response.\");",
+									"    }",
+									"});",
+									"",
+									"// You might also want to set studentAuthToken if the response returns a token",
+									"// pm.test(\"Auth token is returned and set to environment\", function () {",
+									"//     const responseJson = pm.response.json();",
+									"//     if (responseJson && responseJson.token) {",
+									"//         pm.environment.set(\"studentAuthToken\", responseJson.token);",
+									"//         console.log(\"Student Auth Token:\", pm.environment.get(\"studentAuthToken\"));",
+									"//     } else {",
+									"//         // This is optional, depending on whether registration immediately logs them in",
+									"//         console.log(\"No auth token returned upon registration (expected if login is separate step).\");",
+									"//     }",
+									"// });"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "key",
+									"value": "Authorization",
+									"type": "string"
+								},
+								{
+									"key": "value",
+									"value": "{{apiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{studentUsername}}\",\n    \"email\": \"{{studentEmail}}\",\n    \"password\": \"{{studentPassword}}\",\n    \"password2\": \"{{studentPassword}}\",\n    \"date_of_birth\": \"2000-01-15\",\n    \"school_name\": \"Postman High\",\n    \"grade_level\": \"12th Grade\"\n    // Add any other specific student profile fields you have\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/register/student/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"register",
+								"student",
+								""
+							]
+						},
+						"description": "API endpoint for registering a new student user.\nUses StudentRegisterSerializer to handle user and profile creation,\nsetting user_type='student'."
+					},
+					"response": [
+						{
+							"name": "Untitled Example",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "<API Key>",
+										"description": "Added as a part of security scheme: apikey"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"IgyLLf@iKVhlyXFpYMQHgjEoPElDKTvVLwDwYt.hsuy\",\n  \"password\": \"cillum in\",\n  \"password2\": \"elit culpa\",\n  \"username\": \"zNUV1R1\"\n}",
+									"options": {
+										"raw": {
+											"headerFamily": "json",
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/register/student/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"register",
+										"student",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"email\": \"Viwg5YubJ@exbV.sze\",\n  \"username\": \"@GtN0\",\n  \"password\": -60749743,\n  \"password2\": \"aliquip in magna Duis amet\"\n}"
+						}
+					]
+				},
+				{
+					"name": "register teacher create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test 1: Check for a successful status code (201 Created)",
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Parse the JSON response body",
+									"const responseJson = pm.response.json();",
+									"",
+									"// Test 3: Verify the user_id is present and is a number",
+									"pm.test(\"User ID is present and is a number\", function () {",
+									"    pm.expect(responseJson.user_id).to.be.a('number');",
+									"    pm.expect(responseJson.user_id).to.be.above(0); // Assuming IDs start from 1",
+									"});",
+									"",
+									"",
+									"// Test 6: Verify user_type is 'teacher'",
+									"pm.test(\"User type is 'teacher'\", function () {",
+									"    pm.expect(responseJson.user_type).to.eql(\"teacher\");",
+									"});",
+									"",
+									"// Test 7: Extract and save the teacher's User ID (if needed for later tests, like login or approval)",
+									"pm.test(\"Extract and set teacherUserId from response\", function () {",
+									"    if (responseJson && responseJson.user_id) {",
+									"        pm.environment.set(\"registeredTeacherUserId\", responseJson.user_id);",
+									"        console.log(\"Registered Teacher User ID:\", pm.environment.get(\"registeredTeacherUserId\"));",
+									"    } else {",
+									"        pm.expect.fail(\"User ID not found in response.\");",
+									"    }",
+									"});",
+									"",
+									"// Test 8: Extract and save the teacher's Profile ID (CRITICAL for approval later)",
+									"// NOTE: Adjust responseJson.profile_id if your API returns it under a different key",
+									"pm.test(\"Extract and set teacherProfileId from response\", function () {",
+									"    if (responseJson && responseJson.profile_id) { // Assuming your response has a 'profile_id' field",
+									"        pm.environment.set(\"registeredTeacherProfileId\", responseJson.profile_id);",
+									"        console.log(\"Registered Teacher Profile ID:\", pm.environment.get(\"registeredTeacherProfileId\"));",
+									"    } else {",
+									"        // Fallback if profile_id is nested under 'user' or 'profile'",
+									"        // Example: if response is { \"user\": { \"id\": ..., \"profile\": { \"id\": ... } } }",
+									"        // if (responseJson && responseJson.user && responseJson.user.profile && responseJson.user.profile.id) {",
+									"        //     pm.environment.set(\"registeredTeacherProfileId\", responseJson.user.profile.id);",
+									"        //     console.log(\"Registered Teacher Profile ID (nested):\", pm.environment.get(\"registeredTeacherProfileId\"));",
+									"        // } else {",
+									"             pm.expect.fail(\"Profile ID not found in response. Check response structure.\");",
+									"        // }",
+									"    }",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate a unique timestamp",
+									"const timestamp = Date.now();",
+									"",
+									"// Construct unique username and email for teacher",
+									"const uniqueTeacherUsername = \"teacher_api_\" + timestamp;",
+									"const uniqueTeacherEmail = \"teacher_api_\" + timestamp + \"@example.com\";",
+									"const uniqueTeacherPassword = \"TeacherPass\" + timestamp;",
+									"",
+									"// Set these unique values as environment variables ",
+									"pm.environment.set(\"teacherUsername\", uniqueTeacherUsername);",
+									"pm.environment.set(\"teacherEmail\", uniqueTeacherEmail);",
+									"pm.environment.set(\"teacherPassword\", uniqueTeacherPassword);",
+									"",
+									"// Optional: Set a static teacher password if it's not already in your environment",
+									"// if (!pm.environment.get(\"teacherPassword\")) {",
+									"//     pm.environment.set(\"teacherPassword\", \"TeacherPass123!\");",
+									"// }",
+									"",
+									"console.log(\"Pre-request: teacherUsername set to\", pm.environment.get(\"teacherUsername\"));",
+									"console.log(\"Pre-request: teacherEmail set to\", pm.environment.get(\"teacherEmail\"));"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "key",
+									"value": "Authorization",
+									"type": "string"
+								},
+								{
+									"key": "value",
+									"value": "{{apiKey}}",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{teacherUsername}}\",\n    \"email\": \"{{teacherEmail}}\",\n    \"password\": \"{{teacherPassword}}\",\n    \"password2\": \"{{teacherPassword}}\",\n    \"full_name_en\": \"Teacher Automation Name\",  // You can still hardcode static parts\n    \"phone_number\": \"+19876543210\",\n    \"experience_years\": 10,\n    \"university\": \"Automation University\",\n    \"graduation_year\": 2005,\n    \"major\": \"Automated Testing\"\n}",
+							"options": {
+								"raw": {
+									"headerFamily": "json",
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/register/teacher/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"register",
+								"teacher",
+								""
+							]
+						},
+						"description": "API endpoint for registering a new teacher user.\nUses TeacherRegisterSerializer to handle user and profile creation,\nsetting user_type='teacher' and marking application as pending."
+					},
+					"response": [
+						{
+							"name": "Untitled Example",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "<API Key>",
+										"description": "Added as a part of security scheme: apikey"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"ABuJaYzOlr@VuDMFrENTJszIZZ.ajvf\",\n  \"password\": \"labore ex\",\n  \"password2\": \"dolor qui anim irure\",\n  \"username\": \"pLxyXm\",\n  \"qualifications\": \"\",\n  \"experience_years\": 0,\n  \"university\": \"minim irure\",\n  \"graduation_year\": -29326442,\n  \"major\": \"in exercitation\"\n}",
+									"options": {
+										"raw": {
+											"headerFamily": "json",
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/register/teacher/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"register",
+										"teacher",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"email\": \"18ZfGw5yqowEkG@qeVNsqJWtNJRsJabuuDTKMUfPsQvWzt.gny\",\n  \"username\": \"G6K\",\n  \"qualifications\": \"do deserunt ut\",\n  \"experience_years\": 0,\n  \"university\": \"magna Duis reprehende\",\n  \"graduation_year\": -55373296,\n  \"major\": \"magna consequ\"\n}"
+						},
+						{
+							"name": "register teacher create",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"{{teacherUsername}}\",\n    \"email\": \"{{teacherEmail}}\",\n    \"password\": \"{{teacherPassword}}\",\n    \"password2\": \"{{teacherPassword}}\",\n    \"full_name_en\": \"Teacher Automation Name\",  // You can still hardcode static parts\n    \"phone_number\": \"+19876543210\",\n    \"experience_years\": 10,\n    \"university\": \"Automation University\",\n    \"graduation_year\": 2005,\n    \"major\": \"Automated Testing\"\n}",
+									"options": {
+										"raw": {
+											"headerFamily": "json",
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/register/teacher/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"register",
+										"teacher",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Date",
+									"value": "Wed, 04 Jun 2025 21:42:27 GMT"
+								},
+								{
+									"key": "Server",
+									"value": "WSGIServer/0.2 CPython/3.13.3"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Vary",
+									"value": "Accept, Accept-Language, Cookie"
+								},
+								{
+									"key": "Allow",
+									"value": "POST, OPTIONS"
+								},
+								{
+									"key": "Content-Language",
+									"value": "en"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "Content-Length",
+									"value": "261"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "same-origin"
+								},
+								{
+									"key": "Cross-Origin-Opener-Policy",
+									"value": "same-origin"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Teacher application submitted successfully and is awaiting approval.\",\n    \"user_id\": 100,\n    \"username\": \"teacher_auto_1749073347020\",\n    \"email\": \"teacher_auto_1749073347020@example.com\",\n    \"user_type\": \"teacher\",\n    \"is_teacher_application_pending\": true,\n    \"profile_id\": 99\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"// === Collection-Level Pre-request Script ===",
+					"",
+					"// Generate unique timestamp for uniqueness",
+					"const timestamp = Date.now();",
+					"",
+					"// --- Student Credentials ---",
+					"const studentUsername = `student_auto_${timestamp}`;",
+					"const studentEmail = `student_auto_${timestamp}@example.com`;",
+					"const studentPassword = `StudentPass!${timestamp}`; // Generate a strong, unique password",
+					"",
+					"pm.environment.set(\"studentUsername\", studentUsername);",
+					"pm.environment.set(\"studentEmail\", studentEmail);",
+					"pm.environment.set(\"studentPassword\", studentPassword);",
+					"",
+					"console.log(\"Collection Pre-request: Generated Student Username:\", pm.environment.get(\"studentUsername\"));",
+					"console.log(\"Collection Pre-request: Generated Student Password:\", pm.environment.get(\"studentPassword\"));",
+					"",
+					"",
+					"// --- Teacher Credentials ---",
+					"const teacherUsername = `teacher_auto_${timestamp + 1}`; // Use timestamp + 1 to ensure distinctness from student if generated at same millisecond",
+					"const teacherEmail = `teacher_auto_${timestamp + 1}@example.com`;",
+					"const teacherPassword = `TeacherPass!${timestamp + 1}`; // Generate a strong, unique password",
+					"",
+					"pm.environment.set(\"teacherUsername\", teacherUsername);",
+					"pm.environment.set(\"teacherEmail\", teacherEmail);",
+					"pm.environment.set(\"teacherPassword\", teacherPassword);",
+					"",
+					"console.log(\"Collection Pre-request: Generated Teacher Username:\", pm.environment.get(\"teacherUsername\"));",
+					"console.log(\"Collection Pre-request: Generated Teacher Password:\", pm.environment.get(\"teacherPassword\"));",
+					"",
+					"// --- Variables for shared Login request (will be set by setter requests) ---",
+					"pm.environment.set(\"currentLoginUsername\", \"\"); // Initialize as empty",
+					"pm.environment.set(\"currentLoginPassword\", \"\"); // Initialize as empty",
+					"",
+					"// --- Variables for storing Access Tokens (initially empty) ---",
+					"pm.environment.set(\"studentAccessToken\", \"\"); // Initialize as empty",
+					"pm.environment.set(\"teacherAccessToken\", \"\"); // Initialize as empty",
+					"",
+					"// --- Variables for storing Profile IDs (initially empty) ---",
+					"pm.environment.set(\"studentProfileId\", \"\"); // Initialize as empty",
+					"pm.environment.set(\"teacherProfileId\", \"\"); // Initialize as empty"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "/"
+		}
+	]
+}
