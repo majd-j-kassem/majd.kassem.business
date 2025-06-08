@@ -247,28 +247,29 @@ pipeline {
                     sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/${QA_JUNIT_SUBDIR}"
 
                     dir('qa-selenium-project') { // Run pytest from within the QA project directory
-                        sh """#!/bin/bash -el
-                            source ./.venv/bin/activate
-                            echo "--- Verifying Python and Pytest environment ---"
-        echo "Which python: $(which python)"
-        echo "Python version: $(python --version)"
-        echo "Which pip: $(which pip)"
+    sh """#!/bin/bash -el
+        source ./.venv/bin/activate
+
+        echo "--- Verifying Python and Pytest environment ---"
+        echo "Which python: \$(which python)" // Escaped here
+        echo "Python version: \$(python --version)" // Escaped here
+        echo "Which pip: \$(which pip)" // Escaped here
         echo "Pip list (inside venv):"
         pip list
-        echo "Which pytest: $(which pytest)"
-        echo "Pytest version: $(pytest --version)" # This will list plugins too
+        echo "Which pytest: \$(which pytest)" // Escaped here
+        echo "Pytest version: \$(pytest --version)" // Escaped here
         echo "--- End verification ---"
-                            # Execute pytest for Selenium tests
-                            # Pass STAGING_URL to your tests. Adjust '--base-url' if your tests use a different argument.
-                            # Ensure 'tests/' is the correct path to your test files within the QA repo.
-                            pytest --alluredir=../${qaAllureOutputDir} \\
-                                --junitxml=../${qaJunitReportFile} \\
-                                --browser chrome-headless \\
-                                --baseurl \"${params.STAGING_URL_PARAM}\" \\
-                                src/tests/teachers/test_teacher_signup.py
-                        """
-                    }
 
+        # Execute pytest for Selenium tests
+        # Pass STAGING_URL to your tests. Adjust '--base-url' if your tests use a different argument.
+        # Ensure 'tests/' is the correct path to your test files within the QA repo.
+        pytest --alluredir=../${qaAllureOutputDir} \\
+               --junitxml=../${qaJunitReportFile} \\
+               --browser chrome-headless \\
+               --baseurl \"${params.STAGING_URL_PARAM}\" \\
+               src/tests/teachers/test_teacher_signup.py
+    """
+}
                     // 4. (Optional) Convert QA JUnit to Allure results if pytest-allure-plugin is NOT used
                     //    If your pytest setup in the QA project is configured to generate Allure results directly
                     //    (e.g., using `pytest-allure-plugin`), this `allure generate` step might be redundant.
