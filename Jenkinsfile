@@ -92,6 +92,24 @@ pipeline {
                 }
             }
         }
+        stage('Run Integration Tests (SUT)') {
+            steps {
+                script {
+                    echo "Running Django integration tests with pytest and generating Allure results..."
+                    dir('my_learning_platform') {
+                        sh 'rm -rf ../allure-results/integration-tests' // Clear old results
+                        sh 'mkdir -p ../allure-results/integration-tests'
+                        sh 'mkdir -p ../junit-reports' // Ensure this exists for JUnit XML if needed
+                        sh '''#!/bin/bash -el
+                            source .venv/bin/activate
+                            pytest --alluredir=../allure-results/integration-tests \\
+                                   --junitxml=../junit-reports/sut_integration_report.xml \\
+                                   accounts/tests/integration/
+                        '''
+                    }
+                }
+            }
+        }
 
     }
 
