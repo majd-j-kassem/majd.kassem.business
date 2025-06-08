@@ -122,7 +122,7 @@ pipeline {
 
 
                     // --- Now change directory to 'my_learning_platform' for running tests ---
-                    dir('my_learning_platform') {
+                     dir('my_learning_platform') {
                         sh """#!/bin/bash -el
                             source .venv/bin/activate
                             #
@@ -130,7 +130,9 @@ pipeline {
                             # like 'test-results/allure-results/integration-tests', you need to go up one level (../)
                             # and then specify the path relative to the workspace root.
                             #
-                            pytest --alluredir=../${integrationAllureResultsDir} --junitxml=../${integrationJunitReportFile}
+                            pytest --alluredir=../${integrationAllureResultsDir} \\
+                                   --junitxml=../${integrationJunitReportFile} \\
+                                   accounts/tests/integration/ # <--- THIS IS THE MISSING PART for integration tests
                         """
                     }
                 }
@@ -194,29 +196,34 @@ pipeline {
         }
     }
 
-    post {
-            always {
-                script {
-                    echo "Publishing Consolidated Allure Report..."
-                    step([$class: 'AllureReportPublisher',
-                        results: [
-                            [path: 'allure-results/unit-tests'],
-                            [path: 'allure-results/integration-tests']
-                        ],
-                        reportBuildExitCode: 0,
-                        reportCharts: true
-                    ])
-                    echo "Consolidated Allure Report should be available via the link on the build page."
+   post {
+    always {
+        script {
+            echo "Publishing Consolidated Allure Report..."
+            step([$class: 'AllureReportPublisher',
+                results: [
+                    // Updated paths to include TEST_RESULT_ROOT
+                    [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
+                    [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
+                    // *** ADDED API TEST RESULTS PATH HERE ***
+                    [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"]
+                ],
+                reportBuildExitCode: 0,
+                reportCharts: true
+            ])
+            echo "Consolidated Allure Report should be available via the link on the build page."
 
-                    echo "Publishing Consolidated JUnit XML Reports..."
-                    junit 'junit-reports/*.xml'
-                    echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
+            echo "Publishing Consolidated JUnit XML Reports..."
+            // Updated path to include TEST_RESULT_ROOT
+            junit "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml"
+            echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
 
-                    echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
-                    archiveArtifacts artifacts: 'allure-results/**/*', fingerprint: true
-                    archiveArtifacts artifacts: 'junit-reports/*.xml', fingerprint: true
-                }
-            }
-            // ... other post conditions if any
+            echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
+            // Updated paths to include TEST_RESULT_ROOT
+            archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/**/*", fingerprint: true
+            archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml", fingerprint: true
         }
+    }
+    // ... other post conditions if any (e.g., success, failure, unstable)
+}
 }
