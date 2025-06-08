@@ -3,6 +3,10 @@
 pipeline {
     agent any // Or a specific agent if you have labels, e.g., agent { label 'my-jenkins-agent' }
 
+    parameters {
+        string(name: 'STAGING_URL_PARAM', defaultValue: 'https://majd-kassem-business-dev.onrender.com', description: 'URL of the SUT staging environment')
+    }
+
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
         SUT_BRANCH_DEV = 'dev'
@@ -223,20 +227,6 @@ pipeline {
                             credentialsId: "${env.GIT_CREDENTIAL_ID}",
                             url: "${env.QA_REPO}"
                     }
-
-                    // 2. Setup Python Environment for QA project
-                    echo "Setting up Python virtual environment and installing dependencies for QA..."
-                    dir('qa-selenium-project') { // Navigate into the QA project directory
-                        sh '''#!/bin/bash -el
-                            python3 -m venv ./.venv
-                            source ./.venv/bin/activate
-                            pip install --upgrade pip
-                            pip install --no-cache-dir -r requirements.txt
-                        '''
-                        echo "Python environment setup complete for QA."
-                    }
-
-                    // 3. Run Selenium Tests
                     echo "Running Selenium QA tests..."
                     // Define output paths for QA tests (relative to Jenkins workspace root)
                     def qaAllureOutputDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/${QA_ALLURE_SUBDIR}"
@@ -247,29 +237,20 @@ pipeline {
                     sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/${QA_JUNIT_SUBDIR}"
 
                     dir('qa-selenium-project') { // Run pytest from within the QA project directory
-    sh """#!/bin/bash -el
-        source ./.venv/bin/activate
+                        sh """#!/bin/bash -el
+                            source ./.venv/bin/activate
+                            
+                            # Execute pytest for Selenium tests
+                            # Pass STAGING_URL to your tests. Adjust '--base-url' if your tests use a different argument.
+                            # Ensure 'tests/' is the correct path to your test files within the QA repo.
+                            pytest --alluredir=../${qaAllureOutputDir} \\
+                                --junitxml=../${qaJunitReportFile} \\
+                                --browser chrome-headless \\
+                                --baseurl \"${params.STAGING_URL_PARAM}\" \\
+                                src/tests/teachers/test_teacher_signup.py
+                        """
+                    }
 
-        echo "--- Verifying Python and Pytest environment ---"
-        echo "Which python: \$(which python)" // Escaped here
-        echo "Python version: \$(python --version)" // Escaped here
-        echo "Which pip: \$(which pip)" // Escaped here
-        echo "Pip list (inside venv):"
-        pip list
-        echo "Which pytest: \$(which pytest)" // Escaped here
-        echo "Pytest version: \$(pytest --version)" // Escaped here
-        echo "--- End verification ---"
-
-        # Execute pytest for Selenium tests
-        # Pass STAGING_URL to your tests. Adjust '--base-url' if your tests use a different argument.
-        # Ensure 'tests/' is the correct path to your test files within the QA repo.
-        pytest --alluredir=../${qaAllureOutputDir} \\
-               --junitxml=../${qaJunitReportFile} \\
-               --browser chrome-headless \\
-               --baseurl \"${params.STAGING_URL_PARAM}\" \\
-               src/tests/teachers/test_teacher_signup.py
-    """
-}
                     // 4. (Optional) Convert QA JUnit to Allure results if pytest-allure-plugin is NOT used
                     //    If your pytest setup in the QA project is configured to generate Allure results directly
                     //    (e.g., using `pytest-allure-plugin`), this `allure generate` step might be redundant.
