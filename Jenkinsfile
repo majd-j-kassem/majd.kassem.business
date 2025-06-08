@@ -97,14 +97,14 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
-                    dir('sut-code/my_learning_platform') {
-                        sh 'rm -rf ../../allure-results/unit-tests' // Clear old results
-                        sh 'mkdir -p ../../allure-results/unit-tests'
-                        sh 'mkdir -p ../../junit-reports'
+                    dir('my_learning_platform') {
+                        sh 'rm -rf ../allure-results/unit-tests' // Clear old results
+                        sh 'mkdir -p ../allure-results/unit-tests'
+                        sh 'mkdir -p ../junit-reports'
                         sh '''
                             source .venv/bin/activate
-                            pytest --alluredir=../../allure-results/unit-tests \\
-                                   --junitxml=../../junit-reports/sut_unit_report.xml \\
+                            pytest --alluredir=../allure-results/unit-tests \\
+                                   --junitxml=../junit-reports/sut_unit_report.xml \\
                                    accounts/tests/unit/
                         '''
                     }
@@ -116,14 +116,14 @@ pipeline {
             steps {
                 script {
                     echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') {
-                        sh 'rm -rf ../../allure-results/integration-tests' // Clear old results
-                        sh 'mkdir -p ../../allure-results/integration-tests'
-                        sh 'mkdir -p ../../junit-reports' // Ensure this exists for JUnit XML if needed
+                    dir('my_learning_platform') {
+                        sh 'rm -rf ../allure-results/integration-tests' // Clear old results
+                        sh 'mkdir -p ../allure-results/integration-tests'
+                        sh 'mkdir -p ../junit-reports' // Ensure this exists for JUnit XML if needed
                         sh '''
                             source .venv/bin/activate
-                            pytest --alluredir=../../allure-results/integration-tests \\
-                                   --junitxml=../../junit-reports/sut_integration_report.xml \\
+                            pytest --alluredir=../allure-results/integration-tests \\
+                                   --junitxml=../junit-reports/sut_integration_report.xml \\
                                    accounts/tests/integration/
                         '''
                     }
