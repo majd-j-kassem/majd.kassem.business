@@ -205,10 +205,10 @@ pipeline {
                         sh newmanCommand
                     }
 
-                    echo "Converting Newman's JUnit report to Allure results..."
-                    sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${allureApiResultsDir} ${apiJunitReportPath}"
-                    echo "Checking contents of Allure API results directory after conversion:"
-                    sh "ls -l ${allureApiResultsDir}"
+                    //echo "Converting Newman's JUnit report to Allure results..."
+                    //sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${allureApiResultsDir} ${apiJunitReportPath}"
+                    //echo "Checking contents of Allure API results directory after conversion:"
+                    //sh "ls -l ${allureApiResultsDir}"
                 }
             }
         }
@@ -254,10 +254,10 @@ pipeline {
                     //    If your pytest setup in the QA project is configured to generate Allure results directly
                     //    (e.g., using `pytest-allure-plugin`), this `allure generate` step might be redundant.
                     //    Check your QA project's setup. If it's not generating Allure results directly, keep this.
-                    echo "Converting QA JUnit report to Allure results (if needed)..."
-                    sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${qaAllureOutputDir} ${qaJunitReportFile}"
-                    echo "Checking contents of Allure QA results directory after conversion:"
-                    sh "ls -l ${qaAllureOutputDir}"
+                   // echo "Converting QA JUnit report to Allure results (if needed)..."
+                    //sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${qaAllureOutputDir} ${qaJunitReportFile}"
+                   // echo "Checking contents of Allure QA results directory after conversion:"
+                    //sh "ls -l ${qaAllureOutputDir}"
                 }
             }
         }
