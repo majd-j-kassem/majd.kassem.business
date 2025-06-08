@@ -156,8 +156,9 @@ pipeline {
                 }
             }
         }
-        stage('Run API Tests') {
+        // ... (previous code)
 
+stage('Run API Tests') {
     steps {
         script {
             echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
@@ -203,11 +204,6 @@ pipeline {
                     echo "JUnit output path for Newman: \${JUNIT_REPORT_OUTPUT}"
 
                     echo "Running newman command..."
-                    
-                    echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
-                    echo "ALLURE_NEWMAN_EXPORT_PATH set to: \$ALLURE_NEWMAN_EXPORT_PATH"
-                    echo "JUNIT_REPORT_OUTPUT set to: \$JUNIT_REPORT_OUTPUT"
-                    echo "Running newman command..."
                     newman run 5_jun_api.json \\
                         --folder "test_1" \\
                         -e 5_jun_env.json \\
@@ -220,10 +216,11 @@ pipeline {
                 // Execute the constructed command
                 sh newmanCommand
 
-                echo "Newman command finished. Checking contents of Allure output directory:"
-                ls -l "${allureApiResultsDir}"
-                echo "Checking contents of JUnit output directory:"
-                ls -l "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}" # Check the parent directory for JUnit
+                // THESE LINES NEED TO BE SEPARATE sh STEPS
+                sh "echo \"Newman command finished. Checking contents of Allure output directory:\""
+                sh "ls -l \"${allureApiResultsDir}\""
+                sh "echo \"Checking contents of JUnit output directory:\""
+                sh "ls -l \"${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}\""
             }
         }
     }
