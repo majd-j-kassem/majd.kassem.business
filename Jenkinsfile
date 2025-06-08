@@ -24,16 +24,6 @@ pipeline {
     }
 
     stages {
-        stage('Declarative: Checkout SCM') {
-            steps {
-                // This step automatically checks out the Jenkinsfile repository
-                // based on the SCM configuration of the Jenkins job itself.
-                // The credential '8433ffe6-8d5e-40fb-9e5d-016a75096e05' is from your log.
-                checkout([$class: 'GitSCM', branches: [[name: 'refs/remotes/origin/dev']],
-                          doGenerateSubmoduleConfigurations: false, extensions: [], gitTool: 'Default',
-                          userRemoteConfigs: [[credentialsId: '8433ffe6-8d5e-40fb-9e5d-016a75096e05', url: "${env.SUT_REPO}"]]])
-            }
-        }
 
         stage('Test NodeJS Tool') {
             steps {
@@ -75,23 +65,11 @@ pipeline {
             }
         }
 
-        stage('Setup NodeJS and Newman (SUT)') {
+       stage('Setup NodeJS and Newman') {
             steps {
                 script {
                     echo "Installing Newman and Allure reporter..."
-                    // Clean up old installations and install latest
-                    sh '''
-                        npm cache clean --force
-                        rm -rf "${TOOL_HOME}/newman"
-                        rm -rf "${TOOL_HOME}/newman-reporter-allure"
-                        rm -rf "${TOOL_HOME}/newman-reporter-htmlextra"
-                        npm install -g newman@latest newman-reporter-allure@latest newman-reporter-htmlextra@latest
-                    '''
-                    // Note: TOOL_HOME is a Jenkins environment variable that points to the tool installation directory
-                    // You might need to adjust 'TOOL_HOME' or the path if your Node.js tool is installed differently.
-                    // The paths `/var/lib/jenkins/tools/jenkins.plugins.nodejs.tools.NodeJSInstallation/NodeJS_24/lib/node_modules/`
-                    // seen in your logs are specific to the Jenkins agent's tool installation.
-                    // Using `npm install -g` usually handles putting them in the correct PATH for the Node.js tool.
+                    sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra'
                 }
             }
         }
