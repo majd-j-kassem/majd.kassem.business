@@ -13,6 +13,7 @@ pipeline {
 
         // Define Allure results directory relative to workspace root
         ALLURE_RESULTS_ROOT = 'allure-results'
+        TEST_RESULT_ROOT = 'test-result'
         JUNIT_REPORTS_ROOT = 'junit-reports'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
 
@@ -78,10 +79,12 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
+
+                    sh "rm -rf ${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests" // Clear old results for unit tests
+                    sh "mkdir -p ${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests" // Create directory for unit test allure results
+                    sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}" // Create the main JUnit reports directory (only needs to be done once)
+
                     dir('my_learning_platform') {
-                        sh 'rm -rf ../allure-results/unit-tests' // Clear old results
-                        sh 'mkdir -p ../allure-results/unit-tests'
-                        sh 'mkdir -p ../junit-reports'
                         sh '''#!/bin/bash -el
                             source .venv/bin/activate
                             pytest --alluredir=../allure-results/unit-tests \\
@@ -128,15 +131,58 @@ pipeline {
             }
         }
         
-        stage('Run API Tests (SUT)') {
-            // This stage will only run if previous stages succeed
-            // You will likely have a similar setup to unit/integration tests,
-            // but might require the deployed SUT to be accessible.
+        stage('Run API Tests') {
             steps {
-                echo "Running API tests..."
-                // Example: Using Newman for Postman collections
-                dir('sut-code/api-tests') {
-                    sh "newman run my_api_collection.json -e my_env.json --reporters cli,htmlextra,allure --reporter-htmlextra-export ../../newman-reports/api_report.html --reporter-allure-export ../../allure-results/api-tests"
+                script {
+                    echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
+                    sleep(120) // Keep your sleep for now
+
+                    // Define the full absolute path for Newman's Allure results
+                    def newmanAllureResultsAbsoluteDir = "${pwd()}/${ALLURE_RESULTS_ROOT}/api-tests"
+                    // NEW: Define the full absolute path for Newman's JUnit XML report
+                    def newmanJunitReportFile = "${pwd()}/${JUNIT_REPORTS_ROOT}/api_report.xml"
+
+                    // Clean and create directory structure using the absolute path
+                    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
+                    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
+                    // NEW: Ensure the dedicated JUnit reports directory exists
+                    sh "mkdir -p ${pwd()}/${JUNIT_REPORTS_ROOT}"
+
+                    dir("sut-code/${env.API_TESTS_DIR}") {
+                        sh """#!/bin/bash
+                            echo "Current directory: \$(pwd)"
+                            echo "Files in directory:"
+                            ls -la
+
+                            if [ ! -f "5_jun_env.json" ]; then
+                                echo "ERROR: Environment file 5_jun_env.json not found!"
+                                exit 1
+                            fi
+
+                            # --- DEBUG LINE (optional, but good for verification) ---
+                            echo "--- STAGING_URL from Jenkins environment: ${env.STAGING_URL} ---"
+                            # --- END DEBUG LINE ---
+
+                            # --------------------------------------------------------------------------------
+                            #  PUT THE NEWMAN_BASE_URL LOGIC HERE!
+                            # --------------------------------------------------------------------------------
+                            NEWMAN_BASE_URL="${env.STAGING_URL}"
+                            if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
+                                NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
+                            fi
+                            echo "--- Newman Base URL after processing: \$NEWMAN_BASE_URL ---" # Add this to confirm the change
+                            # --------------------------------------------------------------------------------
+
+                            newman run 5_jun_api.json \\
+                                --folder "test_1" \\
+                                -e 5_jun_env.json \\
+                                --reporters cli,htmlextra,allure,junit \\
+                                --reporter-htmlextra-export newman-report.html \\
+                                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
+                                --reporter-junit-export ${newmanJunitReportFile} \\
+                                --env-var "baseUrl=\${NEWMAN_BASE_URL}" # Use the processed variable here
+                        """
+                    }
                 }
             }
         }
