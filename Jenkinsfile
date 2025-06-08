@@ -249,6 +249,17 @@ pipeline {
                     dir('qa-selenium-project') { // Run pytest from within the QA project directory
                         sh """#!/bin/bash -el
                             source ./.venv/bin/activate
+
+                            echo "--- Verifying Python and Pytest environment ---"
+                            echo "Which python: $(which python)"
+                            echo "Python version: $(python --version)"
+                            echo "Which pip: $(which pip)"
+                            echo "Pip list (inside venv):"
+                            pip list
+                            echo "Which pytest: $(which pytest)"
+                            echo "Pytest version: $(pytest --version)" # This will list plugins too
+                            echo "--- End verification ---"
+
                             # Execute pytest for Selenium tests
                             # Pass STAGING_URL to your tests. Adjust '--base-url' if your tests use a different argument.
                             # Ensure 'tests/' is the correct path to your test files within the QA repo.
