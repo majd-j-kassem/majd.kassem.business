@@ -169,7 +169,7 @@ pipeline {
                     sh "rm -rf ${apiAllureResultsDir}"
                     sh "mkdir -p ${apiAllureResultsDir}"
 
-                    dir("my_learning_platform/${env.API_TESTS_DIR}") {
+                    dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
                         sh """#!/bin/bash
                             if [ ! -f "5_jun_env.json" ]; then
                                 echo "ERROR: Environment file 5_jun_env.json not found!"
@@ -186,8 +186,8 @@ pipeline {
                                 -e 5_jun_env.json \\
                                 --reporters cli,htmlextra,allure,junit \\
                                 --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export ../../${apiAllureResultsDir} \\
-                                --reporter-junit-export ../../${apiJunitReportFile} \\
+                                --reporter-allure-export ${apiAllureResultsDir} \\
+                                --reporter-junit-export ${apiJunitReportFile} \\
                                 --env-var "baseUrl=\${NEWMAN_BASE_URL}"
                         """
                     }
@@ -202,10 +202,8 @@ pipeline {
             echo "Publishing Consolidated Allure Report..."
             step([$class: 'AllureReportPublisher',
                 results: [
-                    // Updated paths to include TEST_RESULT_ROOT
                     [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
                     [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
-                    // *** ADDED API TEST RESULTS PATH HERE ***
                     [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"]
                 ],
                 reportBuildExitCode: 0,
