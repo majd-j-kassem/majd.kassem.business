@@ -168,7 +168,7 @@ pipeline {
                     echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
                     sleep(120) // Keep your sleep for now
 
-                    def apiAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/api-tests"
+                    def apiAllureResultsDir = "${TEST_RESULT_ROOT}/${TEST_RESULT_ROOT}/api-tests"
                     def apiJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/api_report.xml"
 
                     sh "rm -rf ${apiAllureResultsDir}"
