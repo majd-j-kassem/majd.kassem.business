@@ -45,8 +45,20 @@ pipeline {
     }
 
     stages {
-
-
+        stage('Checkout SUT Main for Merge') {
+            steps {
+                script {
+                    echo "Checking out SUT repository: ${env.SUT_REPO}, branch: ${env.SUT_BRANCH_MAIN}"
+                    // It's good to define this directory as a variable if used often
+                    def mergeDir = 'sut-main-for-deploy'
+                    dir(mergeDir) {
+                        // Ensure a clean slate before checkout
+                        cleanWs() // Cleans the workspace directory before cloning
+                        git branch: env.SUT_BRANCH_MAIN, credentialsId: env.GIT_CREDENTIAL_ID, url: env.SUT_REPO
+                    }
+                }
+            }
+        }
         stage('Merge Dev to Main & Push') {
             steps {
                 script {
