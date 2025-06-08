@@ -255,7 +255,7 @@ pipeline {
                             pytest --alluredir=../${qaAllureOutputDir} \\
                                    --junitxml=../${qaJunitReportFile} \\
                                    --base-url=${env.STAGING_URL} \\
-                                   tests/
+                                   src/tests/
                         """
                     }
 
