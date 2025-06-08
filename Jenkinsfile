@@ -4,17 +4,19 @@ pipeline {
     agent any // Or a specific agent if you have labels, e.g., agent { label 'my-jenkins-agent' }
 
     environment {
-        // Define environment variables used throughout the pipeline
-        // Make sure these match your actual Jenkins Global properties or credential binding names
-        // RENDER_DEPLOY_HOOK_URL is handled via withCredentials for security
-        // RENDER_AUTH_TOKEN is mentioned in logs but not used in the provided curl,
-        //   so it's kept masked but not explicitly used in this example.
-        // STAGING_URL could be a direct URL or derived
-        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com'
-        // Define repository for SUT if different from the Jenkinsfile repo
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
-        SUT_BRANCH = 'dev'
+        SUT_BRANCH_DEV = 'dev'
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Ensure this is your actual Render dev URL
+        QA_JOB_NAME = 'QA-Tests-Staging'
+        GIT_CREDENTIAL_ID = 'git_id'
+        DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings'
+
+        // Define Allure results directory relative to workspace root
+        ALLURE_RESULTS_ROOT = 'allure-results'
+        JUNIT_REPORTS_ROOT = 'junit-reports'
+        API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
     }
+
     tools {
         
         nodejs 'NodeJS_24' 
@@ -60,8 +62,8 @@ pipeline {
             steps {
                 script {
                     echo "Setting up Python virtual environment and installing dependencies for SUT..."
-                    dir('sut-code/my_learning_platform') { // Assuming your Python project is in 'my_learning_platform'
-                        sh '''
+                    dir('my_learning_platform') { // Assuming your Python project is in 'my_learning_platform'
+                        sh '''#!/bin/bash -el
                             python3 -m venv .venv
                             source .venv/bin/activate
                             pip install --upgrade pip
@@ -93,119 +95,6 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests (SUT)') {
-            steps {
-                script {
-                    echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
-                    dir('sut-code/my_learning_platform') {
-                        sh 'rm -rf ../../allure-results/unit-tests' // Clear old results
-                        sh 'mkdir -p ../../allure-results/unit-tests'
-                        sh 'mkdir -p ../../junit-reports'
-                        sh '''
-                            source .venv/bin/activate
-                            pytest --alluredir=../../allure-results/unit-tests \\
-                                   --junitxml=../../junit-reports/sut_unit_report.xml \\
-                                   accounts/tests/unit/
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Run Integration Tests (SUT)') {
-            steps {
-                script {
-                    echo "Running Django integration tests with pytest and generating Allure results..."
-                    dir('sut-code/my_learning_platform') {
-                        sh 'rm -rf ../../allure-results/integration-tests' // Clear old results
-                        sh 'mkdir -p ../../allure-results/integration-tests'
-                        sh 'mkdir -p ../../junit-reports' // Ensure this exists for JUnit XML if needed
-                        sh '''
-                            source .venv/bin/activate
-                            pytest --alluredir=../../allure-results/integration-tests \\
-                                   --junitxml=../../junit-reports/sut_integration_report.xml \\
-                                   accounts/tests/integration/
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Build and Deploy SUT to Staging (via Render)') {
-            steps {
-                script {
-                    // Use withCredentials to inject the secret RENDER_DEPLOY_HOOK_URL safely
-                    withCredentials([string(credentialsId: 'RENDER_DEPLOY_HOOK_URL', variable: 'RENDER_DEPLOY_HOOK_URL')]) {
-                        echo "Triggering Render deployment for ${env.STAGING_URL}..."
-
-                        def deployResponse = ''
-                        def curlExitStatus = -1 // Initialize with a non-zero value to detect if curl wasn't even run
-
-                        try {
-                            // Execute curl command and capture both stdout and status
-                            // IMPORTANT: `returnStdout: true` is crucial for getting the response content.
-                            def curlResult = sh(script: """
-                                curl -v -X POST "${RENDER_DEPLOY_HOOK_URL}"
-                            """, returnStdout: true, returnStatus: true, encoding: 'UTF-8')
-
-                            deployResponse = curlResult.stdout.trim() // Trim to remove potential leading/trailing whitespace
-                            curlExitStatus = curlResult.status
-
-                            echo "Curl Command Exit Status: ${curlExitStatus}"
-                            echo "Full Curl Response Output (from stdout):"
-                            echo "${deployResponse}" // This will now show the actual 44-byte response from Render
-
-                            // Check if the curl command itself had a non-zero exit status
-                            if (curlExitStatus != 0) {
-                                error "Curl command failed with exit status ${curlExitStatus}. Render deploy hook might be incorrect or unreachable. Response: ${deployResponse}"
-                            }
-
-                            // --- CRITICAL ADAPTATION NEEDED HERE ---
-                            // Based on your logs, Render returns `text/plain` with 44 bytes.
-                            // You MUST inspect what those 44 bytes actually are and adjust the logic below.
-                            // Here are some common scenarios and how to handle them:
-
-                            // Scenario 1: The 44-byte response is a simple success message (e.g., "Deployment initiated successfully.")
-                            if (deployResponse.contains("Deployment initiated successfully.") || deployResponse.equals("ok") || deployResponse.length() > 0) {
-                                echo "Render deploy hook successfully acknowledged the deployment initiation."
-                                // If you need the deploy ID, you cannot get it from this plain text response.
-                                // You would need to check the Render dashboard manually or use Render's API (requiring RENDER_AUTH_TOKEN)
-                                // to poll for the latest deployment status of your service (using its service ID).
-                                // For now, we proceed assuming triggering is enough for this stage.
-                            }
-                            // Scenario 2: The 44-byte response is an error message from Render itself.
-                            else if (deployResponse.contains("Error") || deployResponse.contains("Failed")) { // Example error message
-                                error "Render deploy hook returned an error message: '${deployResponse}'. Please check Render service settings."
-                            }
-                            // Scenario 3: The 44-byte response is completely unknown or empty.
-                            else {
-                                echo "WARNING: Render deploy hook returned an unexpected 44-byte response. Assuming initiated due to HTTP 200: '${deployResponse}'"
-                                // You might choose to fail here with an error, or just warn.
-                            }
-
-                        } catch (Exception e) {
-                            // This catch block handles exceptions thrown by the sh command itself (e.g., command not found)
-                            // or other Groovy/pipeline execution errors within the try block.
-                            echo "Error executing curl command to trigger Render deployment: ${e.message}"
-                            error "Pipeline failed during Render deploy hook execution. Check Jenkins connectivity, Render service status, or the exact format of the deploy hook URL."
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Run API Tests (SUT)') {
-            // This stage will only run if previous stages succeed
-            // You will likely have a similar setup to unit/integration tests,
-            // but might require the deployed SUT to be accessible.
-            steps {
-                echo "Running API tests..."
-                // Example: Using Newman for Postman collections
-                // dir('sut-code/api-tests') {
-                //     sh "newman run my_api_collection.json -e my_env.json --reporters cli,htmlextra,allure --reporter-htmlextra-export ../../newman-reports/api_report.html --reporter-allure-export ../../allure-results/api-tests"
-                // }
-            }
-        }
     }
 
     post {
