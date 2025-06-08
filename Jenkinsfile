@@ -87,9 +87,9 @@ pipeline {
                     dir('my_learning_platform') {
                         sh '''#!/bin/bash -el
                             source .venv/bin/activate
-                            pytest --alluredir=../allure-results/unit-tests \\
-                                   --junitxml=../junit-reports/sut_unit_report.xml \\
-                                   accounts/tests/unit/
+                            pytest --alluredir=../${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/unit-tests \\
+                           --junitxml=../${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/sut_unit_report.xml \\
+                           accounts/tests/unit/
                         '''
                     }
                 }
