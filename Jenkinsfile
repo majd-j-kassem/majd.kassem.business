@@ -94,11 +94,6 @@ pipeline {
                     dir('my_learning_platform') {
                         sh """#!/bin/bash -el
                             source .venv/bin/activate
-                            #
-                            # When inside 'my_learning_platform', to reach a directory at the workspace root
-                            # like 'test-results/allure-results/unit-tests', you need to go up one level (../)
-                            # and then specify the path relative to the workspace root.
-                            #
                             pytest --alluredir=../${unitAllureResultsDir} \\
                                    --junitxml=../${unitJunitReportFile} \\
                                    accounts/tests/unit/
@@ -135,9 +130,7 @@ pipeline {
                             # like 'test-results/allure-results/integration-tests', you need to go up one level (../)
                             # and then specify the path relative to the workspace root.
                             #
-                            pytest --alluredir=../${integrationAllureResultsDir} \\
-                                   --junitxml=../${integrationJunitReportFile} \\
-                                   accounts/tests/integration/
+                            pytest --alluredir=../${integrationAllureResultsDir} --junitxml=../${integrationJunitReportFile}
                         """
                     }
                 }
