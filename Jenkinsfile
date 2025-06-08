@@ -223,40 +223,17 @@ pipeline {
                 }
             }
         
-        stage('Declarative: Post Actions') {
+        stage('Trigger QA Tests against Staging') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
             steps {
                 script {
-                    echo "---"
-                    echo "Starting Post-Build Actions..."
-                    echo "---"
-
-                    echo "Publishing Consolidated Allure Report..."
-                    allure([
-                        includeProperties: false,
-                        jdk: '',
-                        reportBuildExitCode: false, // This parameter is deprecated, but keep it if it's in your configuration to avoid breaking the pipeline directly
-                        reportCharts: false,       // This parameter is deprecated, but keep it
-                        results: [
-                            "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests",
-                            "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests",
-                            "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests" // Now this directory will contain converted results
-                        ]
-                    ])
-                    echo "Consolidated Allure Report should be available via the link on the build page."
-
-                    echo "---"
-                    echo "Publishing Consolidated JUnit XML Reports..."
-                    junit "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml"
-                    echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
-
-                    echo "---"
-                    echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
-                    archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/**", fingerprint: true
-                    archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml", fingerprint: true
-                    echo "Test artifacts archived successfully."
-                    echo "---"
-                    echo "Post-Build Actions Completed."
-                    echo "---"
+                    echo "Triggering downstream QA job: ${env.QA_JOB_NAME}"
+                    // Ensure the 'STAGING_URL_PARAM' matches the parameter name in your QA-Tests-Staging job
+                    build job: env.QA_JOB_NAME, parameters: [
+                        string(name: 'STAGING_URL_PARAM', value: env.STAGING_URL)
+                    ], wait: true
                 }
             }
         }
