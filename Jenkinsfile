@@ -156,33 +156,25 @@ pipeline {
                 }
             }
         }
-        // ... (previous code)
-
-stage('Run API Tests') {
+        stage('Run API Tests') {
     steps {
         script {
             echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-            sleep(120) // Keep your sleep for now to allow application deployment
+            sleep(120)
 
-            // --- Define Paths ---
-            def allureApiResultsDir = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests" // Specific path for API Allure results
+            def allureApiResultsDir = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
             def apiJunitReportPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
 
-            sh "echo 'Cleaning up old API-specific Allure results directory: ${allureApiResultsDir}'"
-            sh "rm -rf ${allureApiResultsDir}" // Remove this specific old target
-
-            sh "echo 'Ensuring API Allure results directory exists: ${allureApiResultsDir}'"
-            sh "mkdir -p ${allureApiResultsDir}" // Ensure this specific directory exists
+            // Ensure the directory is empty and clean right before Newman run
+            sh "echo 'Re-initializing API Allure results directory: ${allureApiResultsDir}'"
+            sh "rm -rf ${allureApiResultsDir}"
+            sh "mkdir -p ${allureApiResultsDir}"
 
             sh "echo 'Ensuring JUnit results directory exists: ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}'"
             sh "mkdir -p ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}"
 
-            // --- Run Newman Tests ---
             dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
-                // IMPORTANT: Construct the newman command as a single logical string
-                // Avoid using backslashes for line continuation inside the Groovy triple-quoted string.
-                // Instead, form one long command.
-                def newmanCommand = """
+                def newmanCommand = """#!/bin/bash -el
                     echo "Current directory inside API_POSTMAN: \$(pwd)"
                     echo "Checking for 5_jun_env.json..."
                     if [ ! -f "5_jun_env.json" ]; then
@@ -192,11 +184,10 @@ stage('Run API Tests') {
                     echo "5_jun_env.json found."
 
                     NEWMAN_BASE_URL="${env.STAGING_URL}"
-                    case "\$NEWMAN_BASE_URL" in
-                        */) # if it ends with /
-                            NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
-                            ;;
-                    esac
+                    # Use bash-compatible string manipulation to remove trailing slash
+                    if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
+                        NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
+                    fi
                     echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
 
                     ALLURE_NEWMAN_EXPORT_PATH="${allureApiResultsDir}"
@@ -214,11 +205,16 @@ stage('Run API Tests') {
                         --reporter-allure-export "\${ALLURE_NEWMAN_EXPORT_PATH}" \\
                         --reporter-junit-export "\${JUNIT_REPORT_OUTPUT}" \\
                         --env-var "baseUrl=\${NEWMAN_BASE_URL}"
+
+                    # Add an immediate check for Allure results *inside* the newmanCommand block
+                    echo "Checking contents of Allure output directory immediately after newman run:"
+                    ls -l "\${ALLURE_NEWMAN_EXPORT_PATH}"
+                    echo "Checking contents of JUnit output directory immediately after newman run:"
+                    ls -l "\${JUNIT_REPORT_OUTPUT}"
                 """
-                // Execute the constructed command
                 sh newmanCommand
 
-                // THESE LINES NEED TO BE SEPARATE sh STEPS
+                // The following ls -l commands are now redundant as they are inside the sh block, but harmless.
                 sh "echo \"Newman command finished. Checking contents of Allure output directory:\""
                 sh "ls -l \"${allureApiResultsDir}\""
                 sh "echo \"Checking contents of JUnit output directory:\""
@@ -227,8 +223,9 @@ stage('Run API Tests') {
         }
     }
 }
-        
-        
+        // ... (previous code)
+
+
     }
 
    post {
