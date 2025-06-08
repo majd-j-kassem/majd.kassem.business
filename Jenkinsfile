@@ -279,11 +279,7 @@ pipeline {
             }
         }
     }
-}
-        // ... (previous code)
 
-
-    }
 
    post {
     always {
