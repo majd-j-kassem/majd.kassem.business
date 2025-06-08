@@ -158,87 +158,147 @@ pipeline {
         }
         
         stage('Run API Tests') {
-            steps {
-                script {
-                    echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-                    sleep(120) // Keep your sleep for now
+    tools {
+        // Assuming you've defined 'NodeJS' and 'Allure' tools in Jenkins global tool configuration
+        nodejs 'NodeJS' // Replace 'NodeJS' with your configured NodeJS tool name (e.g., 'NodeJS_20')
+        allure 'Allure' // Replace 'Allure' with your configured Allure tool name (e.g., 'Allure_2.34.0')
+    }
+    steps {
+        script {
+            echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
+            sleep(120) // Keep your sleep for now to allow application deployment
 
-                    def apiAllureResultsPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
-                    def apiJunitReportPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
+            // --- Define Paths ---
+            // This is the BASE directory where ALL Allure results for this build will reside.
+            // newman-reporter-allure will typically create its own subfolder within this.
+            def allureBaseResultsDir = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}"
 
-                    sh "echo 'Attempting to clean/create Allure results directory: ${apiAllureResultsPath}'"
-                    sh "rm -rf ${apiAllureResultsPath}"
-                    sh "mkdir -p ${apiAllureResultsPath}"
-                    sh "echo 'Attempting to clean/create JUnit results directory: ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}'"
-                    sh "mkdir -p ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}"
+            // This is the specific path for the JUnit XML report.
+            def apiJunitReportPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
 
-                    dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
-                        sh """#!/bin/bash
-                            echo "Current directory inside API_POSTMAN: \$(pwd)"
-                            echo "Checking for 5_jun_env.json..."
-                            if [ ! -f "5_jun_env.json" ]; then
-                                echo "ERROR: Environment file 5_jun_env.json not found in \$(pwd)!"
-                                exit 1
-                            fi
-                            echo "5_jun_env.json found."
+            // --- Directory Management ---
 
-                            NEWMAN_BASE_URL="${env.STAGING_URL}"
-                            if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
-                                NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
-                            fi
-                            echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
+            // IMPORTANT: If you want to keep unit/integration Allure results separate,
+            // DO NOT 'rm -rf' the entire allureBaseResultsDir here, as it will delete them.
+            // If you want a fresh set of ALL Allure results for every build, then it's okay.
+            // For consolidation, it's often better to clear individual test type directories or manage them carefully.
+            // For this example, I will modify it to only ensure the base directory exists,
+            // and remove the specific '/api-tests' folder if you were previously trying to put them there.
 
-                            ALLURE_REPORT_OUTPUT="${apiAllureResultsPath}"
-                            JUNIT_REPORT_OUTPUT="${apiJunitReportPath}"
+            // Remove the previous API-specific Allure results directory if it existed (from older attempts)
+            sh "echo 'Cleaning up old API-specific Allure results directory (if any): ${allureBaseResultsDir}/api-tests'"
+            sh "rm -rf ${allureBaseResultsDir}/api-tests" // Remove this specific old target
 
-                            echo "Allure output path: \${ALLURE_REPORT_OUTPUT}"
-                            echo "JUnit output path: \${JUNIT_REPORT_OUTPUT}"
+            // Ensure the base Allure results directory exists.
+            sh "echo 'Ensuring base Allure results directory exists: ${allureBaseResultsDir}'"
+            sh "mkdir -p ${allureBaseResultsDir}"
 
-                            echo "Running newman command..."
-                            newman run 5_jun_api.json \\
-                                --folder "test_1" \\
-                                -e 5_jun_env.json \\
-                                --reporters cli,htmlextra,allure,junit \\
-                                --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export "\${ALLURE_REPORT_OUTPUT}" \\
-                                --reporter-junit-export "\${JUNIT_REPORT_OUTPUT}" \\
-                                --env-var "baseUrl=\${NEWMAN_BASE_URL}"
+            // Ensure the JUnit results directory exists.
+            sh "echo 'Ensuring JUnit results directory exists: ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}'"
+            sh "mkdir -p ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}"
 
-                            echo "Newman command finished. Checking contents of Allure output directory:"
-                            ls -l "\${ALLURE_REPORT_OUTPUT}"
-                            echo "Checking contents of JUnit output directory:"
-                            ls -l "\$(dirname "\${JUNIT_REPORT_OUTPUT}")"
-                        """
-                    }
-                }
+            // --- Run Newman Tests ---
+            dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
+                sh """#!/bin/bash
+                    echo "Current directory inside API_POSTMAN: \$(pwd)"
+                    echo "Checking for 5_jun_env.json..."
+                    if [ ! -f "5_jun_env.json" ]; then
+                        echo "ERROR: Environment file 5_jun_env.json not found in \$(pwd)!"
+                        exit 1
+                    fi
+                    echo "5_jun_env.json found."
+
+                    # Ensure baseUrl for Newman points to the deployed staging URL
+                    NEWMAN_BASE_URL="${env.STAGING_URL}"
+                    # Remove trailing slash if present, as Postman/Newman might add it or expect it without.
+                    if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
+                        NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
+                    fi
+                    echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
+
+                    # The Allure reporter will create its own subdirectory within this path.
+                    # It DOES NOT write directly into the path provided unless it's designed for that.
+                    ALLURE_NEWMAN_EXPORT_PATH="${allureBaseResultsDir}"
+
+                    JUNIT_REPORT_OUTPUT="${apiJunitReportPath}"
+
+                    echo "Allure output path for Newman: \${ALLURE_NEWMAN_EXPORT_PATH}"
+                    echo "JUnit output path for Newman: \${JUNIT_REPORT_OUTPUT}"
+
+                    echo "Running newman command..."
+                    newman run 5_jun_api.json \\
+                        --folder "test_1" \\
+                        -e 5_jun_env.json \\
+                        --reporters cli,htmlextra,allure,junit \\
+                        --reporter-htmlextra-export newman-report.html \\
+                        --reporter-allure-export "\${ALLURE_NEWMAN_EXPORT_PATH}" \\ # <-- Crucial change here
+                        --reporter-junit-export "\${JUNIT_REPORT_OUTPUT}" \\
+                        --env-var "baseUrl=\${NEWMAN_BASE_URL}"
+
+                    echo "Newman command finished. Checking contents of Allure output directory:"
+                    # List the contents of the BASE Allure directory to see what newman-reporter-allure created
+                    ls -l "\${ALLURE_NEWMAN_EXPORT_PATH}"
+                    echo "Checking contents of JUnit output directory:"
+                    ls -l "\$(dirname "\${JUNIT_REPORT_OUTPUT}")"
+                """
             }
         }
+    }
+}
     }
 
    post {
     always {
         script {
+            echo "---" // Separator for better readability in console output
+            echo "Starting Post-Build Actions..."
+            echo "---"
+
+            // Publish Consolidated Allure Report
             echo "Publishing Consolidated Allure Report..."
-            step([$class: 'AllureReportPublisher',
-                results: [
-                    [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
-                    [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
-                    [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"]
-                ],
-                reportBuildExitCode: 0,
-                reportCharts: true
-            ])
-            echo "Consolidated Allure Report should be available via the link on the build page."
+            try {
+                step([$class: 'AllureReportPublisher',
+                    results: [
+                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
+                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
+                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"]
+                    ],
+                    reportBuildExitCode: 0,
+                    reportCharts: true
+                ])
+                echo "Consolidated Allure Report should be available via the link on the build page."
+            } catch (Exception e) {
+                echo "WARNING: Failed to publish Allure Report: ${e.getMessage()}"
+            }
 
+            echo "---"
+
+            // Publish Consolidated JUnit XML Reports
             echo "Publishing Consolidated JUnit XML Reports..."
-            // Updated path to include TEST_RESULT_ROOT
-            junit "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml"
-            echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
+            try {
+                // Updated path to include TEST_RESULT_ROOT
+                junit "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml"
+                echo "Consolidated JUnit Reports should be available via the 'Test Results' link."
+            } catch (Exception e) {
+                echo "WARNING: Failed to publish JUnit Reports: ${e.getMessage()}"
+            }
 
+            echo "---"
+
+            // Archive Allure raw results and all JUnit XMLs as build artifacts
             echo "Archiving Allure raw results and all JUnit XMLs as build artifacts..."
-            // Updated paths to include TEST_RESULT_ROOT
-            archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/**/*", fingerprint: true
-            archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml", fingerprint: true
+            try {
+                // Updated paths to include TEST_RESULT_ROOT
+                archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/**/*", fingerprint: true
+                archiveArtifacts artifacts: "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml", fingerprint: true
+                echo "Test artifacts archived successfully."
+            } catch (Exception e) {
+                echo "WARNING: Failed to archive build artifacts: ${e.getMessage()}"
+            }
+
+            echo "---"
+            echo "Post-Build Actions Completed."
+            echo "---"
         }
     }
     // ... other post conditions if any (e.g., success, failure, unstable)
