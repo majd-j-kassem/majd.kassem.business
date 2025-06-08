@@ -163,38 +163,51 @@ pipeline {
                     echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
                     sleep(120) // Keep your sleep for now
 
-                    // Define target paths for results relative to the WORKSPACE root
                     def apiAllureResultsPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
                     def apiJunitReportPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
 
-                    // Clean and create result directories at the WORKSPACE root
+                    sh "echo 'Attempting to clean/create Allure results directory: ${apiAllureResultsPath}'"
                     sh "rm -rf ${apiAllureResultsPath}"
                     sh "mkdir -p ${apiAllureResultsPath}"
-                    sh "mkdir -p ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}" // Ensure JUnit directory is created
+                    sh "echo 'Attempting to clean/create JUnit results directory: ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}'"
+                    sh "mkdir -p ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}"
 
-                    // Change into the API_TESTS_DIR (e.g., API_POSTMAN)
                     dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
-                        // Pass the ABSOLUTE paths to Newman reporters, as they are now defined.
-                        // Remove the `../` because the Groovy variables are already absolute.
                         sh """#!/bin/bash
+                            echo "Current directory inside API_POSTMAN: \$(pwd)"
+                            echo "Checking for 5_jun_env.json..."
                             if [ ! -f "5_jun_env.json" ]; then
                                 echo "ERROR: Environment file 5_jun_env.json not found in \$(pwd)!"
                                 exit 1
                             fi
+                            echo "5_jun_env.json found."
 
                             NEWMAN_BASE_URL="${env.STAGING_URL}"
                             if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
                                 NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
                             fi
+                            echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
 
+                            ALLURE_REPORT_OUTPUT="${apiAllureResultsPath}"
+                            JUNIT_REPORT_OUTPUT="${apiJunitReportPath}"
+
+                            echo "Allure output path: \${ALLURE_REPORT_OUTPUT}"
+                            echo "JUnit output path: \${JUNIT_REPORT_OUTPUT}"
+
+                            echo "Running newman command..."
                             newman run 5_jun_api.json \\
                                 --folder "test_1" \\
                                 -e 5_jun_env.json \\
                                 --reporters cli,htmlextra,allure,junit \\
                                 --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export '${apiAllureResultsPath}' \\
-                                --reporter-junit-export '${apiJunitReportPath}' \\
+                                --reporter-allure-export "\${ALLURE_REPORT_OUTPUT}" \\
+                                --reporter-junit-export "\${JUNIT_REPORT_OUTPUT}" \\
                                 --env-var "baseUrl=\${NEWMAN_BASE_URL}"
+
+                            echo "Newman command finished. Checking contents of Allure output directory:"
+                            ls -l "\${ALLURE_REPORT_OUTPUT}"
+                            echo "Checking contents of JUnit output directory:"
+                            ls -l "\$(dirname "\${JUNIT_REPORT_OUTPUT}")"
                         """
                     }
                 }
