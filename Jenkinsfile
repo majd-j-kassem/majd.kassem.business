@@ -82,7 +82,7 @@ pipeline {
                         sh 'rm -rf ../allure-results/unit-tests' // Clear old results
                         sh 'mkdir -p ../allure-results/unit-tests'
                         sh 'mkdir -p ../junit-reports'
-                        sh '''
+                        sh '''#!/bin/bash -el
                             source .venv/bin/activate
                             pytest --alluredir=../allure-results/unit-tests \\
                                    --junitxml=../junit-reports/sut_unit_report.xml \\
