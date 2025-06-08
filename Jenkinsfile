@@ -110,6 +110,23 @@ pipeline {
                 }
             }
         }
+        stage('Build and Deploy SUT to Staging (via Render)') {
+            when {
+                expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+            }
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'ENDER_DEPLOY_HOOK_URL')]) {
+                            echo "Triggering Render deployment for ${env.STAGING_URL}..."
+                            // 2. TRIGGER THE DEPLOYMENT USING CURL AND THE DEPLOY HOOK URL
+                            //    - This is the command that initiates a new build/deploy on Render
+                            sh "curl -X POST ${ENDER_DEPLOY_HOOK_URL}"
+                            echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
+                            
+                    }
+                }
+            }
+        }
 
     }
 
