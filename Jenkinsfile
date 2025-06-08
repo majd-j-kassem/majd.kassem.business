@@ -32,6 +32,8 @@ pipeline {
         // Add explicit credential binding for Render deploy hook for clarity and security
         // Ensure 'RENDER_DEV_DEPLOY_HOOK' is configured in Jenkins Credentials as a 'Secret Text'
         RENDER_DEPLOY_HOOK_URL = credentials('RENDER_DEV_DEPLOY_HOOK')
+        SUT_BRANCH_MAIN = 'main' // Make sure this is 'main' or whatever your production branch is called
+        // You also need RENDER_DEPLOY_HOOK_URL if you're using it l
     }
 
     tools {
