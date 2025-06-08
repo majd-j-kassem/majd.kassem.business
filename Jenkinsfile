@@ -172,16 +172,7 @@ pipeline {
             // This is the specific path for the JUnit XML report.
             def apiJunitReportPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
 
-            // --- Directory Management ---
-
-            // IMPORTANT: If you want to keep unit/integration Allure results separate,
-            // DO NOT 'rm -rf' the entire allureBaseResultsDir here, as it will delete them.
-            // If you want a fresh set of ALL Allure results for every build, then it's okay.
-            // For consolidation, it's often better to clear individual test type directories or manage them carefully.
-            // For this example, I will modify it to only ensure the base directory exists,
-            // and remove the specific '/api-tests' folder if you were previously trying to put them there.
-
-            // Remove the previous API-specific Allure results directory if it existed (from older attempts)
+          
             sh "echo 'Cleaning up old API-specific Allure results directory (if any): ${allureBaseResultsDir}/api-tests'"
             sh "rm -rf ${allureBaseResultsDir}/api-tests" // Remove this specific old target
 
@@ -197,6 +188,7 @@ pipeline {
             dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
                 sh """#!/bin/bash
                     echo "Current directory inside API_POSTMAN: \$(pwd)"
+                    echo "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv: \$({env.WORKSPACE}/${env.API_TESTS_DIR})"
                     echo "Checking for 5_jun_env.json..."
                     if [ ! -f "5_jun_env.json" ]; then
                         echo "ERROR: Environment file 5_jun_env.json not found in \$(pwd)!"
