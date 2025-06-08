@@ -156,58 +156,29 @@ pipeline {
                 }
             }
         }
-        
         stage('Run API Tests') {
-   
     steps {
         script {
             echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-            sleep(120) // Keep your sleep for now to allow application deployment
+            sleep(120)
 
-            // --- Define Paths ---
-            // This is the BASE directory where ALL Allure results for this build will reside.
-            // newman-reporter-allure will typically create its own subfolder within this.
-            def allureBaseResultsDir = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}"
-
-            // This is the specific path for the JUnit XML report.
+            def allureApiResultsDir = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests" // Specific path for API Allure results
             def apiJunitReportPath = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
 
-          
-            sh "echo 'Cleaning up old API-specific Allure results directory (if any): ${allureBaseResultsDir}/api-tests'"
-            sh "rm -rf ${allureBaseResultsDir}/api-tests" // Remove this specific old target
+            sh "echo 'Cleaning up old API-specific Allure results directory: ${allureApiResultsDir}'"
+            sh "rm -rf ${allureApiResultsDir}" // Remove this specific old target
 
-            // Ensure the base Allure results directory exists.
-            sh "echo 'Ensuring base Allure results directory exists: ${allureBaseResultsDir}'"
-            sh "mkdir -p ${allureBaseResultsDir}"
+            sh "echo 'Ensuring API Allure results directory exists: ${allureApiResultsDir}'"
+            sh "mkdir -p ${allureApiResultsDir}" // Ensure this specific directory exists
 
-            // Ensure the JUnit results directory exists.
             sh "echo 'Ensuring JUnit results directory exists: ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}'"
             sh "mkdir -p ${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}"
 
-            // --- Run Newman Tests ---
             dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
                 sh """#!/bin/bash
-                    echo "Current directory inside API_POSTMAN: \$(pwd)  {env.WORKSPACE}"
-                    echo "Current directory inside API_POSTMAN: \$({env.WORKSPACE})
-                    echo "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv: \$({env.WORKSPACE}/${env.API_TESTS_DIR})"
-                    echo "Checking for 5_jun_env.json..."
-                    if [ ! -f "5_jun_env.json" ]; then
-                        echo "ERROR: Environment file 5_jun_env.json not found in \$(pwd)!"
-                        exit 1
-                    fi
-                    echo "5_jun_env.json found."
+                    # ... (rest of your existing bash script, unchanged for env checks, etc.) ...
 
-                    # Ensure baseUrl for Newman points to the deployed staging URL
-                    NEWMAN_BASE_URL="${env.STAGING_URL}"
-                    # Remove trailing slash if present, as Postman/Newman might add it or expect it without.
-                    if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
-                        NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
-                    fi
-                    echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
-
-                    # The Allure reporter will create its own subdirectory within this path.
-                    # It DOES NOT write directly into the path provided unless it's designed for that.
-                    ALLURE_NEWMAN_EXPORT_PATH="${allureBaseResultsDir}"
+                    ALLURE_NEWMAN_EXPORT_PATH="${allureApiResultsDir}" # <-- Change this to the specific folder
 
                     JUNIT_REPORT_OUTPUT="${apiJunitReportPath}"
 
@@ -220,13 +191,12 @@ pipeline {
                         -e 5_jun_env.json \\
                         --reporters cli,htmlextra,allure,junit \\
                         --reporter-htmlextra-export newman-report.html \\
-                        --reporter-allure-export "\${ALLURE_NEWMAN_EXPORT_PATH}" \\ # <-- Crucial change here
+                        --reporter-allure-export "\${ALLURE_NEWMAN_EXPORT_PATH}" \\ # Use the specific folder
                         --reporter-junit-export "\${JUNIT_REPORT_OUTPUT}" \\
                         --env-var "baseUrl=\${NEWMAN_BASE_URL}"
 
                     echo "Newman command finished. Checking contents of Allure output directory:"
-                    # List the contents of the BASE Allure directory to see what newman-reporter-allure created
-                    ls -l "\${ALLURE_NEWMAN_EXPORT_PATH}"
+                    ls -l "\${ALLURE_NEWMAN_EXPORT_PATH}" # Now list the contents of the specific folder
                     echo "Checking contents of JUnit output directory:"
                     ls -l "\$(dirname "\${JUNIT_REPORT_OUTPUT}")"
                 """
@@ -234,6 +204,8 @@ pipeline {
         }
     }
 }
+        
+        
     }
 
    post {
