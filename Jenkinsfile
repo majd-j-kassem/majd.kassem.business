@@ -203,6 +203,11 @@ pipeline {
                     echo "JUnit output path for Newman: \${JUNIT_REPORT_OUTPUT}"
 
                     echo "Running newman command..."
+                    
+                    echo "NEWMAN_BASE_URL set to: \$NEWMAN_BASE_URL"
+                    echo "ALLURE_NEWMAN_EXPORT_PATH set to: \$ALLURE_NEWMAN_EXPORT_PATH"
+                    echo "JUNIT_REPORT_OUTPUT set to: \$JUNIT_REPORT_OUTPUT"
+                    echo "Running newman command..."
                     newman run 5_jun_api.json \\
                         --folder "test_1" \\
                         -e 5_jun_env.json \\
