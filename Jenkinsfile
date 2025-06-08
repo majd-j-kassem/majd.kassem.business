@@ -16,7 +16,6 @@ pipeline {
         JUNIT_REPORTS_ROOT = 'junit-reports'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
 
-        SUT_BRANCH_DEV = 'dev'
     }
 
     tools {
@@ -40,9 +39,9 @@ pipeline {
         stage('Checkout SUT Dev') {
             steps {
                 script {
-                    echo "Checking out SUT repository: ${env.SUT_REPO}, branch: ${env.SUT_BRANCH}"
+                    echo "Checking out SUT repository: ${env.SUT_REPO}, branch: ${env.SUT_BRANCH_DEV}"
                     dir('sut-code') { // Checkout the SUT code into a 'sut-code' subdirectory
-                        git branch: "${env.SUT_BRANCH}",
+                        git branch: "${env.SUT_BRANCH_DEV}",
                             credentialsId: 'git_id', // Assuming 'git_id' is your Git credential for the SUT repo
                             url: "${env.SUT_REPO}"
                     }
