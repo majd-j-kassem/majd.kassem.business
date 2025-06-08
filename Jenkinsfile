@@ -127,7 +127,19 @@ pipeline {
                 }
             }
         }
-
+        
+        stage('Run API Tests (SUT)') {
+            // This stage will only run if previous stages succeed
+            // You will likely have a similar setup to unit/integration tests,
+            // but might require the deployed SUT to be accessible.
+            steps {
+                echo "Running API tests..."
+                // Example: Using Newman for Postman collections
+                dir('sut-code/api-tests') {
+                    sh "newman run my_api_collection.json -e my_env.json --reporters cli,htmlextra,allure --reporter-htmlextra-export ../../newman-reports/api_report.html --reporter-allure-export ../../allure-results/api-tests"
+                }
+            }
+        }
     }
 
     post {
