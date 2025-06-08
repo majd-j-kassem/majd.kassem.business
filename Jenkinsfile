@@ -236,19 +236,18 @@ pipeline {
                     sh "mkdir -p ${qaAllureOutputDir}"
                     sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/${QA_JUNIT_SUBDIR}"
 
-                    dir('qa-selenium-project') { // Run pytest from within the QA project directory
+                   dir('qa-selenium-project') {
                         sh """#!/bin/bash -el
                             source ./.venv/bin/activate
                             
                             # Execute pytest for Selenium tests
-                            # Pass STAGING_URL to your tests. Adjust '--base-url' if your tests use a different argument.
-                            # Ensure 'tests/' is the correct path to your test files within the QA repo.
                             pytest --alluredir=../${qaAllureOutputDir} \\
-                                --junitxml=../${qaJunitReportFile} --browser chrome-headless \\
-                                --baseurl \"${params.STAGING_URL_PARAM}\" \\
+                                --junitxml=../${qaJunitReportFile} \\
+                                --browser=chrome-headless \\
+                                --base-url=\"${params.STAGING_URL_PARAM}\" \\
                                 src/tests/teachers/test_teacher_signup.py
-                        """
-                    }
+                            """
+                        }
 
                     // 4. (Optional) Convert QA JUnit to Allure results if pytest-allure-plugin is NOT used
                     //    If your pytest setup in the QA project is configured to generate Allure results directly
