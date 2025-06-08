@@ -148,7 +148,7 @@ pipeline {
                     // Use the environment variable directly, as it's already bound from credentials
                     sh "curl -X POST ${env.RENDER_DEPLOY_HOOK_URL}"
                     echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
-                    sleep time: 120, unit: 'SECONDS' // Give Render time to deploy
+                    sleep time: 3, unit: 'MINUTES' // Give Render time to deploy
                 }
             }
         }
