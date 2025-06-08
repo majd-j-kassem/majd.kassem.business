@@ -80,17 +80,29 @@ pipeline {
                 script {
                     echo "Running Django unit tests with pytest and generating Allure and JUnit results..."
 
-                    sh "rm -rf ${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests" // Clear old results for unit tests
-                    sh "mkdir -p ${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests" // Create directory for unit test allure results
-                    sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}" // Create the main JUnit reports directory (only needs to be done once)
+                    // --- These commands run from the Jenkins workspace root ---
+                    // Define the full target paths for results relative to workspace root
+                    def unitAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/unit-tests"
+                    def unitJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/sut_unit_report.xml"
 
+                    // Clean and create directories at the workspace root
+                    sh "rm -rf ${unitAllureResultsDir}"
+                    sh "mkdir -p ${unitAllureResultsDir}"
+                    sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}" // Create the JUnit root if it doesn't exist
+
+                    // --- Now change directory to 'my_learning_platform' for running tests ---
                     dir('my_learning_platform') {
-                        sh '''#!/bin/bash -el
+                        sh """#!/bin/bash -el
                             source .venv/bin/activate
-                            pytest --alluredir=../${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/unit-tests \\
-                           --junitxml=../${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/sut_unit_report.xml \\
-                           accounts/tests/unit/
-                        '''
+                            #
+                            # When inside 'my_learning_platform', to reach a directory at the workspace root
+                            # like 'test-results/allure-results/unit-tests', you need to go up one level (../)
+                            # and then specify the path relative to the workspace root.
+                            #
+                            pytest --alluredir=../${unitAllureResultsDir} \\
+                                   --junitxml=../${unitJunitReportFile} \\
+                                   accounts/tests/unit/
+                        """
                     }
                 }
             }
@@ -98,21 +110,40 @@ pipeline {
         stage('Run Integration Tests (SUT)') {
             steps {
                 script {
-                    echo "Running Django integration tests with pytest and generating Allure results..."
+                    echo "Running Django integration tests with pytest and generating Allure and JUnit results..."
+
+                    // --- These commands run from the Jenkins workspace root ---
+                    // Define the full target paths for results relative to workspace root
+                    def integrationAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/integration-tests"
+                    def integrationJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/sut_integration_report.xml"
+
+                    // Clean and create directories at the workspace root
+                    sh "rm -rf ${integrationAllureResultsDir}"
+                    sh "mkdir -p ${integrationAllureResultsDir}"
+                    // The main JUnit reports directory (${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME})
+                    // should already be created by the 'Run Unit Tests (SUT)' stage,
+                    // so no need to recreate it here. If this is your first test stage,
+                    // you might want to add 'sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}"' here.
+
+
+                    // --- Now change directory to 'my_learning_platform' for running tests ---
                     dir('my_learning_platform') {
-                        sh 'rm -rf ../allure-results/integration-tests' // Clear old results
-                        sh 'mkdir -p ../allure-results/integration-tests'
-                        sh 'mkdir -p ../junit-reports' // Ensure this exists for JUnit XML if needed
-                        sh '''#!/bin/bash -el
+                        sh """#!/bin/bash -el
                             source .venv/bin/activate
-                            pytest --alluredir=../allure-results/integration-tests \\
-                                   --junitxml=../junit-reports/sut_integration_report.xml \\
+                            #
+                            # When inside 'my_learning_platform', to reach a directory at the workspace root
+                            # like 'test-results/allure-results/integration-tests', you need to go up one level (../)
+                            # and then specify the path relative to the workspace root.
+                            #
+                            pytest --alluredir=../${integrationAllureResultsDir} \\
+                                   --junitxml=../${integrationJunitReportFile} \\
                                    accounts/tests/integration/
-                        '''
+                        """
                     }
                 }
             }
         }
+        
         stage('Build and Deploy SUT to Staging (via Render)') {
             when {
                 expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' }
@@ -137,50 +168,32 @@ pipeline {
                     echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
                     sleep(120) // Keep your sleep for now
 
-                    // Define the full absolute path for Newman's Allure results
-                    def newmanAllureResultsAbsoluteDir = "${pwd()}/${ALLURE_RESULTS_ROOT}/api-tests"
-                    // NEW: Define the full absolute path for Newman's JUnit XML report
-                    def newmanJunitReportFile = "${pwd()}/${JUNIT_REPORTS_ROOT}/api_report.xml"
+                    def apiAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/api-tests"
+                    def apiJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/api_report.xml"
 
-                    // Clean and create directory structure using the absolute path
-                    sh "rm -rf ${newmanAllureResultsAbsoluteDir}"
-                    sh "mkdir -p ${newmanAllureResultsAbsoluteDir}"
-                    // NEW: Ensure the dedicated JUnit reports directory exists
-                    sh "mkdir -p ${pwd()}/${JUNIT_REPORTS_ROOT}"
+                    sh "rm -rf ${apiAllureResultsDir}"
+                    sh "mkdir -p ${apiAllureResultsDir}"
 
-                    dir("sut-code/${env.API_TESTS_DIR}") {
+                    dir("my_learning_platform/${env.API_TESTS_DIR}") {
                         sh """#!/bin/bash
-                            echo "Current directory: \$(pwd)"
-                            echo "Files in directory:"
-                            ls -la
-
                             if [ ! -f "5_jun_env.json" ]; then
                                 echo "ERROR: Environment file 5_jun_env.json not found!"
                                 exit 1
                             fi
 
-                            # --- DEBUG LINE (optional, but good for verification) ---
-                            echo "--- STAGING_URL from Jenkins environment: ${env.STAGING_URL} ---"
-                            # --- END DEBUG LINE ---
-
-                            # --------------------------------------------------------------------------------
-                            #  PUT THE NEWMAN_BASE_URL LOGIC HERE!
-                            # --------------------------------------------------------------------------------
                             NEWMAN_BASE_URL="${env.STAGING_URL}"
                             if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
                                 NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
                             fi
-                            echo "--- Newman Base URL after processing: \$NEWMAN_BASE_URL ---" # Add this to confirm the change
-                            # --------------------------------------------------------------------------------
 
                             newman run 5_jun_api.json \\
                                 --folder "test_1" \\
                                 -e 5_jun_env.json \\
                                 --reporters cli,htmlextra,allure,junit \\
                                 --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export ${newmanAllureResultsAbsoluteDir} \\
-                                --reporter-junit-export ${newmanJunitReportFile} \\
-                                --env-var "baseUrl=\${NEWMAN_BASE_URL}" # Use the processed variable here
+                                --reporter-allure-export ../../${apiAllureResultsDir} \\
+                                --reporter-junit-export ../../${apiJunitReportFile} \\
+                                --env-var "baseUrl=\${NEWMAN_BASE_URL}"
                         """
                     }
                 }
