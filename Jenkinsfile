@@ -65,9 +65,7 @@ pipeline {
                     def mergeDir = 'sut-main-for-deploy'
                     dir(mergeDir) {
                         echo "Configuring Git user for the merge commit..."
-                        sh "git config user.email 'jenkins@example.com'"
-                        sh "git config user.name 'Jenkins CI Automation'"
-
+            
                         // Pull main to ensure it's up-to-date before merging dev
                         echo "Pulling latest ${env.SUT_BRANCH_MAIN} to ensure it's up-to-date..."
                         sh "git pull origin ${env.SUT_BRANCH_MAIN}"
@@ -75,16 +73,21 @@ pipeline {
                         echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
                         sh "git fetch origin ${env.SUT_BRANCH_DEV}"
 
-                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
+                        echo "Merging origin/${env.SUT_BRANCH_DEV} into origin/${env.SUT_BRANCH_MAIN}..."
                         // Use --no-ff (no fast-forward) to always create a merge commit, even if it could be fast-forwarded.
                         // This keeps a clear history of merges.
                         sh "git merge --no-ff origin/${env.SUT_BRANCH_DEV} -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
 
                         echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote (triggers Render live deploy)..."
-                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-                            // Use the username and password variables in the URL for authentication
-                            // Make sure 'majd-j-kassem/majd.kassem.business.git' is your exact repository path
-                            sh "git push https://${GIT_USERNAME}:${GIT_PAT_PASSWORD}@github.com/majd-j-kassem/majd.kassem.business.git ${env.SUT_BRANCH_MAIN}"
+                       withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+    // This is the correct and reliable way to push with a PAT now:
+                            sh """
+                                git config credential.helper 'cache --timeout=120'
+                                echo "protocol=https\\nhost=github.com\\nusername=${GIT_USERNAME}\\npassword=${GIT_PAT_PASSWORD}" | git credential approve
+                                git push origin ${env.SUT_BRANCH_MAIN}
+                                # Clean up credential helper (optional, but good practice)
+                                git config --unset credential.helper
+                            """
                         }
                         echo "SUT Main branch updated. Render will now deploy to live."
                     }
