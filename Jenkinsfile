@@ -271,12 +271,13 @@ pipeline {
             echo "Publishing Consolidated Allure Report..."
             try {
                 allure([
+                    includeProperties: false,
+                    jdk: '',
                     results: [
-                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
-                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
-                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"]
+                        [path: 'test-result/allure-results/unit-tests'],
+                        [path: 'test-result/allure-results/integration-tests'],
+                        [path: 'test-result/allure-results/api-tests']
                     ]
-                    // Removed reportBuildExitCode and reportCharts as they cause warnings/errors
                 ])
                 echo "Consolidated Allure Report should be available via the link on the build page."
             } catch (Exception e) {
