@@ -6,7 +6,7 @@ pipeline {
     environment {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
         SUT_BRANCH_DEV = 'dev'
-        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com/' // Ensure this is your actual Render dev URL
+        STAGING_URL = 'https://majd-kassem-business-dev.onrender.com' // Ensure this is your actual Render dev URL
         QA_JOB_NAME = 'QA-Tests-Staging'
         GIT_CREDENTIAL_ID = 'git_id'
         DJANGO_SETTINGS_MODULE = 'my_learning_platform_core.settings'
@@ -15,6 +15,8 @@ pipeline {
         ALLURE_RESULTS_ROOT = 'allure-results'
         JUNIT_REPORTS_ROOT = 'junit-reports'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
+
+        SUT_BRANCH_DEV = 'dev'
     }
 
     tools {
