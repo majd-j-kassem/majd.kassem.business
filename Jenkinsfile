@@ -116,7 +116,7 @@ pipeline {
             }
             steps {
                 script {
-                    withCredentials([string(credentialsId: 'ENDER_DEV_DEPLOY_HOOK', variable: 'Render_Deploy_Hook_URL')]) {
+                    withCredentials([string(credentialsId: 'RENDER_DEV_DEPLOY_HOOK', variable: 'Render_Deploy_Hook_URL')]) {
                             echo "Triggering Render deployment for ${env.STAGING_URL}..."
                             // 2. TRIGGER THE DEPLOYMENT USING CURL AND THE DEPLOY HOOK URL
                             //    - This is the command that initiates a new build/deploy on Render
