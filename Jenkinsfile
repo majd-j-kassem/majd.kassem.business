@@ -15,16 +15,10 @@ pipeline {
         SUT_REPO = 'https://github.com/majd-j-kassem/majd.kassem.business.git'
         SUT_BRANCH = 'dev'
     }
-
     tools {
-        // Define the tools required for your pipeline.
-        // These refer to tools configured in Jenkins -> Manage Jenkins -> Tools
-        nodejs 'NodeJS_24' // As seen in your logs, 'NodeJS_24' is used for Node.js
-        // If you have a specific Python installation configured as a Jenkins Tool,
-        // you might define it here, e.g., python 'Python3.10'.
-        // However, your log shows 'python3 -m venv', implying system Python.
-        // Allure Commandline is also used for reporting.
-        allure 'Allure_2.34.0' // As seen in your logs, 'Allure_2.34.0'
+        
+        nodejs 'NodeJS_24' 
+        allure 'Allure_2.34.0' 
     }
 
     stages {
