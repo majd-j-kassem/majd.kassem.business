@@ -65,6 +65,10 @@ pipeline {
                     def mergeDir = 'sut-main-for-deploy'
                     dir(mergeDir) {
                         echo "Configuring Git user for the merge commit..."
+
+                        sh "git config user.email 'jenkins@example.com'"
+                        sh "git config user.name 'Jenkins CI Automation'"
+
             
                         // Pull main to ensure it's up-to-date before merging dev
                         echo "Pulling latest ${env.SUT_BRANCH_MAIN} to ensure it's up-to-date..."
