@@ -14,7 +14,7 @@ pipeline {
         // Define Allure results directory relative to workspace root
         ALLURE_RESULTS_ROOT = 'allure-results'
         TEST_RESULT_ROOT = 'test-result'
-        JUNIT_REPORTS_ROOT = 'junit-reports'
+        JUNIT_REPORTS_ROOT = 'junit-result'
         API_TESTS_DIR = 'API_POSTMAN' // Assuming your Postman files are in a folder named API_POSTMAN
 
     }
@@ -82,13 +82,13 @@ pipeline {
 
                     // --- These commands run from the Jenkins workspace root ---
                     // Define the full target paths for results relative to workspace root
-                    def unitAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/unit-tests"
-                    def unitJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/sut_unit_report.xml"
+                    def unitAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"
+                    def unitJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/unit_report.xml"
 
                     // Clean and create directories at the workspace root
                     sh "rm -rf ${unitAllureResultsDir}"
                     sh "mkdir -p ${unitAllureResultsDir}"
-                    sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}" // Create the JUnit root if it doesn't exist
+                    sh "mkdir -p ${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}" // Create the JUnit root if it doesn't exist
 
                     // --- Now change directory to 'my_learning_platform' for running tests ---
                     dir('my_learning_platform') {
@@ -114,8 +114,8 @@ pipeline {
 
                     // --- These commands run from the Jenkins workspace root ---
                     // Define the full target paths for results relative to workspace root
-                    def integrationAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_DIR_NAME}/integration-tests"
-                    def integrationJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/sut_integration_report.xml"
+                    def integrationAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"
+                    def integrationJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/integration_report.xml"
 
                     // Clean and create directories at the workspace root
                     sh "rm -rf ${integrationAllureResultsDir}"
@@ -168,8 +168,8 @@ pipeline {
                     echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
                     sleep(120) // Keep your sleep for now
 
-                    def apiAllureResultsDir = "${TEST_RESULT_ROOT}/${TEST_RESULT_ROOT}/api-tests"
-                    def apiJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_DIR_NAME}/api_report.xml"
+                    def apiAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
+                    def apiJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
 
                     sh "rm -rf ${apiAllureResultsDir}"
                     sh "mkdir -p ${apiAllureResultsDir}"
