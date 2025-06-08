@@ -158,42 +158,47 @@ pipeline {
         }
         
         stage('Run API Tests') {
-            steps {
-                script {
-                    echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
-                    sleep(120) // Keep your sleep for now
+    steps {
+        script {
+            echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
+            sleep(120) // Keep your sleep for now
 
-                    def apiAllureResultsDir = "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
-                    def apiJunitReportFile = "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
+            // Define target paths for results relative to the WORKSPACE root
+            def rootAllureResultsDir = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
+            def rootJunitReportFile = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml"
+            def rootJunitReportDir = "${env.WORKSPACE}/${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}" // New variable for JUnit directory
 
-                    sh "rm -rf ${apiAllureResultsDir}"
-                    sh "mkdir -p ${apiAllureResultsDir}"
+            // Clean and create result directories at the WORKSPACE root
+            sh "rm -rf ${rootAllureResultsDir}"
+            sh "mkdir -p ${rootAllureResultsDir}"
+            sh "mkdir -p ${rootJunitReportDir}" // Ensure JUnit directory is created
 
-                    dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
-                        sh """#!/bin/bash
-                            if [ ! -f "5_jun_env.json" ]; then
-                                echo "ERROR: Environment file 5_jun_env.json not found!"
-                                exit 1
-                            fi
+            // Change into the API_TESTS_DIR (e.g., API_POSTMAN)
+            dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
+                sh """#!/bin/bash
+                    if [ ! -f "5_jun_env.json" ]; then
+                        echo "ERROR: Environment file 5_jun_env.json not found in \$(pwd)!"
+                        exit 1
+                    fi
 
-                            NEWMAN_BASE_URL="${env.STAGING_URL}"
-                            if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
-                                NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
-                            fi
+                    NEWMAN_BASE_URL="${env.STAGING_URL}"
+                    if [[ "\$NEWMAN_BASE_URL" == */ ]]; then
+                        NEWMAN_BASE_URL="\${NEWMAN_BASE_URL%/}"
+                    fi
 
-                            newman run 5_jun_api.json \\
-                                --folder "test_1" \\
-                                -e 5_jun_env.json \\
-                                --reporters cli,htmlextra,allure,junit \\
-                                --reporter-htmlextra-export newman-report.html \\
-                                --reporter-allure-export ${apiAllureResultsDir} \\
-                                --reporter-junit-export ${apiJunitReportFile} \\
-                                --env-var "baseUrl=\${NEWMAN_BASE_URL}"
-                        """
-                    }
-                }
+                    newman run 5_jun_api.json \\
+                        --folder "test_1" \\
+                        -e 5_jun_env.json \\
+                        --reporters cli,htmlextra,allure,junit \\
+                        --reporter-htmlextra-export newman-report.html \\
+                        --reporter-allure-export ../${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests \\
+                        --reporter-junit-export ../${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/api_report.xml \\
+                        --env-var "baseUrl=\${NEWMAN_BASE_URL}"
+                """
             }
         }
+    }
+}
     }
 
    post {
