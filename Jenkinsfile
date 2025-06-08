@@ -261,7 +261,7 @@ pipeline {
             }
         }
     }
-   post {
+    post {
     always {
         script {
             echo "---"
@@ -270,16 +270,13 @@ pipeline {
 
             echo "Publishing Consolidated Allure Report..."
             try {
-                // Use the simpler 'allure' step syntax
                 allure([
                     results: [
-                        "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests",
-                        "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests",
-                        "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"
-                    ],
-                    // Remove deprecated/problematic parameters if you encounter further errors
-                    // reportBuildExitCode: false, // These parameters were deprecated
-                    // reportCharts: false         // Removed as they might cause issues if plugin version is old
+                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/unit-tests"],
+                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/integration-tests"],
+                        [path: "${TEST_RESULT_ROOT}/${ALLURE_RESULTS_ROOT}/api-tests"]
+                    ]
+                    // Removed reportBuildExitCode and reportCharts as they cause warnings/errors
                 ])
                 echo "Consolidated Allure Report should be available via the link on the build page."
             } catch (Exception e) {
@@ -288,7 +285,6 @@ pipeline {
 
             echo "---"
 
-            // ... (rest of your post actions like JUnit and archiveArtifacts) ...
             echo "Publishing Consolidated JUnit XML Reports..."
             try {
                 junit "${TEST_RESULT_ROOT}/${JUNIT_REPORTS_ROOT}/*.xml"
@@ -314,4 +310,6 @@ pipeline {
         }
     }
 }
+
+   
 }
