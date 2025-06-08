@@ -158,11 +158,7 @@ pipeline {
         }
         
         stage('Run API Tests') {
-    tools {
-        // Assuming you've defined 'NodeJS' and 'Allure' tools in Jenkins global tool configuration
-        nodejs 'NodeJS' // Replace 'NodeJS' with your configured NodeJS tool name (e.g., 'NodeJS_20')
-        allure 'Allure' // Replace 'Allure' with your configured Allure tool name (e.g., 'Allure_2.34.0')
-    }
+   
     steps {
         script {
             echo "Running Postman API tests with Newman and generating Allure and JUnit results..."
