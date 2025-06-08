@@ -187,7 +187,7 @@ pipeline {
             // --- Run Newman Tests ---
             dir("${env.WORKSPACE}/${env.API_TESTS_DIR}") {
                 sh """#!/bin/bash
-                    echo "Current directory inside API_POSTMAN: \$(pwd)"
+                    echo "Current directory inside API_POSTMAN: \$(pwd)    ::: \{env.WORKSPACE}"
                     echo "vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv: \$({env.WORKSPACE}/${env.API_TESTS_DIR})"
                     echo "Checking for 5_jun_env.json..."
                     if [ ! -f "5_jun_env.json" ]; then
