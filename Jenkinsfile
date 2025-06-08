@@ -157,8 +157,6 @@ pipeline {
             }
         }
 
-        stages {
-            // ... (previous stages remain unchanged) ...
 
             stage('Run API Tests') {
                 steps {
@@ -224,7 +222,7 @@ pipeline {
                     }
                 }
             }
-        }
+        
         stage('Declarative: Post Actions') {
             steps {
                 script {
