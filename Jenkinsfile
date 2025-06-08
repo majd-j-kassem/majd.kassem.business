@@ -244,7 +244,7 @@ pipeline {
                             pytest --alluredir=../${qaAllureOutputDir} \\
                                 --junitxml=../${qaJunitReportFile} \\
                                 --browser=chrome-headless \\
-                                --base-url=\"${params.STAGING_URL_PARAM}\" \\
+                                --baseurl=\"${params.STAGING_URL_PARAM}\" \\
                                 src/tests/teachers/test_teacher_signup.py
                             """
                         }
