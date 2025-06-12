@@ -45,10 +45,6 @@ pipeline {
     }
 
     stages {
-
-
-
-
         stage('Test NodeJS Tool') {
             steps {
                 script {
