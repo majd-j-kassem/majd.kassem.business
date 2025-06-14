@@ -45,10 +45,6 @@ pipeline {
     }
 
     stages {
-
-
-
-
         stage('Test NodeJS Tool') {
             steps {
                 script {
@@ -151,7 +147,7 @@ pipeline {
                     // Use the environment variable directly, as it's already bound from credentials
                     sh "curl -X POST ${env.RENDER_DEPLOY_HOOK_URL}"
                     echo "Render deployment triggered via Deploy Hook. Waiting for it to become healthy."
-                    sleep time: 3, unit: 'MINUTES' // Give Render time to deploy
+                    sleep time: 2.5, unit: 'MINUTES' // Give Render time to deploy
                 }
             }
         }
@@ -205,10 +201,10 @@ pipeline {
                         sh newmanCommand
                     }
 
-                    echo "Converting Newman's JUnit report to Allure results..."
-                    sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${allureApiResultsDir} ${apiJunitReportPath}"
-                    echo "Checking contents of Allure API results directory after conversion:"
-                    sh "ls -l ${allureApiResultsDir}"
+                    //echo "Converting Newman's JUnit report to Allure results..."
+                    //sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${allureApiResultsDir} ${apiJunitReportPath}"
+                    //echo "Checking contents of Allure API results directory after conversion:"
+                    //sh "ls -l ${allureApiResultsDir}"
                 }
             }
         }
@@ -254,20 +250,17 @@ pipeline {
                     //    If your pytest setup in the QA project is configured to generate Allure results directly
                     //    (e.g., using `pytest-allure-plugin`), this `allure generate` step might be redundant.
                     //    Check your QA project's setup. If it's not generating Allure results directly, keep this.
-                    echo "Converting QA JUnit report to Allure results (if needed)..."
-                    sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${qaAllureOutputDir} ${qaJunitReportFile}"
-                    echo "Checking contents of Allure QA results directory after conversion:"
-                    sh "ls -l ${qaAllureOutputDir}"
+                   // echo "Converting QA JUnit report to Allure results (if needed)..."
+                    //sh "${tool 'Allure_2.34.0'}/bin/allure generate --clean --output ${qaAllureOutputDir} ${qaJunitReportFile}"
+                   // echo "Checking contents of Allure QA results directory after conversion:"
+                    //sh "ls -l ${qaAllureOutputDir}"
                 }
             }
         }
 
         stage('Checkout SUT Main for Merge') {
              when {
-                // This stage will run only if the overall build status so far is SUCCESS or UNSTABLE.
-                // If 'Run QA Tests (Selenium)' makes the build FAILED, this stage will be skipped.
-                // If you want to proceed even with UNSTABLE tests, keep || currentBuild.result == 'UNSTABLE'.
-                // If you want to proceed ONLY with strictly SUCCESSFUL tests, remove || currentBuild.result == 'UNSTABLE'.
+                
                 expression { return currentBuild.result == 'SUCCESS' || currentBuild.result == 'UNSTABLE' }
             }
             steps {
@@ -284,39 +277,41 @@ pipeline {
             }
         }
         stage('Merge Dev to Main & Push') {
+             when { // ADD THIS WHEN DIRECTIVE
+                expression { return currentBuild.result == 'SUCCESS' || currentBuild.result == 'UNSTABLE' }
+            }
             steps {
                 script {
                     def mergeDir = 'sut-main-for-deploy'
                     dir('sut-main-for-deploy') {
-    echo "Configuring Git user for the merge commit..."
-    // >>> THESE TWO LINES ARE MISSING FROM YOUR LOG AND ARE THE CAUSE OF THE ERROR <<<
-    sh "git config user.email 'jenkins@example.com'" // <-- Ensure this is present
-    sh "git config user.name 'Jenkins CI Automation'" // <-- Ensure this is present
+                        echo "Configuring Git user for the merge commit..."
+                        // >>> THESE TWO LINES ARE MISSING FROM YOUR LOG AND ARE THE CAUSE OF THE ERROR <<<
+                        sh "git config user.email 'jenkins@example.com'" // <-- Ensure this is present
+                        sh "git config user.name 'Jenkins CI Automation'" // <-- Ensure this is present
 
-    echo "Pulling latest ${env.SUT_BRANCH_MAIN} to ensure it's up-to-date..."
-    sh "git pull origin ${env.SUT_BRANCH_MAIN}"
+                        echo "Pulling latest ${env.SUT_BRANCH_MAIN} to ensure it's up-to-date..."
+                        sh "git pull origin ${env.SUT_BRANCH_MAIN}"
 
-    echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
-    sh "git fetch origin ${env.SUT_BRANCH_DEV}"
+                        echo "Fetching latest ${env.SUT_BRANCH_DEV} to ensure up-to-date merge..."
+                        sh "git fetch origin ${env.SUT_BRANCH_DEV}"
 
-    echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
-    sh "git merge --no-ff origin/${env.SUT_BRANCH_DEV} -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
+                        echo "Merging origin/${env.SUT_BRANCH_DEV} into ${env.SUT_BRANCH_MAIN}..."
+                        sh "git merge --no-ff origin/${env.SUT_BRANCH_DEV} -m 'Merge ${env.SUT_BRANCH_DEV} to ${env.SUT_BRANCH_MAIN} after successful QA tests [Jenkins CI]'"
 
-    echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote (triggers Render live deploy)..."
-    withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-        sh """
-            git config credential.helper 'cache --timeout=120'
-            echo "protocol=https\\nhost=github.com\\nusername=${GIT_USERNAME}\\npassword=${GIT_PAT_PASSWORD}" | git credential approve
-            git push origin ${env.SUT_BRANCH_MAIN}
-            git config --unset credential.helper
-        """
-    }
-    echo "SUT Main branch updated. Render will now deploy to live."
-}
+                        echo "Pushing merged ${env.SUT_BRANCH_MAIN} to remote (triggers Render live deploy)..."
+                        withCredentials([usernamePassword(credentialsId: env.GIT_CREDENTIAL_ID, passwordVariable: 'GIT_PAT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
+                            sh """
+                                git config credential.helper 'cache --timeout=120'
+                                echo "protocol=https\\nhost=github.com\\nusername=${GIT_USERNAME}\\npassword=${GIT_PAT_PASSWORD}" | git credential approve
+                                git push origin ${env.SUT_BRANCH_MAIN}
+                                git config --unset credential.helper
+                            """
+                        }
+                        echo "SUT Main branch updated. Render will now deploy to live."
+                    }
                 }
             }
         }
-
 
     }
 
