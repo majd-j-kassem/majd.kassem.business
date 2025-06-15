@@ -88,7 +88,7 @@ pipeline {
             steps {
                 script {
                     echo "Installing Newman and Allure reporter..."
-                    sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra'
+                    sh 'npm install -g newman newman-reporter-allure newman-reporter-htmlextra --verbose'
                 }
             }
         }
