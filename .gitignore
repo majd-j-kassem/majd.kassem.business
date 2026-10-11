@@ -29,6 +29,7 @@ dist/
 
 # Environmental file
 *.env
+.env
 #related to test
 .pytest_cache/
 .coverage
