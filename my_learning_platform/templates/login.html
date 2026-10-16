@@ -397,7 +397,7 @@
 {% endif %}
                 {# --- END MESSAGE DISPLAY BLOCK --- #}
 
-        <form method="post" class="login-form-container">
+        <form method="post" class="login-form-container" novalidate>
             {% csrf_token %}
 
             {% for field in form %}

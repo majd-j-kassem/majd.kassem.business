@@ -35,6 +35,11 @@ from .forms import (
     PaymentForm,
     PasswordSettingForm
 )
+class CustomAuthenticationForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs.pop("required", None)
 
 User = get_user_model()
 
@@ -170,7 +175,7 @@ def login_view(request):
             del request.session['_messages']
 
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = CustomAuthenticationForm(request, data=request.POST)
 
         if form.is_valid():
             username = form.cleaned_data.get('username')
@@ -205,7 +210,7 @@ def login_view(request):
             messages.error(request, 'Please enter a valid username and password.')
 
     else:
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
 
     context = {
         'form': form,
